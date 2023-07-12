@@ -2,7 +2,7 @@ use std::env;
 
 // Import utilities that are not necessarily commands
 mod utils;
-use crate::utils::terminal::{error, warning};
+use crate::utils::terminal::*;
 use crate::utils::installer;
 use crate::utils::setup;
 mod args; // Import modules which act as a handler for certain command parameters

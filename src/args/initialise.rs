@@ -1,13 +1,19 @@
 use crate::utils::setup;
-use crate::utils::terminal::success;
+use crate::utils::terminal::*;
 
 pub fn main() {
-	println!("Checking for existing configuration directory...");
 	if setup::confirm_applejuice_data_folder_existence() {
-		println!("Configuration directory already exists!");
+		warning("Configuration directory already exists!");
 	} else {
 		println!("Constructing configuration directory...");
 		setup::construct_applejuice_data_folder();
+		success("Created cache directory");
+	}
+	if setup::confirm_existence("cache") {
+		warning("Cache directory already exists!");
+	} else {
+		setup::create_dir("cache");
+		success("Created cache directory");
 	}
 
 	println!(); // "Print a newline (for aesthetics" -GitHub copilot, providing dumb crap since 2022
