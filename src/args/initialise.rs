@@ -7,7 +7,7 @@ pub fn main() {
 	} else {
 		println!("Constructing configuration directory...");
 		setup::construct_applejuice_data_folder();
-		success("Created cache directory");
+		success("Constructed configuration directory");
 	}
 	if setup::confirm_existence("cache") {
 		warning("Cache directory already exists!");
