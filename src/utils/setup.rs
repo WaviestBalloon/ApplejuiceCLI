@@ -15,7 +15,7 @@ pub fn confirm_applejuice_data_folder_existence() -> bool {
 }
 
 pub fn construct_applejuice_data_folder() {
-	let path = format!("{}/{}", env!("HOME"), ".applejuice");
+	let path: String = format!("{}/{}", env!("HOME"), ".applejuice");
 	println!("Creating the Applejuice data directory at '{}'", path);
 
 	match fs::create_dir(path.clone()) {

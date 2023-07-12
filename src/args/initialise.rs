@@ -1,4 +1,5 @@
 use crate::utils::setup;
+use crate::utils::terminal::success;
 
 pub fn main() {
 	println!("Checking for existing configuration directory...");
@@ -9,5 +10,6 @@ pub fn main() {
 		setup::construct_applejuice_data_folder();
 	}
 
-	println!("\nApplejuice has been initialised!\nTo get started, run 'applejuicecli --help'\nOr to dive right in, run 'applejuicecli --install client'");
+	println!(); // "Print a newline (for aesthetics" -GitHub copilot, providing dumb crap since 2022
+	success("Applejuice has been initialised!\nTo get started, run 'applejuicecli --help'\nOr to dive right in, run 'applejuicecli --install client'");
 }

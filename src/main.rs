@@ -1,10 +1,8 @@
 use std::env;
-use std::process;
 
 // Import utilities that are not necessarily commands
 mod utils;
-use crate::utils::terminal::error;
-use crate::utils::terminal::warning;
+use crate::utils::terminal::{error, warning, success};
 use crate::utils::installer;
 use crate::utils::setup;
 mod args; // Import modules which act as a handler for certain command parameters
@@ -25,13 +23,12 @@ fn main() {
 	
 	match command_clean {
 		"help" => {
-			println!("Applejuice CLI\n\nUsage: {} [command]\n\nCommands:\n\t--help\t\tDisplays this help message\n\t--install\tInstalls Roblox Client or Roblox Studio\n\t--init\t\tInitialises Applejuice", args[0]);
+			println!("ApplejuiceCLI - A manager to get Roblox to run on Linux using Valve's Proton\n\nUsage: {} [command]\n\nCommands:\n\t--help\t\tDisplays this help message\n\t--install\tInstalls Roblox Client or Roblox Studio\n\t--init\t\tInitialises Applejuice", args[0]);
 		},
 		"init" => initialise::main(),
 		"install" => installer::main(arguments),
 		_ => {
-			println!("Unknown command '{}'\nRun '{} --help' for more information.", command, args[0]);
-			process::exit(1);
+			error(format!("Unknown command parameter: '{}'\nRun '{} --help' for more information.", command, args[0]));
 		}
 	}
 }
