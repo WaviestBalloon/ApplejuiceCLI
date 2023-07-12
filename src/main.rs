@@ -1,7 +1,6 @@
 use std::env;
 
-// Import utilities that are not necessarily commands
-mod utils;
+mod utils; // Import utilities that are not necessarily commands
 use crate::utils::terminal::*;
 use crate::utils::installer;
 use crate::utils::setup;
