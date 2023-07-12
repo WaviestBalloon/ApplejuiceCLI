@@ -1,27 +1,37 @@
 use std::env;
 use std::process;
 
+// Import utilities that are not necessarily commands
 mod utils;
+use crate::utils::terminal::error;
+use crate::utils::terminal::warning;
 use crate::utils::installer;
 use crate::utils::setup;
+mod args; // Import modules which act as a handler for certain command parameters
+use crate::args::initialise;
 
 fn main() {
-	setup::confirm_applejuice_data_folder_existence();
 	let args: Vec<String> = env::args().collect();
-	
+	if setup::confirm_applejuice_data_folder_existence() == false {
+		warning(format!("Applejuice has not been initialised yet!\nRun '{} --init' to initialise Applejuice.\n", args[0]));
+	}
 	if args.len() == 1 {
-		println!("No command line arguments provided!\nRun '{} --help' for more information.", args[0]);
-		process::exit(1);
+		error(format!("No command line arguments provided!\nRun '{} --help' for more information.", args[0]));
 	}
 
 	let command = &args[1];
-	let command_clean = &args[1].replace("--", "");
+	let command_clean: &str = &args[1].replace("--", "");
 	let arguments = &args[2..];
 	
-	if command_clean == "install" {
-		installer::main(arguments);
-	} else {
-		println!("Unknown command '{}'\nRun '{} --help' for more information.", command, args[0]);
-		process::exit(1);
+	match command_clean {
+		"help" => {
+			println!("Applejuice CLI\n\nUsage: {} [command]\n\nCommands:\n\t--help\t\tDisplays this help message\n\t--install\tInstalls Roblox Client or Roblox Studio\n\t--init\t\tInitialises Applejuice", args[0]);
+		},
+		"init" => initialise::main(),
+		"install" => installer::main(arguments),
+		_ => {
+			println!("Unknown command '{}'\nRun '{} --help' for more information.", command, args[0]);
+			process::exit(1);
+		}
 	}
 }

@@ -1,5 +1,4 @@
 use std::process;
-use std::fs;
 static LATEST_VERSION: &str = "https://setup.rbxcdn.com/version";
 static DEPLOYMENT_URL_CLIENT: &str = "https://setup.rbxcdn.com/version-{}-Roblox.exe";
 static DEPLOYMENT_URL_STUDIO: &str = "https://setup.rbxcdn.com/RobloxStudioLauncherBeta.exe";
