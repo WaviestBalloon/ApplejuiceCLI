@@ -34,7 +34,6 @@ fn install_studio() {
 	let wine_command: String = format!("wine {}{}", setup::get_applejuice_dir(), "/cache/RobloxStudio.exe");
 	// TODO: Actually download thy studio
 
-	println!("Running: {}", curl_command);
 	let command = process::Command::new("sh")
 		.arg("-c")
 		.arg(curl_command)
@@ -49,7 +48,7 @@ fn install_studio() {
 		success("Downloaded Studio executable!");
 	}
 
-	println!("Launching Studio installer with Wine...\nRunning: {}", wine_command);
+	println!("Launching Studio installer with Wine...");
 	let command = process::Command::new("sh")
 		.arg("-c")
 		.arg(wine_command)
