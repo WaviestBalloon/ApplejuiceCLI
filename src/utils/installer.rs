@@ -6,14 +6,37 @@ static DEPLOYMENT_URL_STUDIO: &str = "https://setup.rbxcdn.com/RobloxStudioLaunc
 
 const HELP_TEXT: &str = "\nUsage: --install [type]\nInstalls Roblox Client or Roblox Studio\n\nOptions:\n\tclient\tInstalls the Roblox Client\n\tstudio\tInstalls Roblox Studio";
 
-#[warn(dead_code)]
-fn get_latest_version_hash() {
-	// TODO
-	// let mut response = reqwest::get(LATEST_VERSION).unwrap();
-	// assert!(response.status().is_success());
-	// let body = response.text().unwrap();
-	// println!("body = {:?}", body);
-	// body
+fn get_latest_version_hash() -> String {
+	let output = process::Command::new("curl")
+		.arg(LATEST_VERSION)
+		.output()
+		.expect("Failed to execute curl command");
+
+	if output.status.success() == false {
+		error(format!("Failed to get the latest available version hash.\ncurl quitted with: {}", output.status));
+	}
+
+	let output_string = String::from_utf8_lossy(&output.stdout);
+	success(format!("Received latest version hash: {}", output_string));
+
+	return output_string.to_string();
+}
+fn get_package_manifest(version_hash: String) -> String {
+	let output = process::Command::new("curl")
+		.arg(format!("https://setup.rbxcdn.com/{}-rbxPkgManifest.txt", version_hash))
+		.output()
+		.expect("Failed to execute curl command");
+
+	if output.status.success() == false {
+		error(format!("Failed to get the rbxPkgManifest.txt.\ncurl quitted with: {}", output.status));
+	} else if String::from_utf8_lossy(&output.stdout).contains("Error") {
+		error(format!("Unexpected server response when getting the rbxPkgManifest information.\nResponse: {}", String::from_utf8_lossy(&output.stdout)));
+	}
+
+	let output_string = String::from_utf8_lossy(&output.stdout);
+	let output_string_clean = output_string.to_string();
+
+	return output_string_clean;
 }
 
 fn install_client() {
@@ -29,12 +52,19 @@ fn install_client() {
 	process::exit(1);
 }
 fn install_studio() {
-	println!("Downloading Roblox Studio from '{}'...", DEPLOYMENT_URL_STUDIO);
+	//println!("Downloading Roblox Studio from '{}'...", DEPLOYMENT_URL_STUDIO);
+	println!("Installing Roblox Studio...");
 	let curl_command: String = format!("curl {} -o {}{}", DEPLOYMENT_URL_STUDIO, setup::get_applejuice_dir(), "/cache/RobloxStudio.exe");
 	let wine_command: String = format!("wine {}{}", setup::get_applejuice_dir(), "/cache/RobloxStudio.exe");
-	// TODO: Actually download thy studio
 
-	let command = process::Command::new("sh")
+	warning("No version hash was provided, resolving the latest version hash...");
+	let version_hash = get_latest_version_hash();
+	println!("Resolving package manifest for version hash {}...", version_hash);
+	let package_manifest = get_package_manifest(version_hash);
+	success("Obtained rbxPkgManifest.txt successfully");
+	//error("dbg test ends here");
+
+	/*let command = process::Command::new("sh")
 		.arg("-c")
 		.arg(curl_command)
 		.output()
@@ -44,9 +74,8 @@ fn install_studio() {
 
 	if command.status.success() == false {
 		error(format!("Stderr was detected, download has failed.\ncurl quitted with: {}", command.status));
-	} else {
-		success("Downloaded Studio executable!");
 	}
+	success("Downloaded Studio executable!");
 
 	println!("Launching Studio installer with Wine...");
 	let command = process::Command::new("sh")
@@ -60,7 +89,7 @@ fn install_studio() {
 		error(format!("Stderr was detected, download has failed.\nWine quitted with: {}", command.status));
 	} else {
 		success("Studio has been installed!");
-	}
+	}*/
 }
 
 pub fn main(parsed_args: &[String]) {
