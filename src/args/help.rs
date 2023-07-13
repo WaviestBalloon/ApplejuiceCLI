@@ -1,3 +1,5 @@
+use crate::utils::terminal::*;
+
 pub fn main() {
-	println!("not implimented yet!");
+	error("not implimented yet!");
 }

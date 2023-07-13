@@ -9,7 +9,7 @@ use crate::args::initialise;
 
 fn main() {
 	let args: Vec<String> = env::args().collect();
-	if setup::confirm_applejuice_data_folder_existence() == false {
+	if setup::confirm_applejuice_data_folder_existence() == false { // Initialisation warning
 		warning(format!("Applejuice has not been initialised yet!\nRun '{} --init' to initialise Applejuice.\n", args[0]));
 	}
 	if args.len() == 1 {
@@ -17,7 +17,7 @@ fn main() {
 	}
 
 	let command = &args[1];
-	let command_clean: &str = &args[1].replace("--", "");
+	let command_clean: &str = &args[1].replace("--", ""); // TODO: collect different params and their values
 	let arguments = &args[2..];
 	
 	match command_clean {

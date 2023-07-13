@@ -61,37 +61,11 @@ fn install_studio() {
 	println!("Resolving package manifest for version hash {}...", version_hash);
 	let package_manifest = get_package_manifest(version_hash);
 	success("Obtained rbxPkgManifest.txt successfully");
-	//error("dbg test ends here");
 
-	/*let command = process::Command::new("sh")
-		.arg("-c")
-		.arg(curl_command)
-		.output()
-		.expect("failed to execute process");
-
-	//success(format!("{:?}", command.stdout));
-
-	if command.status.success() == false {
-		error(format!("Stderr was detected, download has failed.\ncurl quitted with: {}", command.status));
-	}
-	success("Downloaded Studio executable!");
-
-	println!("Launching Studio installer with Wine...");
-	let command = process::Command::new("sh")
-		.arg("-c")
-		.arg(wine_command)
-		.output()
-		.expect("failed to execute process");
-
-	if command.status.success() == false {
-		warning(format!("{}", String::from_utf8_lossy(&command.stderr)));
-		error(format!("Stderr was detected, download has failed.\nWine quitted with: {}", command.status));
-	} else {
-		success("Studio has been installed!");
-	}*/
+	error("not implimented yet!")
 }
 
-pub fn main(parsed_args: &[String]) {
+pub fn main(parsed_args: &[String]) { // TODO: Move this func into args mods instead of utils mods
 	if parsed_args.len() == 0 {
 		error(format!("No command line arguments provided for install!{}", HELP_TEXT));
 		process::exit(1);
