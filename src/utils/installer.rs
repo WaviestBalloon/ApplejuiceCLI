@@ -34,9 +34,8 @@ fn get_package_manifest(version_hash: String) -> String {
 	}
 
 	let output_string = String::from_utf8_lossy(&output.stdout);
-	let output_string_clean = output_string.to_string();
 
-	return output_string_clean;
+	return output_string.to_string();
 }
 
 fn install_client() {
