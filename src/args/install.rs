@@ -5,8 +5,8 @@ use crate::setup;
 const HELP_TEXT: &str = "\nUsage: --install [type]\nInstalls Roblox Client or Roblox Studio\n\nOptions:\n\tclient\tInstalls the Roblox Client\n\tstudio\tInstalls Roblox Studio";
 
 fn install_client() {
+	warning("Roblox Player now has Byfron, anti-tamper software, as of now it is not currently possible to play Roblox Player on Linux due to Wine being blacklisted. (This has been confirmed to be temporary)");
 	error("not implimented yet!");
-	process::exit(1);
 }
 fn install_studio(version_hash_arg: Option<String>) {
 	if version_hash_arg.is_some() == false {
