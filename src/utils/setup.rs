@@ -2,7 +2,7 @@ use std::fs;
 use crate::utils::terminal::*;
 
 pub fn confirm_applejuice_data_folder_existence() -> bool { // Check whether the .applejuice data folder exists under $HOME/.applejuice
-	let path = format!("{}/{}", env!("HOME"), ".applejuice");
+	let path = format!("{}/.local/share/applejuice", env!("HOME"));
 
 	match fs::metadata(path.clone()) {
 		Ok(_) => {
@@ -15,7 +15,7 @@ pub fn confirm_applejuice_data_folder_existence() -> bool { // Check whether the
 }
 
 pub fn construct_applejuice_data_folder() { // Construct the .applejuice data folder, part of initialisation
-	let path: String = format!("{}/{}", env!("HOME"), ".applejuice");
+	let path: String = format!("{}/.local/share/applejuice", env!("HOME"));
 	println!("Creating the Applejuice data directory at '{}'", path);
 
 	match fs::create_dir(path.clone()) {
@@ -30,7 +30,7 @@ pub fn construct_applejuice_data_folder() { // Construct the .applejuice data fo
 }
 
 pub fn confirm_existence(providedpath: &str) -> bool { // Check whether a item exists in the .applejuice data folder or a ancestor to it
-	let path = format!("{}/{}/{}", env!("HOME"), ".applejuice", providedpath);
+	let path = format!("{}/.local/share/applejuice/{}", env!("HOME"), providedpath);
 
 	match fs::metadata(path.clone()) {
 		Ok(_) => {
@@ -43,7 +43,7 @@ pub fn confirm_existence(providedpath: &str) -> bool { // Check whether a item e
 }
 
 pub fn create_dir(providedpath: &str) -> bool { // Create a directory in the .applejuice data folder or a ancestor to it
-	let path: String = format!("{}/{}/{}", env!("HOME"), ".applejuice", providedpath);
+	let path: String = format!("{}/.local/share/applejuice/{}", env!("HOME"), providedpath);
 
 	match fs::create_dir(path.clone()) {
 		Ok(_) => {
@@ -56,5 +56,5 @@ pub fn create_dir(providedpath: &str) -> bool { // Create a directory in the .ap
 }
 
 pub fn get_applejuice_dir() -> String { // Returns where the .applejuice data folder *should* be
-	return format!("{}/{}", env!("HOME"), ".applejuice");
+	return format!("{}/.local/share/applejuice", env!("HOME"));
 }
