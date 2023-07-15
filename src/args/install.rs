@@ -36,8 +36,8 @@ fn install_studio(version_hash_arg: Option<String>) {
 	}
 	
 	installation::write_appsettings_xml(folder_path.clone());
-	println!();
 	let cache_path = installation::download_deployment(binary_type, version_hash);
+	println!();
 	installation::extract_deployment_zips(binary_type, cache_path, folder_path);
 	success("Extracted deployment successfully");
 }
