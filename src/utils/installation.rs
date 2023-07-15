@@ -106,15 +106,14 @@ pub fn download_deployment(binary: &str, version_hash: String) -> String {
 	let root_path = setup::get_applejuice_dir();
 	let temp_path = format!("{}/cache/{}-download", root_path, version_hash);
 
-	setup::create_dir(&format!("cache/{}-download", version_hash));
-	success("Constructed cache directory");
-
-	status("Downloading deployment...");
-	status(format!("Using cache directory: {temp_path}"));
 	if setup::confirm_existence(&temp_path) {
 		warning(format!("{} is already downloaded. Skipping download.", version_hash));
 		return temp_path;
 	}
+	setup::create_dir(&format!("cache/{}-download", version_hash));
+	success("Constructed cache directory");
+	status("Downloading deployment...");
+	status(format!("Using cache directory: {temp_path}"));
 	
 	let client = reqwest::blocking::Client::new();
 	let bindings: &[_] = if binary == "Player" { &PLAYER_EXTRACT_BINDINGS } else { &STUDIO_EXTRACT_BINDINGS };
