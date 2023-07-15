@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
-echo "Hello! This is the Applejuice CLI installer, keep in mind that this is still in development and may not work as expected.\nFurthermore, this installer will require sudo privileges to install the CLI to /usr/local/bin."
+echo "Hello! This is the Applejuice CLI installer, keep in mind that this is still in development and may not work as expected.
+Furthermore, this installer will require sudo privileges to install the CLI to /usr/local/bin."
 echo ""
 
 echo "Moving to project directory..."
