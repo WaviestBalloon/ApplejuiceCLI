@@ -15,15 +15,15 @@ fn install_studio(version_hash_arg: Option<String>) {
 	let channel: &str = "LIVE"; // TODO: Make this configurable
 	let version_hash: String = version_hash_arg.unwrap_or_else(|| installation::get_latest_version_hash());
 
-	println!("Resolving package manifest for version hash {}...", version_hash);
+	status(format!("Resolving package manifest for version hash {}...", version_hash));
 	let package_manifest = installation::get_package_manifest(version_hash.clone());
 	success("Obtained rbxPkgManifest.txt successfully");
 
-	println!("Parsing package manifest...");
+	status("Parsing package manifest...");
 	let mut package_manifest_parsed: Vec<&str> = package_manifest.split("\n").collect();
 	package_manifest_parsed.remove(package_manifest_parsed.len() - 1); // Remove last element which is an empty string
 	let binary_type = installation::get_binary_type(package_manifest_parsed);
-	println!("Discovered Binary type: {}", binary_type);
+	status(format!("Discovered Binary type: {}", binary_type));
 
 	let folder_path = format!("{}/roblox/versions/{}/{}/{}", setup::get_applejuice_dir(), channel, binary_type, version_hash.to_string());
 	match fs::create_dir_all(folder_path.clone()) { // TODO: Move this into crate::setup::create_dir
@@ -35,9 +35,11 @@ fn install_studio(version_hash_arg: Option<String>) {
 		}
 	}
 	
-	
-
-	error("not implimented yet!");
+	installation::write_appsettings_xml(folder_path.clone());
+	println!();
+	let cache_path = installation::download_deployment(binary_type, version_hash);
+	installation::extract_deployment_zips(binary_type, cache_path, folder_path);
+	success("Extracted deployment successfully");
 }
 
 pub fn main(parsed_args: &[String]) { // TODO: Move this func into args mods instead of utils mods

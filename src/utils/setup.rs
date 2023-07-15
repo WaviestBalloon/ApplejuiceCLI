@@ -30,7 +30,10 @@ pub fn construct_applejuice_data_folder() { // Construct the .applejuice data fo
 }
 
 pub fn confirm_existence(providedpath: &str) -> bool { // Check whether a item exists in the .applejuice data folder or a ancestor to it
-	let path = format!("{}/.local/share/applejuice/{}", env!("HOME"), providedpath);
+	let mut path = format!("{}/.local/share/applejuice/{}", env!("HOME"), providedpath);
+	if providedpath.contains(get_applejuice_dir().to_string().as_str()) { // Sometimes we provide the EXACT path, so we need to check for that and overwrite the other exact path
+		path = providedpath.to_string();
+	}
 
 	match fs::metadata(path.clone()) {
 		Ok(_) => {
@@ -43,9 +46,12 @@ pub fn confirm_existence(providedpath: &str) -> bool { // Check whether a item e
 }
 
 pub fn create_dir(providedpath: &str) -> bool { // Create a directory in the .applejuice data folder or a ancestor to it
-	let path: String = format!("{}/.local/share/applejuice/{}", env!("HOME"), providedpath);
+	let mut path = format!("{}/.local/share/applejuice/{}", env!("HOME"), providedpath);
+	if providedpath.contains(get_applejuice_dir().to_string().as_str()) { // Sometimes we provide the EXACT path, so we need to check for that and overwrite the other exact path
+		path = providedpath.to_string();
+	}
 
-	match fs::create_dir(path.clone()) {
+	match fs::create_dir_all(path.clone()) {
 		Ok(_) => {
 			return true;
 		},

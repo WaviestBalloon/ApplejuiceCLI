@@ -1,8 +1,9 @@
-use std::process;
+use std::{process, fs};
 use crate::utils::terminal::*;
+
+use super::setup;
 static LATEST_VERSION: &str = "https://setup.rbxcdn.com/version";
-static DEPLOYMENT_URL_CLIENT: &str = "https://setup.rbxcdn.com/version-{}-Roblox.exe";
-static DEPLOYMENT_URL_STUDIO: &str = "https://setup.rbxcdn.com/RobloxStudioLauncherBeta.exe";
+static DEPLOYMENT_CDN: &str = "https://setup.rbxcdn.com/";
 
 static PLAYER_EXTRACT_BINDINGS: [(&'static str, &'static str); 20] = [
 	("RobloxApp.zip", ""),
@@ -76,19 +77,104 @@ pub fn get_latest_version_hash() -> String {
 
 	return output_string.to_string();
 }
+
 pub fn get_binary_type(package_manifest: Vec<&str>) -> &str {
 	let mut binary: &str = "";
 	for package in package_manifest {
 		let package_str = package.to_string();
 		if package_str.contains("RobloxApp.zip") {
-			binary = "WindowsPlayer";
+			binary = "Player";
 		} else if package_str.contains("RobloxStudio.zip") {
-			binary = "WindowsStudio";
+			binary = "Studio";
 		}
 	}
 
 	return binary;
 }
+
+pub fn write_appsettings_xml(path: String) {
+	fs::write(format!("{}/AppSettings.xml", path), "\
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<Settings>
+	<ContentFolder>content</ContentFolder>
+	<BaseUrl>http://www.roblox.com</BaseUrl>
+</Settings>\
+").expect("Failed to write AppSettings.xml");
+}
+
+pub fn download_deployment(binary: &str, version_hash: String) -> String {
+	let root_path = setup::get_applejuice_dir();
+	let temp_path = format!("{}/cache/{}-download", root_path, version_hash);
+
+	setup::create_dir(&format!("cache/{}-download", version_hash));
+	success("Constructed cache directory");
+
+	status("Downloading deployment...");
+	status(format!("Using cache directory: {temp_path}"));
+	if setup::confirm_existence(&temp_path) {
+		warning(format!("{} is already downloaded. Skipping download.", version_hash));
+		return temp_path;
+	}
+	
+	let client = reqwest::blocking::Client::new();
+	let bindings: &[_] = if binary == "Player" { &PLAYER_EXTRACT_BINDINGS } else { &STUDIO_EXTRACT_BINDINGS };
+	for (index, (package, _path)) in bindings.iter().enumerate() {
+		let start_epoch = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
+		statusdownload(format!("Downloading Files (Working on {package})"));
+
+		let mut response = client.get(format!("{}{}-{}", DEPLOYMENT_CDN, version_hash, package)).send().unwrap();
+		let path: std::path::PathBuf = format!("{}/{}", temp_path, package).into();
+		std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+		let mut file = std::fs::File::create(path).unwrap();
+		std::io::copy(&mut response, &mut file).unwrap();
+
+		/*let output = process::Command::new("curl")
+			.arg(format!("{}{}-{}", DEPLOYMENT_CDN, version_hash, package))
+			.arg("-o")
+			.arg(format!("{}/{}/{}", root_path, temp_path, package))
+			.output()
+			.expect("Failed to execute curl command");*/
+
+		let end_epoch = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
+		let elapsed = end_epoch - start_epoch;
+		let percentage = ((index as f32 + 1.0) / bindings.len() as f32 * 100.0) as u64;
+		statusprogress(format!("Took {} seconds - {}% completed", elapsed, percentage));
+	}
+
+	success("All compressed files downloaded, expanding files...".to_string());
+	return temp_path; // Return the cache path to continue with extraction
+}
+
+pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path: String) {
+	let bindings: &[_] = if binary == "Player" { &PLAYER_EXTRACT_BINDINGS } else { &STUDIO_EXTRACT_BINDINGS };
+	for (index, (package, path)) in bindings.iter().enumerate() {
+		let start_epoch = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
+		status(format!("Extracting Files (Working on {package})"));
+
+		if setup::confirm_existence(&format!("{}/{}", extraction_path, path)) {
+			warning(format!("{} is already extracted. Skipping extraction.", package));
+			continue;
+		}
+
+		setup::create_dir(&format!("{}/{}", extraction_path, path));
+		let output = process::Command::new("unzip")
+			.arg(format!("{}/{}", temp_path, package))
+			.arg("-d")
+			.arg(format!("{}/{}", extraction_path, path))
+			.output()
+			.expect("Failed to execute unzip command");
+
+		if output.status.success() == false {
+			warning(format!("Failed to extract {}! Is something corrupted? Did you stop a download and cache is stuck with incomplete files? (Use --purgecache)\nError: {}", package, String::from_utf8_lossy(&output.stderr)));
+		}
+
+		let end_epoch = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
+		let elapsed = end_epoch - start_epoch;
+		let percentage = ((index as f32 + 1.0) / bindings.len() as f32 * 100.0) as u64;
+		statusprogress(format!("Took {} seconds - {}% completed", elapsed, percentage));
+	}
+}
+
 pub fn get_package_manifest(version_hash: String) -> String {
 	let output = process::Command::new("curl")
 		.arg(format!("https://setup.rbxcdn.com/{}-rbxPkgManifest.txt", version_hash))
