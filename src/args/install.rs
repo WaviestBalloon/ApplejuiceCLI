@@ -42,10 +42,9 @@ fn install_studio(version_hash_arg: Option<String>) {
 	success("Extracted deployment successfully");
 }
 
-pub fn main(parsed_args: &[String]) { // TODO: Move this func into args mods instead of utils mods
+pub fn main(parsed_args: &[String]) {
 	if parsed_args.len() == 0 {
 		error(format!("No command line arguments provided for install!{}", HELP_TEXT));
-		process::exit(1);
 	}
 	let install_type: &str = &parsed_args[0];
 
@@ -54,7 +53,6 @@ pub fn main(parsed_args: &[String]) { // TODO: Move this func into args mods ins
 		"studio" => install_studio(parsed_args.get(1).cloned()),
 		_ => {
 			error(format!("Unknown type to install '{}'{}", parsed_args[0], HELP_TEXT));
-			process::exit(1);
 		}
 	}
 }

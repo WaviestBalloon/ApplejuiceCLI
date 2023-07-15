@@ -117,9 +117,11 @@ pub fn download_deployment(binary: &str, version_hash: String) -> String {
 	
 	let client = reqwest::blocking::Client::new();
 	let bindings: &[_] = if binary == "Player" { &PLAYER_EXTRACT_BINDINGS } else { &STUDIO_EXTRACT_BINDINGS };
+	status(format!("{} files will be downloaded from {}!", bindings.len(), DEPLOYMENT_CDN));
+
 	for (index, (package, _path)) in bindings.iter().enumerate() {
 		let start_epoch = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
-		statusdownload(format!("Downloading Files (Working on {package})"));
+		status(format!("Downloading {package}..."));
 
 		let mut response = client.get(format!("{}{}-{}", DEPLOYMENT_CDN, version_hash, package)).send().unwrap();
 		let path: std::path::PathBuf = format!("{}/{}", temp_path, package).into();
@@ -148,14 +150,16 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 	let bindings: &[_] = if binary == "Player" { &PLAYER_EXTRACT_BINDINGS } else { &STUDIO_EXTRACT_BINDINGS };
 	for (index, (package, path)) in bindings.iter().enumerate() {
 		let start_epoch = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
-		status(format!("Extracting Files (Working on {package})"));
+		status(format!("Extracting {package}..."));
 
-		if setup::confirm_existence(&format!("{}/{}", extraction_path, path)) {
+		if setup::confirm_existence(&format!("{}/{}", extraction_path, path)) && path.is_empty() == false {
 			warning(format!("{} is already extracted. Skipping extraction.", package));
 			continue;
 		}
-
-		setup::create_dir(&format!("{}/{}", extraction_path, path));
+		if path.to_string() != extraction_path {
+			status(format!("Creating directory {}/{}", extraction_path, path));
+			setup::create_dir(&format!("{}/{}", extraction_path, path));
+		}
 		let output = process::Command::new("unzip")
 			.arg(format!("{}/{}", temp_path, package))
 			.arg("-d")
@@ -163,8 +167,8 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 			.output()
 			.expect("Failed to execute unzip command");
 
-		if output.status.success() == false {
-			warning(format!("Failed to extract {}! Is something corrupted? Did you stop a download and cache is stuck with incomplete files? (Use --purgecache)\nError: {}", package, String::from_utf8_lossy(&output.stderr)));
+		if output.status.success() == false { // TODO FIX DAMNIT
+			//error(format!("Failed to extract {}! Is something corrupted? Did you stop a download and cache is stuck with incomplete files? (Use --purgecache)\nError: {}", package, String::from_utf8_lossy(&output.stderr)));
 		}
 
 		let end_epoch = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();

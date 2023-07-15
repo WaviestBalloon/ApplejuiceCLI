@@ -6,6 +6,17 @@ echo ""
 echo "Moving to project directory..."
 cd $( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
+while true; do
+	read -p "This clone might be out of date.
+Do you want to pull the latest changes from the repository? (y/n): " yn
+	case $yn in
+		[Yy]* ) git pull; break;;
+		[Nn]* ) break;;
+		* ) echo "Please answer yes or no.";;
+	esac
+done
+
+
 if [[ $EUID -eq 0 ]]; then
 	echo "This script is restricted to run as a non-root user only. Do not run as root or sudo."
 	exit 1

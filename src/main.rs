@@ -22,7 +22,7 @@ fn main() {
 		"help" => args::help::main(),
 		"init" => args::initialise::main(),
 		"install" => args::install::main(arguments),
-		"purgecache" => args::purgecache::main(),
+		"purge" => args::purge::main(arguments),
 		_ => {
 			error(format!("Unknown command parameter: '{}'\nRun '{} --help' for more information.", command, args[0]));
 		}

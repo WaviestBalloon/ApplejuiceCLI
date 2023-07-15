@@ -14,12 +14,12 @@ pub fn success<S: AsRef<str>>(message: S) {
 }
 
 pub fn status<S: AsRef<str>>(message: S) {
-	println!("\x1b[94m\x1b[1m      -\x1b[0m {}", message.as_ref());
+	println!("\x1b[94m\x1b[1m      •\x1b[0m {}", message.as_ref());
 }
 
 pub fn statusdownload<S: AsRef<str>>(message: S) {
-	print!("\x1b[94m\x1b[1m      -\x1b[0m {}", message.as_ref());
+	print!("\x1b[94m\x1b[1m      •\x1b[0m {}", message.as_ref());
 }
 pub fn statusprogress<S: AsRef<str>>(message: S) {
-	println!("\t\x1b[94m\x1b[1m(✓ {})\x1b[0m", message.as_ref());
+	println!("\x1b[94m\x1b[1m       🡲 {}\x1b[0m", message.as_ref());
 }
