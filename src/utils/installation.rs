@@ -2,7 +2,8 @@ use std::{process, fs};
 use crate::utils::terminal::*;
 
 use super::setup;
-static LATEST_VERSION: &str = "https://setup.rbxcdn.com/version";
+static LATEST_VERSION_PLAYER: &str = "https://setup.rbxcdn.com/version";
+static LATEST_VERSION_STUDIO: &str = "https://setup.rbxcdn.com/versionQTStudio";
 static DEPLOYMENT_CDN: &str = "https://setup.rbxcdn.com/";
 
 static PLAYER_EXTRACT_BINDINGS: [(&'static str, &'static str); 20] = [
@@ -62,9 +63,18 @@ static STUDIO_EXTRACT_BINDINGS: [(&'static str, &'static str); 32] = [
 	("extracontent-models.zip", "ExtraContent/models/")
 ];
 
-pub fn get_latest_version_hash() -> String {
+pub fn get_latest_version_hash(version_type: &str) -> String {
+	let mut version_url: &str = "";
+	if version_type == "Player" {
+		version_url = LATEST_VERSION_PLAYER;
+	} else if version_type == "Studio" {
+		version_url = LATEST_VERSION_STUDIO;
+	} else {
+		error(format!("Invalid version type: {}", version_type));
+	}
+
 	let output = process::Command::new("curl")
-		.arg(LATEST_VERSION)
+		.arg(version_url)
 		.output()
 		.expect("Failed to execute curl command");
 

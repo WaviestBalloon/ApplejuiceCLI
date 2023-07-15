@@ -13,7 +13,7 @@ fn install_studio(version_hash_arg: Option<String>) {
 		warning("No version hash provided, getting latest version hash instead...");
 	}
 	let channel: &str = "LIVE"; // TODO: Make this configurable
-	let version_hash: String = version_hash_arg.unwrap_or_else(|| installation::get_latest_version_hash());
+	let version_hash: String = version_hash_arg.unwrap_or_else(|| installation::get_latest_version_hash("Studio"));
 
 	status(format!("Resolving package manifest for version hash {}...", version_hash));
 	let package_manifest = installation::get_package_manifest(version_hash.clone());
