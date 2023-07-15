@@ -98,6 +98,9 @@ pub fn get_binary_type(package_manifest: Vec<&str>) -> &str {
 			binary = "Studio";
 		}
 	}
+	if binary == "" {
+		error("Could not determine binary type for provided package menifest!")
+	}
 
 	return binary;
 }
