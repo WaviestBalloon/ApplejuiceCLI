@@ -1,4 +1,4 @@
-use std::{process, fs};
+use std::fs;
 use crate::utils::{terminal::*, installation};
 use crate::setup;
 
