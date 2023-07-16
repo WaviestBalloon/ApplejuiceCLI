@@ -16,7 +16,6 @@ pub fn main(parsed_args: &[String]) {
 
 			if setup::confirm_existence("cache") {
 				let paths = read_dir(format!("{}/cache", setup::get_applejuice_dir())).unwrap();
-
 				if paths.count() == 0 {
 					error("Cache directory is empty!");
 				}
@@ -36,7 +35,6 @@ pub fn main(parsed_args: &[String]) {
 				error("Cache directory does not exist! Did you forget to initialise?");
 			}
 
-			println!();
 			success("Purged cache successfully");
 		},
 		"installs" => {
@@ -44,7 +42,6 @@ pub fn main(parsed_args: &[String]) {
 
 			if setup::confirm_existence("roblox") {
 				let paths = read_dir(format!("{}/roblox", setup::get_applejuice_dir())).unwrap();
-
 				if paths.count() == 0 {
 					error("Roblox directory is empty!");
 				}
@@ -57,6 +54,9 @@ pub fn main(parsed_args: &[String]) {
 						error(format!("Failed to remove the Roblox directory!\nError: {}", errmsg));
 					}
 				}
+
+				status("Searching for remnants entries in config...");
+				// TODO: Remove remnants from config
 				
 				setup::create_dir("roblox");
 				success("Created Roblox directory");
@@ -64,7 +64,6 @@ pub fn main(parsed_args: &[String]) {
 				error("Roblox directory does not exist! Did you forget to initialise?");
 			}
 
-			println!();
 			success("Purged Roblox installations successfully");
 		},
 		_ => {

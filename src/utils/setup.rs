@@ -16,12 +16,16 @@ pub fn confirm_applejuice_data_folder_existence() -> bool { // Check whether the
 
 pub fn construct_applejuice_data_folder() { // Construct the .applejuice data folder, part of initialisation
 	let path: String = format!("{}/.local/share/applejuice", env!("HOME"));
-	println!("Creating the Applejuice data directory at '{}'", path);
+	status(format!("Creating the Applejuice data directory at '{}'", path));
 
 	match fs::create_dir(path.clone()) {
 		Ok(_) => { },
-		Err(_) => {
-			error(format!("Failed to create the Applejuice data directory, raw: '{}'", path));
+		Err(errmsg) => {
+			if errmsg.kind() == std::io::ErrorKind::AlreadyExists {
+				warning(format!("The Applejuice data directory already exists at '{}', skipping directory construction...", path));
+			} else {
+				error(format!("Failed to create the Applejuice data directory, raw: '{}'\nError: {}", path, errmsg));
+			}
 		}
 	}
 

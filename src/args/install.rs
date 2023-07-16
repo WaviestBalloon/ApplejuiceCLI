@@ -1,6 +1,6 @@
 use std::fs;
-use crate::utils::{terminal::*, installation};
-use crate::setup;
+use crate::utils::{terminal::*, installation, setup, configuration};
+use serde_json;
 
 const HELP_TEXT: &str = "\nUsage: --install [type]\nInstalls Roblox Client or Roblox Studio\n\nOptions:\n\tclient\tInstalls the Roblox Client\n\tstudio\tInstalls Roblox Studio";
 
@@ -36,9 +36,18 @@ fn install_studio(version_hash_arg: Option<String>) {
 	}
 	
 	installation::write_appsettings_xml(folder_path.clone());
-	let cache_path = installation::download_deployment(binary_type, version_hash);
-	println!();
-	installation::extract_deployment_zips(binary_type, cache_path, folder_path);
+	let cache_path = installation::download_deployment(binary_type, version_hash.clone());
+
+	installation::extract_deployment_zips(binary_type, cache_path, folder_path.clone());
+
+	configuration::update_config(serde_json::json!({
+		format!("{}", version_hash): {
+			"version": version_hash,
+			"channel": channel,
+			"binary_type": binary_type,
+			"install_path": folder_path.to_string()
+		}
+	}), &version_hash);
 	success("Extracted deployment successfully");
 }
 

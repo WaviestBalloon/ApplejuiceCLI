@@ -1,8 +1,7 @@
-use std::fs;
-
 use crate::utils::setup;
 use crate::utils::terminal::*;
 use crate::utils::proton;
+use crate::utils::configuration;
 
 pub fn main() {
 	status("Initialising Applejuice...");
@@ -43,7 +42,7 @@ pub fn main() {
 			statusprogress(key);
 		}
 
-		fs::write(format!("{}/config.json", setup::get_applejuice_dir()), serde_json::to_string_pretty(&detected_installations).unwrap()).expect("Failed to write to config.json");
+		configuration::update_config(detected_installations, "proton_installations");
 		success("config.json updated with Proton paths");
 	}
 

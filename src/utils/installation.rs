@@ -137,6 +137,7 @@ pub fn download_deployment(binary: &str, version_hash: String) -> String {
 		status(format!("Downloading {package}..."));
 
 		let mut response = client.get(format!("{}{}-{}", DEPLOYMENT_CDN, version_hash, package)).send().unwrap();
+
 		let path: std::path::PathBuf = format!("{}/{}", temp_path, package).into();
 		std::fs::create_dir_all(path.parent().unwrap()).unwrap();
 		let mut file = std::fs::File::create(path).unwrap();
@@ -161,6 +162,8 @@ pub fn download_deployment(binary: &str, version_hash: String) -> String {
 
 pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path: String) {
 	let bindings: &[_] = if binary == "Player" { &PLAYER_EXTRACT_BINDINGS } else { &STUDIO_EXTRACT_BINDINGS };
+	status(format!("{} files will be extracted!", bindings.len()));
+
 	for (index, (package, path)) in bindings.iter().enumerate() {
 		let start_epoch = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
 		status(format!("Extracting {package}..."));
@@ -169,7 +172,8 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 			warning(format!("{} is already extracted. Skipping extraction.", package));
 			continue;
 		}
-		if path.to_string() != extraction_path {
+		
+		if path.to_string() != "" {
 			status(format!("Creating directory {}/{}", extraction_path, path));
 			setup::create_dir(&format!("{}/{}", extraction_path, path));
 		}
@@ -180,10 +184,9 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 			.output()
 			.expect("Failed to execute unzip command");
 
-		if output.status.success() == false { // TODO FIX DAMNIT
-			//error(format!("Failed to extract {}! Is something corrupted? Did you stop a download and cache is stuck with incomplete files? (Use --purgecache)\nError: {}", package, String::from_utf8_lossy(&output.stderr)));
-		}
-
+		/*if output.status.success() == false { // TODO FIX DAMNIT
+			warning("status.success() returned false, extraction may have failed");
+		}*/
 		let end_epoch = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
 		let elapsed = end_epoch - start_epoch;
 		let percentage = ((index as f32 + 1.0) / bindings.len() as f32 * 100.0) as u64;
