@@ -94,8 +94,10 @@ pub fn get_binary_type(package_manifest: Vec<&str>) -> &str {
 		let package_str = package.to_string();
 		if package_str.contains("RobloxApp.zip") {
 			binary = "Player";
+			break;
 		} else if package_str.contains("RobloxStudio.zip") {
 			binary = "Studio";
+			break;
 		}
 	}
 	if binary == "" {
@@ -143,13 +145,6 @@ pub fn download_deployment(binary: &str, version_hash: String) -> String {
 		let mut file = std::fs::File::create(path).unwrap();
 		std::io::copy(&mut response, &mut file).unwrap();
 
-		/*let output = process::Command::new("curl")
-			.arg(format!("{}{}-{}", DEPLOYMENT_CDN, version_hash, package))
-			.arg("-o")
-			.arg(format!("{}/{}/{}", root_path, temp_path, package))
-			.output()
-			.expect("Failed to execute curl command");*/
-
 		let end_epoch = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
 		let elapsed = end_epoch - start_epoch;
 		let percentage = ((index as f32 + 1.0) / bindings.len() as f32 * 100.0) as u64;
@@ -177,7 +172,7 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 			status(format!("Creating directory {}/{}", extraction_path, path));
 			setup::create_dir(&format!("{}/{}", extraction_path, path));
 		}
-		let output = process::Command::new("unzip")
+		let _output = process::Command::new("unzip")
 			.arg(format!("{}/{}", temp_path, package))
 			.arg("-d")
 			.arg(format!("{}/{}", extraction_path, path))
