@@ -4,19 +4,9 @@ use serde_json;
 
 const HELP_TEXT: &str = "\nUsage: --install [type]\nInstalls Roblox Client or Roblox Studio\n\nOptions:\n\tclient\tInstalls the Roblox Client\n\tstudio\tInstalls Roblox Studio";
 
-fn install_client() {
-	warning("Roblox Player now has Byfron, anti-tamper software, as of now it is not currently possible to play Roblox Player on Linux due to Wine being blacklisted. (This has been confirmed to be temporary)");
-	error("not implimented yet!");
-}
-fn install_studio(version_hash_arg: Option<String>) {
-	if version_hash_arg.is_some() == false {
-		warning("No version hash provided, getting latest version hash instead...");
-	}
-	let channel: &str = "LIVE"; // TODO: Make this configurable
-	let version_hash: String = version_hash_arg.unwrap_or_else(|| installation::get_latest_version_hash("Studio"));
-
+fn download_and_install(version_hash: &str, channel: &str) {
 	status(format!("Resolving package manifest for version hash {}...", version_hash));
-	let package_manifest = installation::get_package_manifest(version_hash.clone());
+	let package_manifest = installation::get_package_manifest(version_hash.to_string());
 	success("Obtained rbxPkgManifest.txt successfully");
 
 	status("Parsing package manifest...");
@@ -36,7 +26,7 @@ fn install_studio(version_hash_arg: Option<String>) {
 	}
 	
 	installation::write_appsettings_xml(folder_path.clone());
-	let cache_path = installation::download_deployment(binary_type, version_hash.clone());
+	let cache_path = installation::download_deployment(binary_type, version_hash.to_string());
 
 	installation::extract_deployment_zips(binary_type, cache_path, folder_path.clone());
 
@@ -49,6 +39,22 @@ fn install_studio(version_hash_arg: Option<String>) {
 		}
 	}), &version_hash);
 	success("Extracted deployment successfully");
+}
+
+fn install_client() {
+	warning("Roblox Player now has Byfron, anti-tamper software, as of now it is not currently possible to play Roblox Player on Linux due to Wine being blacklisted. (This has been confirmed to be temporary)\n\tInstallation will continue as normal...");
+	
+	let version_hash = installation::get_latest_version_hash("Player");
+	download_and_install(&version_hash, "LIVE");
+}
+fn install_studio(version_hash_arg: Option<String>) {
+	if version_hash_arg.is_some() == false {
+		warning("No version hash provided, getting latest version hash instead...");
+	}
+	let _channel: &str = "LIVE"; // TODO: Make this configurable
+	let version_hash: String = version_hash_arg.unwrap_or_else(|| installation::get_latest_version_hash("Studio"));
+
+	download_and_install(&version_hash, "LIVE");
 }
 
 pub fn main(parsed_args: &[String]) {

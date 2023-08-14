@@ -1,7 +1,10 @@
 #!/bin/bash
 set -e
+git_hash=$(git rev-parse --short HEAD)
 echo "Hello! This is the Applejuice CLI installer, keep in mind that this is still in development and may not work as expected.
 Furthermore, this installer will require sudo privileges to install the CLI to /usr/local/bin."
+echo ""
+echo "Current git hash: #$git_hash"
 echo ""
 
 echo "Moving to project directory..."
@@ -11,9 +14,9 @@ while true; do
 	read -p "This clone might be out of date.
 Do you want to pull the latest changes from the repository? (y/n): " yn
 	case $yn in
-		[Yy]* ) git pull; break;;
+		[Yy]* ) git pull --force; break;;
 		[Nn]* ) break;;
-		* ) echo "Please answer yes or no.";;
+		* ) echo "Please answer y or n.";;
 	esac
 done
 

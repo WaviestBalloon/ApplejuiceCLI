@@ -55,7 +55,7 @@ pub fn main(parsed_args: &[String]) {
 					}
 				}
 
-				status("Searching for remnants entries in config...");
+				status("Searching for remnant entries in config...");
 				// TODO: Remove remnants from config
 				
 				setup::create_dir("roblox");
