@@ -11,8 +11,7 @@ echo "Moving to project directory..."
 cd $( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 while true; do
-	read -p "This clone might be out of date.
-Do you want to pull the latest changes from the repository? (y/n): " yn
+	read -p "Do you want to pull the latest changes from the repository? (y/n): " yn
 	case $yn in
 		[Yy]* ) git pull --force; break;;
 		[Nn]* ) break;;

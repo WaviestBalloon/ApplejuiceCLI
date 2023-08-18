@@ -59,7 +59,7 @@ pub fn create_dir(providedpath: &str) -> bool { // Create a directory in the .ap
 		Ok(_) => {
 			return true;
 		},
-		Err(_) => {
+		Err(error) => {
 			return false;
 		}
 	}

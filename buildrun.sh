@@ -1,6 +1,6 @@
 #!/bin/bash
-set -e
+#set -e
+# Purge cache and installs for testing
+cargo run -- --purge cache
 
-#cargo build
-# Compile and run the CLI
-cargo run -- $@
+RUST_BACKTRACE=1 cargo run -- $@

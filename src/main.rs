@@ -24,6 +24,7 @@ fn main() {
 		"install" => args::install::main(arguments),
 		"purge" => args::purge::main(arguments),
 		"opendata" => args::opendata::main(),
+		"play" => args::play::main(),
 		_ => {
 			error(format!("Unknown command parameter: '{}'\nRun '{} --help' for more information.", command, args[0]));
 		}

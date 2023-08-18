@@ -1,4 +1,3 @@
-use std::fs;
 use crate::utils::{terminal::*, installation, setup, configuration};
 use serde_json;
 
@@ -6,7 +5,7 @@ const HELP_TEXT: &str = "\nUsage: --install [type]\nInstalls Roblox Client or Ro
 
 fn download_and_install(version_hash: &str, channel: &str) {
 	status(format!("Resolving package manifest for version hash {}...", version_hash));
-	let package_manifest = installation::get_package_manifest(version_hash.to_string());
+	let package_manifest = installation::get_package_manifest(version_hash.to_string(), channel.to_string());
 	success("Obtained rbxPkgManifest.txt successfully");
 
 	status("Parsing package manifest...");
@@ -15,18 +14,15 @@ fn download_and_install(version_hash: &str, channel: &str) {
 	let binary_type = installation::get_binary_type(package_manifest_parsed);
 	status(format!("Discovered Binary type: {}", binary_type));
 
-	let folder_path = format!("{}/roblox/versions/{}/{}/{}", setup::get_applejuice_dir(), channel, binary_type, version_hash.to_string());
-	match fs::create_dir_all(folder_path.clone()) { // TODO: Move this into crate::setup::create_dir
-		Ok(_) => {
-			success(format!("Constructed install directory at '{}'", folder_path));
-		},
-		Err(_) => {
-			warning(format!("Failed to create directory at '{}'", folder_path));
-		}
+	let folder_path = format!("{}/roblox/{}/{}/{}", setup::get_applejuice_dir(), channel, binary_type, version_hash.to_string());
+	if setup::create_dir(&folder_path) == true {
+		success(format!("Constructed install directory at '{}'", folder_path));
+	} else {
+		error(format!("Failed to create directory at '{}'", folder_path));
 	}
 	
 	installation::write_appsettings_xml(folder_path.clone());
-	let cache_path = installation::download_deployment(binary_type, version_hash.to_string());
+	let cache_path = installation::download_deployment(binary_type, version_hash.to_string(), channel);
 
 	installation::extract_deployment_zips(binary_type, cache_path, folder_path.clone());
 
@@ -41,18 +37,32 @@ fn download_and_install(version_hash: &str, channel: &str) {
 	success("Extracted deployment successfully");
 }
 
-fn install_client() {
+fn install_client(channel_arg: Option<String>, version_hash_arg: Option<String>) {
+	let version_hash: String;
+	let mut channel: String = "LIVE".to_string();
 	warning("Roblox Player now has Byfron, anti-tamper software, as of now it is not currently possible to play Roblox Player on Linux due to Wine being blacklisted. (This has been confirmed to be temporary)\n\tInstallation will continue as normal...");
 	
-	let version_hash = installation::get_latest_version_hash("Player");
-	download_and_install(&version_hash, "LIVE");
+	if channel_arg.is_some() == false {
+		status("Defaulting to LIVE channel...");
+	} else {
+		channel = channel_arg.unwrap_or_else(|| "LIVE".to_string());
+		status(format!("Using channel: {}", channel));
+	}
+	if version_hash_arg.is_some() == false {
+		status("Getting latest version hash...");
+		version_hash = installation::get_latest_version_hash("Player", &channel);
+	} else {
+		version_hash = version_hash_arg.unwrap();
+	}
+
+	download_and_install(&version_hash, &channel);
 }
-fn install_studio(version_hash_arg: Option<String>) {
+fn install_studio(channel_arg: Option<String>, version_hash_arg: Option<String>) {
 	if version_hash_arg.is_some() == false {
 		warning("No version hash provided, getting latest version hash instead...");
 	}
 	let _channel: &str = "LIVE"; // TODO: Make this configurable
-	let version_hash: String = version_hash_arg.unwrap_or_else(|| installation::get_latest_version_hash("Studio"));
+	let version_hash: String = version_hash_arg.unwrap_or_else(|| installation::get_latest_version_hash("Studio", "LIVE")); // TODO: make studio channels allowed masdnekja;kr;owwk;a :(
 
 	download_and_install(&version_hash, "LIVE");
 }
@@ -64,8 +74,8 @@ pub fn main(parsed_args: &[String]) {
 	let install_type: &str = &parsed_args[0];
 
 	match install_type {
-		"client" => install_client(),
-		"studio" => install_studio(parsed_args.get(1).cloned()),
+		"client" => install_client(parsed_args.get(1).cloned(), parsed_args.get(2).cloned()),
+		"studio" => install_studio(parsed_args.get(1).cloned(), parsed_args.get(2).cloned()),
 		_ => {
 			error(format!("Unknown type to install '{}'{}", parsed_args[0], HELP_TEXT));
 		}
