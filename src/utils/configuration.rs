@@ -18,7 +18,7 @@ pub fn update_config(json: serde_json::Value, config_type: &str) {
 	fs::write(config_path, serde_json::to_string_pretty(&config_json).unwrap()).unwrap();
 }
 
-pub fn _get_config(config_type: &str) -> serde_json::Value {
+pub fn get_config(config_type: &str) -> serde_json::Value {
 	let config_path = format!("{}/config.json", setup::get_applejuice_dir());
 	if setup::confirm_existence(&config_path) == false {
 		warning(format!("Failed to find configuration file at '{}', calling to construct the data folder!", config_path));

@@ -142,7 +142,7 @@ pub fn download_deployment(binary: &str, version_hash: String, channel: &str) ->
 	let bindings: &[_] = if binary == "Player" { &PLAYER_EXTRACT_BINDINGS } else { &STUDIO_EXTRACT_BINDINGS };
 	let deployment_channel = if channel == "LIVE" { LIVE_DEPLOYMENT_CDN.to_string() } else { format!("{CHANNEL_DEPLOYMENT_CDN}{channel}/") };
 
-	println!("{} {} {}", CHANNEL_DEPLOYMENT_CDN, channel, version_hash);
+	//dbg!("{} {} {}", CHANNEL_DEPLOYMENT_CDN, channel, version_hash);
 	status(format!("Using deployment CDN URL: {}", deployment_channel));
 	status(format!("{} files will be downloaded from {}!", bindings.len(), deployment_channel));
 

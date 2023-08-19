@@ -3,13 +3,17 @@ use crate::utils::terminal::*;
 use crate::utils::proton;
 use crate::utils::configuration;
 
+const ASSET_URLS: [&'static str; 2] = [
+	"",
+	""
+];
+
 pub fn main() {
 	status("Initialising Applejuice...");
 
 	if setup::confirm_applejuice_data_folder_existence() {
 		warning("Configuration directory already exists!");
 	} else {
-		println!("Constructing configuration directory...");
 		setup::construct_applejuice_data_folder();
 		success("Constructed configuration directory");
 	}
@@ -30,6 +34,16 @@ pub fn main() {
 	} else {
 		setup::create_dir("roblox");
 		success("Created Roblox directory");
+	}
+
+	if setup::confirm_existence("assets") {
+		warning("Assets directory already exists!");
+	} else {
+		setup::create_dir("assets");
+		success("Created assets directory");
+		status("Downloading assets...");
+		let client = reqwest::blocking::Client::new();
+		
 	}
 
 	status("Finding a Proton installation...");

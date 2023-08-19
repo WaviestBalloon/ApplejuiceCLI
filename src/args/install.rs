@@ -1,3 +1,4 @@
+use std::fs;
 use crate::utils::{terminal::*, installation, setup, configuration};
 use serde_json;
 
@@ -16,7 +17,7 @@ fn download_and_install(version_hash: &str, channel: &str) {
 
 	let folder_path = format!("{}/roblox/{}/{}/{}", setup::get_applejuice_dir(), channel, binary_type, version_hash.to_string());
 	if setup::create_dir(&folder_path) == true {
-		success(format!("Constructed install directory at '{}'", folder_path));
+		status(format!("Constructed install directory at '{}'", folder_path));
 	} else {
 		error(format!("Failed to create directory at '{}'", folder_path));
 	}
@@ -41,7 +42,29 @@ fn download_and_install(version_hash: &str, channel: &str) {
 		}
 	}), &version_hash);
 
-	success(format!("\nRoblox {} has been installed!\n{} {} located in {}", binary_type, binary_type, version_hash, folder_path));
+	status("Creating application shortcut...");
+	status("Resolving Proton instances...");
+	let proton_instances = configuration::get_config("proton_installations");
+	let mut proton_instance: String = "".to_string();
+	for (key, _value) in proton_instances.as_object().unwrap() {
+		proton_instance = key.to_string();
+		break;
+	}
+	if proton_instance == "" {
+		error("Failed to find a Proton instance!");
+	}
+	success(format!("Found Proton instance '{}'", proton_instance));
+	let desktop_shortcut_path = format!("{}/.local/share/applications/roblox-{}.desktop", env!("HOME"), binary_type);
+	let clean_version_hash = version_hash.replace("version", "");
+	let desktop_shortcut_contents = format!("[Desktop Entry]
+Name=Roblox {binary_type} ({channel}-{clean_version_hash})
+Exec=env 
+Icon={}/roblox/{}/Player/{}/Roblox.ico
+Type=Application
+Categories=Game;");
+	fs::write(desktop_shortcut_path, desktop_shortcut_contents).expect("Failed to write desktop shortcut");
+
+	success(format!("Roblox {} has been installed!\n\t{} {} located in {}", binary_type, binary_type, version_hash, folder_path));
 }
 
 fn install_client(channel_arg: Option<String>, version_hash_arg: Option<String>) {
