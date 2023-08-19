@@ -40,7 +40,7 @@ fn download_and_install(version_hash: &str, channel: &str) {
 fn install_client(channel_arg: Option<String>, version_hash_arg: Option<String>) {
 	let version_hash: String;
 	let mut channel: String = "LIVE".to_string();
-	warning("Roblox Player now has Byfron, anti-tamper software, as of now it is not currently possible to play Roblox Player on Linux due to Wine being blacklisted. (This has been confirmed to be temporary)\n\tInstallation will continue as normal...");
+	warning("Roblox Player now has Byfron, anti-tamper software, as of now it is not currently impossible to play Roblox Player on Linux due to Wine being blacklisted. (This has been confirmed to be temporary)\n\tInstallation will continue as normal...");
 	
 	if channel_arg.is_some() == false {
 		status("Defaulting to LIVE channel...");
