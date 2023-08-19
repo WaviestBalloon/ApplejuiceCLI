@@ -70,8 +70,8 @@ fn install_studio(channel_arg: Option<String>, version_hash_arg: Option<String>)
 	if version_hash_arg.is_some() == false {
 		warning("No version hash provided, getting latest version hash instead...");
 	}
-	let _channel: &str = "LIVE"; // TODO: Make this configurable
-	let version_hash: String = version_hash_arg.unwrap_or_else(|| installation::get_latest_version_hash("Studio", "LIVE")); // TODO: make studio channels allowed masdnekja;kr;owwk;a :(
+	let channel: String = channel_arg.unwrap_or_else(|| "LIVE".to_owned());
+	let version_hash: String = version_hash_arg.unwrap_or_else(|| installation::get_latest_version_hash("Studio", &channel));
 
 	download_and_install(&version_hash, "LIVE");
 }
