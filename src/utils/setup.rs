@@ -51,7 +51,7 @@ pub fn confirm_existence(providedpath: &str) -> bool { // Check whether a item e
 
 pub fn create_dir(providedpath: &str) -> bool { // Create a directory in the .applejuice data folder or a ancestor to it
 	let mut path = format!("{}/.local/share/applejuice/{}", env!("HOME"), providedpath);
-	if providedpath.contains(get_applejuice_dir().to_string().as_str()) { // Sometimes we provide the EXACT path, so we need to check for that and overwrite the other exact path
+	if providedpath.contains(&get_applejuice_dir()) { // Sometimes we provide the EXACT path, so we need to check for that and overwrite the other exact path
 		path = providedpath.to_string();
 	}
 

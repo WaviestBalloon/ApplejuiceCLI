@@ -54,12 +54,12 @@ fn download_and_install(version_hash: &str, channel: &str) {
 		error("Failed to find a Proton instance!");
 	}
 	success(format!("Found Proton instance '{}'", proton_instance));
-	let desktop_shortcut_path = format!("{}/.local/share/applications/roblox-{}.desktop", env!("HOME"), binary_type);
-	let clean_version_hash = version_hash.replace("version", "");
+	let clean_version_hash = version_hash.replace("version-", "");
+	let desktop_shortcut_path = format!("{}/.local/share/applications/roblox-{}-{}.desktop", env!("HOME"), binary_type.to_lowercase(), clean_version_hash);
 	let desktop_shortcut_contents = format!("[Desktop Entry]
 Name=Roblox {binary_type} ({channel}-{clean_version_hash})
-Exec=env 
-Icon={}/roblox/{}/Player/{}/Roblox.ico
+Exec=env notify-send \"Launching Roblox {binary_type}\"
+Icon={folder_path}/content/textures/loading/robloxTilt.png
 Type=Application
 Categories=Game;");
 	fs::write(desktop_shortcut_path, desktop_shortcut_contents).expect("Failed to write desktop shortcut");

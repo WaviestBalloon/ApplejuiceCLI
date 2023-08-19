@@ -1,11 +1,13 @@
+use std::fs;
 use crate::utils::setup;
 use crate::utils::terminal::*;
 use crate::utils::proton;
 use crate::utils::configuration;
 
-const ASSET_URLS: [&'static str; 2] = [
-	"",
-	""
+
+const ASSET_URLS: [&str; 2] = [
+	"https://raw.githubusercontent.com/WaviestBalloon/ApplejuiceCLI/main/assets/player.png",
+	"https://raw.githubusercontent.com/WaviestBalloon/ApplejuiceCLI/main/assets/studio.png"
 ];
 
 pub fn main() {
@@ -43,7 +45,16 @@ pub fn main() {
 		success("Created assets directory");
 		status("Downloading assets...");
 		let client = reqwest::blocking::Client::new();
-		
+		for (_index, url) in ASSET_URLS.iter().enumerate() {
+			let filename = url.split("/").last().unwrap().to_lowercase();
+			let output = client.get(url.to_string())
+				.send()
+				.expect("Failed to download asset")
+				.bytes()
+				.unwrap();
+
+			fs::write(format!("{}/assets/{}", setup::get_applejuice_dir(), filename), output).expect("Failed to write asset");
+		}
 	}
 
 	status("Finding a Proton installation...");

@@ -178,7 +178,7 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 		progress_bar::print_progress_bar_info("•", format!("Extracting {package}...").as_str(), progress_bar::Color::Blue, progress_bar::Style::Bold);
 
 		if setup::confirm_existence(&format!("{}/{}", extraction_path, path)) && path.is_empty() == false {
-			progress_bar::print_progress_bar_info("Warning", format!("{} is already extracted. Skipping extraction.", package).as_str(), progress_bar::Color::Red, progress_bar::Style::Bold);
+			progress_bar::print_progress_bar_info("!", format!("{} is already extracted. Skipping extraction.", package).as_str(), progress_bar::Color::Red, progress_bar::Style::Bold);
 			continue;
 		}
 		if path.to_string() != "" { // Create directory if it doesn't exist during extraction
