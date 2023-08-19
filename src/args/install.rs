@@ -57,12 +57,12 @@ fn install_client(channel_arg: Option<String>, version_hash_arg: Option<String>)
 
 	download_and_install(&version_hash, &channel);
 }
-fn install_studio(channel_arg: Option<&str>, version_hash_arg: Option<String>) {
+fn install_studio(channel_arg: Option<String>, version_hash_arg: Option<String>) {
 	if version_hash_arg.is_some() == false {
 		warning("No version hash provided, getting latest version hash instead...");
 	}
-	let channel: &str = if channel_arg.is_some() == false { "LIVE" } else { channel_arg.unwrap() };
-	let version_hash: String = version_hash_arg.unwrap_or_else(|| installation::get_latest_version_hash("Studio", channel));
+	let channel: String = channel_arg.unwrap_or_else(|| "LIVE".to_owned());
+	let version_hash: String = version_hash_arg.unwrap_or_else(|| installation::get_latest_version_hash("Studio", &channel));
 
 	download_and_install(&version_hash, "LIVE");
 }
