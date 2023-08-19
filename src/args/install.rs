@@ -21,11 +21,17 @@ fn download_and_install(version_hash: &str, channel: &str) {
 		error(format!("Failed to create directory at '{}'", folder_path));
 	}
 	
+	status("Writing AppSettings.xml...");
 	installation::write_appsettings_xml(folder_path.clone());
+	status("Downloading Roblox...");
 	let cache_path = installation::download_deployment(binary_type, version_hash.to_string(), channel);
+	success("Downloaded deployment successfully!");
 
+	status("Installing Roblox...");
 	installation::extract_deployment_zips(binary_type, cache_path, folder_path.clone());
+	success("Extracted deployment successfully!");
 
+	status("Updating configuration file...");
 	configuration::update_config(serde_json::json!({
 		format!("{}", version_hash): {
 			"version": version_hash,
@@ -34,13 +40,16 @@ fn download_and_install(version_hash: &str, channel: &str) {
 			"install_path": folder_path.to_string()
 		}
 	}), &version_hash);
-	success("Extracted deployment successfully");
+
+	success(format!("\nRoblox {} has been installed!\n{} {} located in {}", binary_type, binary_type, version_hash, folder_path));
 }
 
 fn install_client(channel_arg: Option<String>, version_hash_arg: Option<String>) {
 	let version_hash: String;
 	let mut channel: String = "LIVE".to_string();
-	warning("Roblox Player now has Byfron, anti-tamper software, as of now it is not currently possible to play Roblox Player on Linux due to Wine being blacklisted. (This has been confirmed to be temporary)\n\tInstallation will continue as normal...");
+	let mut protocol: bool = false;
+	let mut uncap_fps_fflag: bool = false;
+	warning("Roblox Player now has Byfron, anti-tamper software, as of now it is not currently possible to play Roblox Player on Linux due to Wine being blacklisted. (This has been confirmed to be temporary)\n\tPlease view this issue: https://github.com/WaviestBalloon/ApplejuiceCLI/issues/1\n\tInstallation will continue as normal...");
 	
 	if channel_arg.is_some() == false {
 		status("Defaulting to LIVE channel...");

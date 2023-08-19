@@ -8,16 +8,23 @@ mod args; // Import modules which act as a handler for certain command parameter
 fn main() {
 	let args: Vec<String> = env::args().collect();
 	if setup::confirm_applejuice_data_folder_existence() == false { // Initialisation warning
-		warning(format!("Applejuice has not been initialised yet!\nRun '{} --init' to initialise Applejuice.\n", args[0]));
+		warning("Applejuice has not been initialised yet! Attempting to initialise...");
+		args::initialise::main();
+		status("Continuing with task...");
 	}
 	if args.len() == 1 {
 		error(format!("No command line arguments provided!\nRun '{} --help' for more information.", args[0]));
 	}
 
+
 	let command = &args[1];
 	let command_clean: &str = &args[1].replace("--", ""); // TODO: collect different params and their values
 	let arguments = &args[2..];
 	
+	dbg!(command);
+	dbg!(command_clean);
+	dbg!(arguments);
+
 	match command_clean {
 		"help" => args::help::main(),
 		"init" => args::initialise::main(),
