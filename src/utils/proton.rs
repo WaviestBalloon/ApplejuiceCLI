@@ -4,9 +4,7 @@ use serde_json;
 
 pub fn discover_proton_directory() -> serde_json::Value { // Try to automatically find where Proton is installed to
 	let potential_path = format!("{}/.steam/steam/steamapps/common/", env!("HOME"));
-	let mut installations = serde_json::json!({
-		"proton_installations": { }
-	});
+	let mut installations = serde_json::json!({ "proton_installations": {} }); // Init
 
 	match fs::read_dir(potential_path.clone()) {
 		Ok(_) => {
@@ -27,7 +25,7 @@ pub fn discover_proton_directory() -> serde_json::Value { // Try to automaticall
 		},
 		Err(_) => {
 			warning(format!("Failed to find the Steam directory at '{}'", potential_path));
-			return serde_json::json!("null");
+			return serde_json::Value::Null;
 		}
 	}
 }

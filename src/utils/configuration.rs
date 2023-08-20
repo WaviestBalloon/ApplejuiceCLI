@@ -1,12 +1,11 @@
 use std::fs;
 use crate::utils::terminal::*;
 use crate::utils::setup;
-use serde_json;
 
 pub fn update_config(json: serde_json::Value, config_type: &str) {
 	status("Updating configuration file...".to_string());
 	let config_path = format!("{}/config.json", setup::get_applejuice_dir());
-	if setup::confirm_existence(&config_path) == false {
+	if !setup::confirm_existence(&config_path) {
 		warning(format!("Failed to find configuration file at '{}', calling to construct the data folder!", config_path));
 		setup::construct_applejuice_data_folder();
 	}
@@ -20,7 +19,7 @@ pub fn update_config(json: serde_json::Value, config_type: &str) {
 
 pub fn get_config(config_type: &str) -> serde_json::Value {
 	let config_path = format!("{}/config.json", setup::get_applejuice_dir());
-	if setup::confirm_existence(&config_path) == false {
+	if !setup::confirm_existence(&config_path) {
 		warning(format!("Failed to find configuration file at '{}', calling to construct the data folder!", config_path));
 		setup::construct_applejuice_data_folder();
 	}

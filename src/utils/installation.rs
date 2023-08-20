@@ -1,9 +1,6 @@
 use std::{process, fs, path, io};
 use crate::utils::terminal::*;
 use crate::setup;
-use reqwest;
-use serde_json;
-use progress_bar;
 
 const LATEST_VERSION_PLAYER: &str = "https://setup.rbxcdn.com/version";
 const LATEST_VERSION_STUDIO: &str = "https://setup.rbxcdn.com/versionQTStudio";
@@ -152,7 +149,7 @@ pub fn download_deployment(binary: &str, version_hash: String, channel: &str) ->
 		progress_bar::print_progress_bar_info("•", format!("Downloading {package}... ({version_hash}-{package})").as_str(), progress_bar::Color::Blue, progress_bar::Style::Bold);
 
 		let mut response = client.get(format!("{}{}-{}", deployment_channel, version_hash, package)).send().unwrap();
-		if response.status().is_success() == false {
+		if !response.status().is_success() {
 			warning(format!("Failed to download {} from CDN! Status code: {}", package, response.status()));
 			continue;
 		}
@@ -177,7 +174,7 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 	for (index, (package, path)) in bindings.iter().enumerate() {
 		progress_bar::print_progress_bar_info("•", format!("Extracting {package}...").as_str(), progress_bar::Color::Blue, progress_bar::Style::Bold);
 
-		if setup::confirm_existence(&format!("{}/{}", extraction_path, path)) && path.is_empty() == false {
+		if setup::confirm_existence(&format!("{}/{}", extraction_path, path)) && !path.is_empty() {
 			progress_bar::print_progress_bar_info("!", format!("{} is already extracted. Skipping extraction.", package).as_str(), progress_bar::Color::Red, progress_bar::Style::Bold);
 			continue;
 		}

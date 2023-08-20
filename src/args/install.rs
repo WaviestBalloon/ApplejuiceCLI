@@ -1,6 +1,5 @@
 use std::fs;
 use crate::utils::{terminal::*, installation, setup, configuration};
-use serde_json;
 
 const HELP_TEXT: &str = "\nUsage: --install [type]\nInstalls Roblox Client or Roblox Studio\n\nOptions:\n\tclient\tInstalls the Roblox Client\n\tstudio\tInstalls Roblox Studio";
 
@@ -46,7 +45,7 @@ fn download_and_install(version_hash: &str, channel: &str) {
 	status("Reading available Proton instances from configuration...");
 	let proton_instances = configuration::get_config("proton_installations");
 	let mut proton_instance: String = "".to_string();
-	if proton_instances.is_null() == false {
+	if !proton_instances.is_null() {
 		for (key, value) in proton_instances.as_object().unwrap() {
 			if value.as_str().unwrap().contains("Proton") {
 				proton_instance = key.to_string();
@@ -73,17 +72,17 @@ Categories=Game;");
 fn install_client(channel_arg: Option<String>, version_hash_arg: Option<String>) {
 	let version_hash: String;
 	let mut channel: String = "LIVE".to_string();
-	let mut protocol: bool = false;
-	let mut uncap_fps_fflag: bool = false;
+	let mut _protocol: bool = false;
+	let mut _uncap_fps_fflag: bool = false;
 	warning("Roblox Player now has Byfron, anti-tamper software, as of now it is not currently possible to play Roblox Player on Linux due to Wine being blacklisted. (This has been confirmed to be temporary)\n\tPlease view this issue: https://github.com/WaviestBalloon/ApplejuiceCLI/issues/1\n\tInstallation will continue as normal...");
 	
-	if channel_arg.is_some() == false {
+	if !channel_arg.is_some() {
 		status("Defaulting to LIVE channel...");
 	} else {
 		channel = channel_arg.unwrap_or_else(|| "LIVE".to_string());
 		status(format!("Using channel: {}", channel));
 	}
-	if version_hash_arg.is_some() == false {
+	if !version_hash_arg.is_some() {
 		status("Getting latest version hash...");
 		version_hash = installation::get_latest_version_hash("Player", &channel);
 	} else {
@@ -93,7 +92,7 @@ fn install_client(channel_arg: Option<String>, version_hash_arg: Option<String>)
 	download_and_install(&version_hash, &channel);
 }
 fn install_studio(channel_arg: Option<String>, version_hash_arg: Option<String>) {
-	if version_hash_arg.is_some() == false {
+	if !version_hash_arg.is_some() {
 		warning("No version hash provided, getting latest version hash instead...");
 	}
 	let channel: String = channel_arg.unwrap_or_else(|| "LIVE".to_owned());

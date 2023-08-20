@@ -7,7 +7,7 @@ mod args; // Import modules which act as a handler for certain command parameter
 
 fn main() {
 	let args: Vec<String> = env::args().collect();
-	if setup::confirm_applejuice_data_folder_existence() == false { // Initialisation warning
+	if !setup::confirm_applejuice_data_folder_existence() { // Initialisation warning
 		warning("Applejuice has not been initialised yet! Attempting to initialise...");
 		args::initialise::main();
 		status("Continuing with task...");
