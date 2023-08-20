@@ -27,7 +27,7 @@ pub fn discover_proton_directory() -> serde_json::Value { // Try to automaticall
 		},
 		Err(_) => {
 			warning(format!("Failed to find the Steam directory at '{}'", potential_path));
-			return "null".parse().unwrap();
+			return serde_json::json!("null");
 		}
 	}
 }

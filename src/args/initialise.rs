@@ -60,7 +60,7 @@ pub fn main() {
 	status("Finding a Proton installation...");
 	let detected_installations = proton::discover_proton_directory();
 	if detected_installations == "null" {
-		error("Failed to find a Proton installation!");
+		warning("Failed to find a Proton installation! You might not have Steam or Proton installed.");
 	} else {
 		status("Found the following Proton installations: ");
 		for (key, _value) in detected_installations["proton_installations"].as_object().unwrap() {

@@ -51,7 +51,7 @@ fn download_and_install(version_hash: &str, channel: &str) {
 		break;
 	}
 	if proton_instance == "" {
-		error("Failed to find a Proton instance!");
+		warning("Failed to find a Proton instance!");
 	}
 	success(format!("Found Proton instance '{}'", proton_instance));
 	let clean_version_hash = version_hash.replace("version-", "");
