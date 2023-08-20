@@ -43,17 +43,20 @@ fn download_and_install(version_hash: &str, channel: &str) {
 	}), &version_hash);
 
 	status("Creating application shortcut...");
-	status("Resolving Proton instances...");
+	status("Reading available Proton instances from configuration...");
 	let proton_instances = configuration::get_config("proton_installations");
 	let mut proton_instance: String = "".to_string();
-	for (key, _value) in proton_instances.as_object().unwrap() {
-		proton_instance = key.to_string();
-		break;
+	if proton_instances.is_null() == false {
+		for (key, value) in proton_instances.as_object().unwrap() {
+			if value.as_str().unwrap().contains("Proton") {
+				proton_instance = key.to_string();
+				break;
+			}
+		}
+		success(format!("Found Proton instance '{}'", proton_instance));
+	} else {
+		warning("Failed to find a Proton instance! Do you have one specified in your config.json file?");
 	}
-	if proton_instance == "" {
-		warning("Failed to find a Proton instance!");
-	}
-	success(format!("Found Proton instance '{}'", proton_instance));
 	let clean_version_hash = version_hash.replace("version-", "");
 	let desktop_shortcut_path = format!("{}/.local/share/applications/roblox-{}-{}.desktop", env!("HOME"), binary_type.to_lowercase(), clean_version_hash);
 	let desktop_shortcut_contents = format!("[Desktop Entry]
