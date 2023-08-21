@@ -2,6 +2,7 @@
 name = "applejuice_cli"
 version = "0.1.0"
 edition = "2021"
+opt-level = "s"
 
 [dependencies]
 progress_bar = "1.0.5"
