@@ -1,4 +1,5 @@
 use std::env;
+use std::rc::Rc;
 
 mod utils; // Import utilities that are not necessarily commands
 use crate::utils::terminal::*;
@@ -19,17 +20,21 @@ fn main() {
 
 	let command = &args[1];
 	let command_clean: &str = &args[1].replace("--", ""); // TODO: collect different params and their values
-	let arguments = &args[2..];
-	
-	dbg!(command);
-	dbg!(command_clean);
+	//let arguments = &args[2..];
+
+	let mut arguments: Vec<Vec<(&str, &str)>> = vec![]; // Collected args and their values
+	let mut arg_command = Rc::new(""); // Current command parameter being collected
+	let mut arg_command_value: &str = ""; // Current command parameter value being collected
+	let mut for_counter: usize = 0; // For loop stepper
+
+
 	dbg!(arguments);
 
 	match command_clean {
 		"help" => args::help::main(),
 		"init" => args::initialise::main(),
-		"install" => args::install::main(arguments),
-		"purge" => args::purge::main(arguments),
+		//"install" => args::install::main(arguments),
+		//"purge" => args::purge::main(arguments),
 		"opendata" => args::opendata::main(),
 		"play" => args::play::main(),
 		_ => {

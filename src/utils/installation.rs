@@ -145,7 +145,7 @@ pub fn download_deployment(binary: &str, version_hash: String, channel: &str) ->
 
 	let client = reqwest::blocking::Client::new();
 	progress_bar::init_progress_bar_with_eta(bindings.len());
-	for (index, (package, _path)) in bindings.iter().enumerate() {
+	for (_index, (package, _path)) in bindings.iter().enumerate() {
 		progress_bar::print_progress_bar_info("•", format!("Downloading {package}... ({version_hash}-{package})").as_str(), progress_bar::Color::Blue, progress_bar::Style::Bold);
 
 		let mut response = client.get(format!("{}{}-{}", deployment_channel, version_hash, package)).send().unwrap();
@@ -171,7 +171,7 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 	status(format!("{} files will be extracted!", bindings.len()));
 
 	progress_bar::init_progress_bar_with_eta(bindings.len());
-	for (index, (package, path)) in bindings.iter().enumerate() {
+	for (_index, (package, path)) in bindings.iter().enumerate() {
 		progress_bar::print_progress_bar_info("•", format!("Extracting {package}...").as_str(), progress_bar::Color::Blue, progress_bar::Style::Bold);
 
 		if setup::confirm_existence(&format!("{}/{}", extraction_path, path)) && !path.is_empty() {
