@@ -1,8 +1,8 @@
 use std::env;
 mod utils; // Import utilities that are not necessarily commands
+mod args; // Import modules which act as a handler for certain command parameters
 use crate::utils::terminal::*;
 use crate::utils::*;
-mod args; // Import modules which act as a handler for certain command parameters
 
 fn main() {
 	let args: Vec<String> = env::args().collect();
