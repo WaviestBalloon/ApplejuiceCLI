@@ -110,7 +110,6 @@ pub fn main(args: Vec<Vec<(String, String)>>) {
 	let install_type: &str = &parsed_args[0];
 
 	match install_type {
-		// &&str .to_owned() -> &str
 		"client" => install_client(parsed_args.get(1).map(|&string| string.to_owned()), parsed_args.get(2).map(|&string| string.to_owned())),
 		"studio" => install_studio(parsed_args.get(1).map(|&string| string.to_owned()), parsed_args.get(2).map(|&string| string.to_owned())),
 		_ => {
