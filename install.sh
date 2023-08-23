@@ -39,7 +39,7 @@ cargo build --release --verbose
 echo "---------------------------"
 
 echo "Installing the Applejuice CLI to /usr/local/bin..."
-sudo cp ./target/release/applejuice_cli /usr/local/bin/applejuicecli
+sudo cp ./target/release/applejuice_cli /usr/local/bin/applejuicecli || doas cp ./target/release/applejuice_cli /usr/local/bin/applejuicecli
 
 echo "Initialising Applejuice..."
 echo "---------------------------"

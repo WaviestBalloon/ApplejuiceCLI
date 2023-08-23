@@ -1,5 +1,5 @@
-use std::fs;
-use crate::utils::{terminal::*, installation, setup, configuration};
+use std::{fs, env::var};
+use crate::utils::{terminal::*, installation, setup, configuration, args};
 
 const HELP_TEXT: &str = "\nUsage: --install [type]\nInstalls Roblox Client or Roblox Studio\n\nOptions:\n\tclient\tInstalls the Roblox Client\n\tstudio\tInstalls Roblox Studio";
 
@@ -57,9 +57,10 @@ fn download_and_install(version_hash: &str, channel: &str) {
 		warning("Failed to find a Proton instance! Do you have one specified in your config.json file?");
 	}
 	let clean_version_hash = version_hash.replace("version-", "");
-	let desktop_shortcut_path = format!("{}/.local/share/applications/roblox-{}-{}.desktop", env!("HOME"), binary_type.to_lowercase(), clean_version_hash);
+	let desktop_shortcut_path = format!("{}/.local/share/applications/roblox-{}-{}.desktop", var("HOME").expect("$HOME not set"), binary_type.to_lowercase(), clean_version_hash);
 	let desktop_shortcut_contents = format!("[Desktop Entry]
 Name=Roblox {binary_type} ({channel}-{clean_version_hash})
+Comment=Launch Roblox with Proton
 Exec=env notify-send \"Launching Roblox {binary_type}\"
 Icon={folder_path}/content/textures/loading/robloxTilt.png
 Type=Application
@@ -74,7 +75,6 @@ fn install_client(channel_arg: Option<String>, version_hash_arg: Option<String>)
 	let mut channel: String = "LIVE".to_string();
 	let mut _protocol: bool = false;
 	let mut _uncap_fps_fflag: bool = false;
-	warning("Roblox Player now has Byfron, anti-tamper software, as of now it is not currently possible to play Roblox Player on Linux due to Wine being blacklisted. (This has been confirmed to be temporary)\n\tPlease view this issue: https://github.com/WaviestBalloon/ApplejuiceCLI/issues/1\n\tInstallation will continue as normal...");
 	
 	if !channel_arg.is_some() {
 		status("Defaulting to LIVE channel...");
@@ -101,15 +101,18 @@ fn install_studio(channel_arg: Option<String>, version_hash_arg: Option<String>)
 	download_and_install(&version_hash, "LIVE");
 }
 
-pub fn main(parsed_args: &[String]) {
+pub fn main(args: Vec<Vec<(String, String)>>) {
+	let binding = args::get_param_value(args, "install");
+	let parsed_args = binding.split(" ").collect::<Vec<&str>>();
 	if parsed_args.len() == 0 {
 		error(format!("No command line arguments provided for install!{}", HELP_TEXT));
 	}
 	let install_type: &str = &parsed_args[0];
 
 	match install_type {
-		"client" => install_client(parsed_args.get(1).cloned(), parsed_args.get(2).cloned()),
-		"studio" => install_studio(parsed_args.get(1).cloned(), parsed_args.get(2).cloned()),
+		// &&str .to_owned() -> &str
+		"client" => install_client(parsed_args.get(1).map(|&string| string.to_owned()), parsed_args.get(2).map(|&string| string.to_owned())),
+		"studio" => install_studio(parsed_args.get(1).map(|&string| string.to_owned()), parsed_args.get(2).map(|&string| string.to_owned())),
 		_ => {
 			error(format!("Unknown type to install '{}'{}", parsed_args[0], HELP_TEXT));
 		}

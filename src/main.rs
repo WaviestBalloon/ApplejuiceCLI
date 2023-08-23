@@ -1,6 +1,4 @@
 use std::env;
-use std::rc::Rc;
-
 mod utils; // Import utilities that are not necessarily commands
 use crate::utils::terminal::*;
 use crate::utils::*;
@@ -19,22 +17,44 @@ fn main() {
 
 
 	let command = &args[1];
-	let command_clean: &str = &args[1].replace("--", ""); // TODO: collect different params and their values
-	//let arguments = &args[2..];
+	let command_clean: &str = &command.replace("--", "");
+	let mut arguments: Vec<Vec<(String, String)>> = vec![]; // Collected args and their values
+	let mut arg_command = String::new(); // Current command parameter being collected
+	let mut arg_command_value = String::new(); // Current command parameter value being collected
 
-	let mut arguments: Vec<Vec<(&str, &str)>> = vec![]; // Collected args and their values
-	let mut arg_command = Rc::new(""); // Current command parameter being collected
-	let mut arg_command_value: &str = ""; // Current command parameter value being collected
-	let mut for_counter: usize = 0; // For loop stepper
+	for (index, argument) in args.iter().enumerate() {
+		if index == 0 { continue; }
 
+		if argument.contains("--") {
+			if arg_command.is_empty() && arg_command_value.is_empty() {
+				arg_command = argument.replace("--", "");
+			}
+		} else {
+			if arg_command_value.is_empty() {
+				arg_command_value = argument.to_string(); // Construct first argument
+			} else {
+				arg_command_value = format!("{} {}", arg_command_value, argument); // Construct argument value and concatenate :3
+			}
+		}
 
-	dbg!(arguments);
+		if index == args.len() - 1 { // Last argument so just push to vec
+			arguments.push(vec![(arg_command, arg_command_value)]);
+			arg_command = String::new();
+			arg_command_value = String::new();
+		} else {
+			if args[index + 1].contains("--") { // Next argument is a command
+				arguments.push(vec![(arg_command, arg_command_value)]);
+				arg_command = String::new();
+				arg_command_value = String::new();
+			}
+		}
+	}
 
 	match command_clean {
 		"help" => args::help::main(),
 		"init" => args::initialise::main(),
-		//"install" => args::install::main(arguments),
-		//"purge" => args::purge::main(arguments),
+		"install" => args::install::main(arguments),
+		"purge" => args::purge::main(arguments),
 		"opendata" => args::opendata::main(),
 		"play" => args::play::main(),
 		_ => {
