@@ -105,7 +105,7 @@ pub fn main(args: Vec<Vec<(String, String)>>) {
 					}
 				}
 
-				status("Removing shortcuts to deployments..."); // /home/wav/.local/share/applications/
+				status("Removing shortcuts to deployments...");
 				removing.iter().for_each(|version| {
 					let config = get_config(version);
 					let binary_type = config.get("binary_type").unwrap().as_str().unwrap();
@@ -114,7 +114,7 @@ pub fn main(args: Vec<Vec<(String, String)>>) {
 					std::fs::remove_file(desktop_shortcut_path).unwrap()
 				});
 
-				status("Removing installation entires from configuration file..."); // refer to configuration.rs x3
+				status("Removing installation entires from configuration file...");
 				removing.iter().for_each(|version| {
 					update_config(serde_json::Value::Null, version);
 				});
