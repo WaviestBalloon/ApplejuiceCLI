@@ -1,5 +1,6 @@
 use crate::utils::{setup, terminal::*, argparse, configuration::{get_config, update_config}};
 use std::fs::{read_dir, remove_dir_all};
+use std::env::var;
 
 const HELP_TEXT: &str = "\nUsage: --purge [type]\nPurges cache or installs, useful for a fresh start or if you are having issues\n\nOptions:\n\tcache\tDeletes all compressed files that were downloaded from the CDN\n\tinstalls\tNukes every install of Roblox you have\n\tinstall\tDeletes a specific version of Roblox, can purge multiple versions at once";
 
@@ -49,7 +50,7 @@ pub fn main(args: Vec<Vec<(String, String)>>) {
 					error("Roblox directory is empty!");
 				}
 
-				let removing = Vec::new();
+				let mut removing = Vec::new();
 				match read_dir(format!("{}/roblox", setup::get_applejuice_dir())) {
 					Ok(paths) => {
 						for deployment_path in paths {
