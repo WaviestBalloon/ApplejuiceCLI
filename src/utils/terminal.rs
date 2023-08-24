@@ -17,6 +17,7 @@ pub fn status<S: AsRef<str>>(message: S) {
 	println!("\x1b[94m\x1b[1m      •\x1b[0m {}", message.as_ref());
 }
 
+#[warn(dead_code)]
 pub fn statusdownload<S: AsRef<str>>(message: S) {
 	print!("\x1b[94m\x1b[1m      •\x1b[0m {}", message.as_ref());
 }

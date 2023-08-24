@@ -45,7 +45,7 @@ pub fn main() {
 		success("Created assets directory");
 		status("Downloading assets...");
 		let client = reqwest::blocking::Client::new();
-		for (_index, url) in ASSET_URLS.iter().enumerate() {
+		for url in ASSET_URLS.iter() {
 			let filename = url.split("/").last().unwrap().to_lowercase();
 			let output = client.get(url.to_string())
 				.send()

@@ -1,8 +1,7 @@
 use std::env;
 mod utils; // Import utilities that are not necessarily commands
 mod args; // Import modules which act as a handler for certain command parameters
-use crate::utils::terminal::*;
-use crate::utils::*;
+use crate::utils::{terminal::*, *};
 
 fn main() {
 	let args: Vec<String> = env::args().collect();
@@ -14,7 +13,6 @@ fn main() {
 	if args.len() == 1 {
 		error(format!("No command line arguments provided!\nRun '{} --help' for more information.", args[0]));
 	}
-
 
 	let command = &args[1];
 	let command_clean: &str = &command.replace("--", "");
@@ -57,6 +55,7 @@ fn main() {
 		"purge" => args::purge::main(arguments),
 		"opendata" => args::opendata::main(),
 		"play" => args::play::main(),
+		"launch" => args::launch::main(arguments),
 		_ => {
 			error(format!("Unknown command parameter: '{}'\nRun '{} --help' for more information.", command, args[0]));
 		}

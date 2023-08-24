@@ -3,4 +3,4 @@ pub mod setup;
 pub mod terminal;
 pub mod proton;
 pub mod configuration;
-pub mod args;
+pub mod argparse;

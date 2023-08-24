@@ -7,7 +7,7 @@ ApplejuiceCLI is the backbone of Applejuice's interface, you can either use the 
 > Applejuice is still in VERY EARLY development, and may not work as expected.
 
 > [!IMPORTANT]
-> For issues you encounter during using Roblox, please refer to [this pinned issue](https://github.com/WaviestBalloon/ApplejuiceCLI/issues/1)!
+> For issues you encounter while using Roblox, please refer to [this pinned issue](https://github.com/WaviestBalloon/ApplejuiceCLI/issues/1)!
 
 ## Installation
 
