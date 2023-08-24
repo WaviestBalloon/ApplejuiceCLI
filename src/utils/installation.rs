@@ -2,8 +2,6 @@ use std::{process, fs, path, io};
 use crate::utils::terminal::*;
 use crate::setup;
 
-const LATEST_VERSION_PLAYER: &str = "https://setup.rbxcdn.com/version";
-const LATEST_VERSION_STUDIO: &str = "https://setup.rbxcdn.com/versionQTStudio";
 const LATEST_VERSION_PLAYER_CHANNEL: &str = "https://clientsettings.roblox.com/v2/client-version/WindowsPlayer/channel/";
 const LATEST_VERSION_STUDIO_CHANNEL: &str = "https://clientsettings.roblox.com/v2/client-version/WindowsStudio/channel/";
 const LIVE_DEPLOYMENT_CDN: &str = "https://setup.rbxcdn.com/";
@@ -67,11 +65,11 @@ const STUDIO_EXTRACT_BINDINGS: [(&'static str, &'static str); 32] = [
 ];
 
 pub fn get_latest_version_hash(version_type: &str, channel: &str) -> String {
-	let version_url: String;
+	let version_url: String ;
 	if version_type == "Player" {
-		version_url = if channel == "LIVE" { LATEST_VERSION_PLAYER.to_string() } else { format!("{}{}", LATEST_VERSION_PLAYER_CHANNEL, channel) };
+		version_url = format!("{}{}", LATEST_VERSION_PLAYER_CHANNEL, channel);
 	} else if version_type == "Studio" {
-		version_url = if channel == "LIVE" { LATEST_VERSION_STUDIO.to_string() } else { format!("{}{}", LATEST_VERSION_STUDIO_CHANNEL, channel) };
+		version_url = format!("{}{}", LATEST_VERSION_STUDIO_CHANNEL, channel);
 	} else {
 		error(format!("Invalid version type: {}", version_type));
 		return "".to_string();
@@ -84,11 +82,9 @@ pub fn get_latest_version_hash(version_type: &str, channel: &str) -> String {
 		.text()
 		.unwrap();
 
-	if channel != "LIVE" {
-		let json: serde_json::Value = serde_json::from_str(&output).unwrap();
-		let version_hash = json["clientVersionUpload"].as_str().unwrap();
-		output = version_hash.to_string();
-	}
+	let json: serde_json::Value = serde_json::from_str(&output).unwrap();
+	let version_hash = json["clientVersionUpload"].as_str().unwrap();
+	output = version_hash.to_string();
 
 	success(format!("Received latest version hash: {}", output));
 
