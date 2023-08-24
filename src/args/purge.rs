@@ -1,4 +1,4 @@
-use crate::utils::{setup, terminal::*, argparse};
+use crate::utils::{setup, terminal::*, argparse, configuration::{get_config, update_config}};
 use std::fs::{read_dir, remove_dir_all};
 
 const HELP_TEXT: &str = "\nUsage: --purge [type]\nPurges cache or installs, useful for a fresh start or if you are having issues\n\nOptions:\n\tcache\tDeletes all compressed files that were downloaded from the CDN\n\tinstalls\tNukes every install of Roblox you have\n\tinstall\tDeletes a specific version of Roblox, can purge multiple versions at once";
@@ -49,21 +49,22 @@ pub fn main(args: Vec<Vec<(String, String)>>) {
 					error("Roblox directory is empty!");
 				}
 
+				let removing = Vec::new();
 				match read_dir(format!("{}/roblox", setup::get_applejuice_dir())) {
 					Ok(paths) => {
 						for deployment_path in paths {
 							let path_unwrap = deployment_path.unwrap();
-
 							match read_dir(path_unwrap.path()) {
 								Ok(paths) => {
 									for binary_type in paths {
 										let path_unwrap = binary_type.unwrap();
-										
+
 										match read_dir(path_unwrap.path()) {
 											Ok(paths) => {
 												for version_path in paths {
 													let path_unwrap = version_path.unwrap();
 													let binding = path_unwrap.path();
+													removing.push(path_unwrap.file_name().into_string().unwrap());
 
 													status(format!("Removing {:?}...", binding.clone()));
 													match remove_dir_all(binding.clone()) {
@@ -102,11 +103,21 @@ pub fn main(args: Vec<Vec<(String, String)>>) {
 						error(format!("Failed to remove the Roblox directory!\nError: {}", errmsg));
 					}
 				}
-				status("Removing shortcuts to deployments..."); // /home/wav/.local/share/applications/ and install.rs
-				
+
+				status("Removing shortcuts to deployments..."); // /home/wav/.local/share/applications/
+				removing.iter().for_each(|version| {
+					let config = get_config(version);
+					let binary_type = config.get("binary_type").unwrap().as_str().unwrap();
+					let clean_version_hash = version.replace("version-", "");
+					let desktop_shortcut_path = format!("{}/.local/share/applications/roblox-{}-{}.desktop", var("HOME").expect("$HOME not set"), binary_type.to_lowercase(), clean_version_hash);
+					std::fs::remove_file(desktop_shortcut_path).unwrap()
+				});
 
 				status("Removing installation entires from configuration file..."); // refer to configuration.rs x3
-				
+				removing.iter().for_each(|version| {
+					update_config(serde_json::Value::Null, version);
+				});
+
 				setup::create_dir("roblox");
 				success("Created Roblox directory");
 			} else {
