@@ -1,4 +1,6 @@
 use std::{fs, env::var};
+use serde_json::json;
+
 use crate::utils::{terminal::*, installation, setup, configuration, argparse};
 
 const HELP_TEXT: &str = "\nUsage: --install [type] [?removeolder] [?migratefflags] \nInstalls Roblox Client or Roblox Studio\n\nOptions:\n\tclient\tInstalls the Roblox Client\n\tstudio\tInstalls Roblox Studio\n\nExample: --install client zcanary --removeolder --migratefflags";
@@ -34,6 +36,10 @@ fn download_and_install(version_hash: &str, channel: &str, raw_args: Vec<Vec<(St
 	installation::extract_deployment_zips(binary_type, cache_path, folder_path.clone());
 	success("Extracted deployment successfully!");
 
+	status("Creating ClientSettings for FFlag configuration...");
+	fs::create_dir(format!("{}/ClientSettings", folder_path)).expect("Failed to create ClientSettings directory");
+	fs::write(format!("{}/ClientSettings/ClientAppSettings.json", folder_path), json!({}).to_string()).expect("Failed to create the config file!");
+
 	status("Reading available Proton instances from configuration...");
 	let proton_instances = configuration::get_config("proton_installations");
 	let mut proton_instance: String = "".to_string();
@@ -44,7 +50,7 @@ fn download_and_install(version_hash: &str, channel: &str, raw_args: Vec<Vec<(St
 				break;
 			}
 		}
-		success(format!("Setting \"preferred_proton\" to '{}'", proton_instance));
+		success(format!("Setting \"preferred_proton\" to {}", proton_instance));
 	} else {
 		warning("Failed to find a Proton instance! Do you have one specified in your config.json file?");
 	}
@@ -61,7 +67,6 @@ Type=Application
 Categories=Game;");
 	fs::write(desktop_shortcut_path.clone(), desktop_shortcut_contents).expect("Failed to write desktop shortcut");
 
-	status("Updating configuration file...");
 	configuration::update_config(serde_json::json!({
 		format!("{}", version_hash): {
 			"version": version_hash,
@@ -79,8 +84,6 @@ Categories=Game;");
 fn install_client(channel_arg: Option<String>, version_hash_arg: Option<String>, raw_args: Vec<Vec<(String, String)>>) {
 	let version_hash: String;
 	let mut channel: String = "LIVE".to_string();
-	let mut _protocol: bool = false;
-	let mut _uncap_fps_fflag: bool = false;
 	
 	if !channel_arg.is_some() {
 		status("Defaulting to LIVE channel...");
@@ -110,7 +113,7 @@ fn install_studio(channel_arg: Option<String>, version_hash_arg: Option<String>,
 pub fn main(args: Vec<Vec<(String, String)>>) {
 	let binding = argparse::get_param_value(args.clone(), "install");
 	let parsed_args = binding.split(" ").collect::<Vec<&str>>();
-	if parsed_args.len() == 0 {
+	if parsed_args.len() == 0 || parsed_args[0] == "blank" {
 		error(format!("No command line arguments provided for install!{}", HELP_TEXT));
 	}
 	let install_type: &str = &parsed_args[0];

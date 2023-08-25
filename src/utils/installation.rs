@@ -103,7 +103,7 @@ pub fn get_binary_type(package_manifest: Vec<&str>) -> &str {
 			break;
 		}
 	}
-	if binary == "" {
+	if binary.is_empty() {
 		error("Could not determine binary type for provided package menifest!");
 	}
 

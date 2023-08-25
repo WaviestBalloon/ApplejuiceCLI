@@ -1,4 +1,6 @@
 use std::{fs, env::var};
+use serde_json::json;
+
 use crate::utils::terminal::*;
 
 pub fn confirm_applejuice_data_folder_existence() -> bool { // Check whether the .applejuice data folder exists under $HOME/.applejuice
@@ -29,8 +31,10 @@ pub fn construct_applejuice_data_folder() { // Construct the .applejuice data fo
 		}
 	}
 
+	status("Creating README.txt...");
 	fs::write(format!("{}/{}", path, "README.txt"), "Hey! Welcome to the cool zone...\n\n\tIf you want a fresh start, delete this folder and Applejuice will forget everything!").expect("Failed to create the README file!");
-	fs::write(format!("{}/{}", path, "config.json"), "{}").expect("Failed to create the config file!");
+	status("Creating config.json...");
+	fs::write(format!("{}/{}", path, "config.json"), json!({}).to_string()).expect("Failed to create the config file!");
 }
 
 pub fn confirm_existence(providedpath: &str) -> bool { // Check whether a item exists in the .applejuice data folder or a ancestor to it

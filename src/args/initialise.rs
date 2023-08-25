@@ -1,4 +1,6 @@
 use std::fs;
+use serde_json::json;
+
 use crate::utils::setup;
 use crate::utils::terminal::*;
 use crate::utils::proton;
@@ -70,6 +72,8 @@ pub fn main() {
 		configuration::update_config(detected_installations, "proton_installations");
 		success("config.json updated with Proton paths");
 	}
+
+	configuration::update_config(json!({ "global": {} }), "global");
 
 	println!(); // "Print a newline (for aesthetics" -GitHub copilot, providing dumb crap since 2022
 	success("Applejuice has been initialised!\nTo get started, run 'applejuicecli --help'\nOr to dive right in, run 'applejuicecli --install client'");
