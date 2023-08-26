@@ -7,7 +7,8 @@ const HELP_TEXT: &str = "\nUsage: --install [type] [?removeolder] [?migratefflag
 
 fn download_and_install(version_hash: &str, channel: &str, raw_args: Vec<Vec<(String, String)>>) {
 	let remove_older = argparse::get_param_value(raw_args.clone(), "removeolder").is_empty();
-	let migrate_fflags = argparse::get_param_value(raw_args, "migratefflags").is_empty();
+	let migrate_fflags = argparse::get_param_value(raw_args.clone(), "migratefflags").is_empty();
+	let disallow_multithreading = argparse::get_param_value(raw_args, "nothreads").is_empty() == false; // If there is no --nothreads flag it will return true, which means we need to invert it
 
 	status(format!("Resolving package manifest for version hash {}...", version_hash));
 	let package_manifest = installation::get_package_manifest(version_hash.to_string(), channel.to_string());
@@ -33,12 +34,16 @@ fn download_and_install(version_hash: &str, channel: &str, raw_args: Vec<Vec<(St
 	success("Downloaded deployment successfully!");
 
 	status("Installing Roblox...");
-	installation::extract_deployment_zips(binary_type, cache_path, folder_path.clone());
+	installation::extract_deployment_zips(binary_type, cache_path, folder_path.clone(), disallow_multithreading);
 	success("Extracted deployment successfully!");
 
 	status("Creating ClientSettings for FFlag configuration...");
-	fs::create_dir(format!("{}/ClientSettings", folder_path)).expect("Failed to create ClientSettings directory");
-	fs::write(format!("{}/ClientSettings/ClientAppSettings.json", folder_path), json!({}).to_string()).expect("Failed to create the config file!");
+	if !setup::confirm_existence(format!("{}/ClientSettings", folder_path).as_str()) {
+		fs::create_dir(format!("{}/ClientSettings", folder_path)).expect("Failed to create ClientSettings directory");
+		fs::write(format!("{}/ClientSettings/ClientAppSettings.json", folder_path), json!({}).to_string()).expect("Failed to create the config file!");
+	} else {
+		warning("Not creating ClientSettings directory as it already exists!");
+	}
 
 	status("Reading available Proton instances from configuration...");
 	let proton_instances = configuration::get_config("proton_installations");

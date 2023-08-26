@@ -42,7 +42,7 @@ pub fn confirm_existence(providedpath: &str) -> bool { // Check whether a item e
 	if providedpath.contains(get_applejuice_dir().to_string().as_str()) { // Sometimes we provide the EXACT path, so we need to check for that and overwrite the other exact path
 		path = providedpath.to_string();
 	}
-
+	
 	match fs::metadata(path.clone()) {
 		Ok(_) => {
 			return true;

@@ -1,4 +1,4 @@
-use std::{process, fs, path, io};
+use std::{process, fs, path, io, thread, thread::available_parallelism};
 use crate::utils::terminal::*;
 use crate::setup;
 
@@ -124,7 +124,7 @@ pub fn download_deployment(binary: &str, version_hash: String, channel: &str) ->
 	let temp_path = format!("{}/cache/{}-download", root_path, version_hash);
 
 	if setup::confirm_existence(&temp_path) {
-		warning(format!("{} is already downloaded. Skipping download.", version_hash));
+		warning(format!("{} is already downloaded. Skipping download. Use --purge cache to delete previously downloaded files.", version_hash));
 		return temp_path;
 	}
 	setup::create_dir(&format!("cache/{}-download", version_hash));
@@ -162,32 +162,76 @@ pub fn download_deployment(binary: &str, version_hash: String, channel: &str) ->
 	return temp_path; // Return the cache path to continue with extraction
 }
 
-pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path: String) {
+pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path: String, disallow_multithreading: bool) {
 	let bindings: &[_] = if binary == "Player" { &PLAYER_EXTRACT_BINDINGS } else { &STUDIO_EXTRACT_BINDINGS };
 	status(format!("{} files will be extracted!", bindings.len()));
 
+	let start_time = std::time::Instant::now();
 	progress_bar::init_progress_bar_with_eta(bindings.len());
-	for (_index, (package, path)) in bindings.iter().enumerate() {
-		progress_bar::print_progress_bar_info("•", format!("Extracting {package}...").as_str(), progress_bar::Color::Blue, progress_bar::Style::Bold);
 
-		if setup::confirm_existence(&format!("{}/{}", extraction_path, path)) && !path.is_empty() {
-			progress_bar::print_progress_bar_info("!", format!("{} is already extracted. Skipping extraction.", package).as_str(), progress_bar::Color::Red, progress_bar::Style::Bold);
-			continue;
+	println!("{}", disallow_multithreading);
+	if disallow_multithreading {
+		for (_index, (package, path)) in bindings.iter().enumerate() {
+			progress_bar::print_progress_bar_info("•", format!("Extracting {package}...").as_str(), progress_bar::Color::Blue, progress_bar::Style::Bold);
+	
+			if setup::confirm_existence(&format!("{}/{}", extraction_path, path)) && !path.is_empty() {
+				progress_bar::print_progress_bar_info("!", format!("{} is already extracted. Skipping extraction.", package).as_str(), progress_bar::Color::LightYellow, progress_bar::Style::Bold);
+				continue;
+			}
+			if path.to_string() != "" { // Create directory if it doesn't exist during extraction
+				progress_bar::print_progress_bar_info("•", format!("Creating path for {}/{}", extraction_path, path).as_str(), progress_bar::Color::Blue, progress_bar::Style::Bold);
+				setup::create_dir(&format!("{}/{}", extraction_path, path));
+			}
+			process::Command::new("unzip")
+				.arg(format!("{}/{}", temp_path, package))
+				.arg("-d")
+				.arg(format!("{}/{}", extraction_path, path))
+				.output()
+				.expect("Failed to execute unzip command");
+	
+			progress_bar::inc_progress_bar();
 		}
-		if path.to_string() != "" { // Create directory if it doesn't exist during extraction
-			progress_bar::print_progress_bar_info("•", format!("Creating path for {}/{}", extraction_path, path).as_str(), progress_bar::Color::Blue, progress_bar::Style::Bold);
-			setup::create_dir(&format!("{}/{}", extraction_path, path));
-		}
-		process::Command::new("unzip")
-			.arg(format!("{}/{}", temp_path, package))
-			.arg("-d")
-			.arg(format!("{}/{}", extraction_path, path))
-			.output()
-			.expect("Failed to execute unzip command");
+	} else {
+		warning("Multi-threading is enabled for this part! This may cause issues with some files not being extracted properly; If you encounter any issues, re-run this command with the --nothreads flag");
+		let threads_available = available_parallelism().unwrap();
+		let mut threads = vec![];
+		let chunked_files = bindings.chunks(threads_available.into());
 
-		progress_bar::inc_progress_bar();
+		status(format!("{} threads available, {} chunks created from bindings", threads_available, threads_available));
+		for (_index, chunk) in chunked_files.enumerate() {
+			status(format!("Preparing thread {}...", _index));
+			let extract_bind = extraction_path.clone();
+			let temp_path_bind = temp_path.clone();
+			threads.push(thread::spawn(move || {
+				for (package, path) in chunk.iter() {
+					if setup::confirm_existence(&format!("{}/{}", extract_bind, path)) && !path.is_empty() {
+						warning(format!("[Thread {_index}] {} is already extracted. Skipping extraction.", package));
+						continue;
+					}
+					if path.to_string() != "" { // Create directory if it doesn't exist during extraction
+						setup::create_dir(&format!("{}/{}", extract_bind, path));
+					}
+					status(format!("[Thread {_index}] Extracting {}...", package));
+					process::Command::new("unzip")
+						.arg(format!("{}/{}", temp_path_bind, package))
+						.arg("-d")
+						.arg(format!("{}/{}", extract_bind, path))
+						.output()
+						.expect("Failed to execute unzip command");
+
+				}
+
+				success(format!("[Thread {_index}] Thread quitting!"));
+			}));
+		}
+
+		for thread in threads { // Wait for all threads to finish
+			let _ = thread.join();
+		}
 	}
+
 	progress_bar::finalize_progress_bar();
+	success(format!("Decompression task finished in {} milliseconds!", start_time.elapsed().as_millis()));
 }
 
 pub fn get_package_manifest(version_hash: String, channel: String) -> String {
