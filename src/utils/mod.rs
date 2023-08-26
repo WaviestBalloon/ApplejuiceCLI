@@ -4,3 +4,4 @@ pub mod terminal;
 pub mod proton;
 pub mod configuration;
 pub mod argparse;
+pub mod notification;

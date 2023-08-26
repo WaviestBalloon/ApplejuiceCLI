@@ -77,7 +77,7 @@ Categories=Game;");
 			"version": version_hash,
 			"channel": channel,
 			"binary_type": binary_type,
-			"install_path": folder_path.to_string(),
+			"install_path": folder_path,
 			"shortcut_path": desktop_shortcut_path,
 			"preferred_proton": proton_instance
 		}

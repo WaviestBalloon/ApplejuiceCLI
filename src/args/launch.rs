@@ -1,4 +1,4 @@
-use crate::utils::{setup, terminal::*, argparse, installation};
+use crate::utils::{setup, terminal::*, argparse, installation, notification::create_notification};
 use crate::configuration;
 use std::process;
 
@@ -20,17 +20,34 @@ pub fn main(raw_args: Vec<Vec<(String, String)>>) {
 		} else {
 			warning(format!("You are not on the latest version! You are on {} and the latest version for {} is {}", version_hash, channel, latest_version));
 			let formatted_install_command = format!("--install {} {}", if binary_type == "Player" { "client" } else { "studio" }, if channel == "LIVE" { "" } else { &channel });
-			let _ = process::Command::new("notify-send")
-				.arg("--app-name=Applejuice")
-				.arg("--icon=dialog-warning")
-				.arg("--urgency=normal")
-				.arg("--expire-time=5000")
-				.arg("Version outdated!")
-				.arg(format!("You are on {} and the latest version for {} is {}\nConsider running \"{}\"", version_hash.replace("version-", ""), channel, latest_version.replace("version-", ""), formatted_install_command))
-				.output();
+			create_notification("dialog-warning", "5000", "Version outdated!", &format!("You are on {} and the latest version for {} is {}\nConsider running \"{}\"", version_hash.replace("version-", ""), channel, latest_version.replace("version-", ""), formatted_install_command));
 		}
 	}
 	
+	status("Detecting Proton...");
+	let installation_configuration = configuration::get_config(&version_hash);
+	let installed_deployment_location = installation_configuration["install_path"].as_str().unwrap();
+	let mut binary_location = "".to_string();
+
+	let path_normal = format!("{}/dist/bin", installation_configuration["preferred_proton"].as_str().unwrap());
+	let path_experimental = format!("{}/files/bin", installation_configuration["preferred_proton"].as_str().unwrap());
+
+	if setup::confirm_existence_raw(&path_normal) {
+		binary_location = path_normal;
+	} else {
+		warning(format!("Failed to find the installation at {}, attempting a different location...", path_normal));
+		if setup::confirm_existence_raw(&path_experimental) {
+			binary_location = path_experimental;
+		} else {
+			create_notification("dialog-error", "10000", "Proton installation not found!", "Exhausted all possible locations, aborting...");
+			error(format!("Failed to find the installation at {}, aborting...", path_experimental));
+		}
+	}
+
 	status("Launching Roblox...");
-	let proton_instances = configuration::get_config("proton_installations");
+	process::Command::new(format!("{}/wine64", binary_location))
+		.env("STEAM_COMPAT_DATA_PATH", format!("{}/prefixdata", setup::get_applejuice_dir()))
+		.arg(format!("{}/{}", installed_deployment_location, if binary_type == "Player" { "RobloxPlayerBeta.exe".to_string() } else { "RobloxStudioBeta.exe".to_string() }))
+		.spawn()
+		.expect("Failed to launch Roblox Player using Proton");
 }
