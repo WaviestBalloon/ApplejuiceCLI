@@ -73,7 +73,10 @@ pub fn main() {
 		success("config.json updated with Proton paths");
 	}
 
-	configuration::update_config(json!({ "global": {} }), "global");
+	configuration::update_config(json!({
+		"config_version": "0",
+		"global": {}
+	}), "global");
 
 	println!(); // "Print a newline (for aesthetics" -GitHub copilot, providing dumb crap since 2022
 	success("Applejuice has been initialised!\nTo get started, run 'applejuicecli --help'\nOr to dive right in, run 'applejuicecli --install client'");
