@@ -1,8 +1,19 @@
-use std::{env, process};
+use std::{env, process, thread, time::Duration};
 mod utils; // Import utilities that are not necessarily commands
 mod args; // Import modules which act as a handler for certain command parameters
 use crate::utils::{terminal::*, *};
 
+use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
+
+fn create_rpc_instance() -> Result<(), Box<dyn std::error::Error>> {
+	let mut client = DiscordIpcClient::new("1005469189907173486")?;
+	client.connect()?;
+
+	let payload = activity::Activity::new().state("Hello world!").details("bar");
+	client.set_activity(payload)?;
+
+	Ok(())
+}
 fn main() {
 	utils::configuration::test_balls();
 

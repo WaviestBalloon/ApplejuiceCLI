@@ -1,8 +1,12 @@
 use crate::utils::{setup, terminal::*, argparse, installation, notification::create_notification};
 use crate::configuration;
-use std::process;
+use std::{process, thread};
 
 const HELP_TEXT: &str = "\nUsage: TODO";
+const DLL_OVERRIDES: [&str; 2] = [
+	"ntdll.dll",
+	"vulkan-1.dll"
+];
 
 pub fn main(raw_args: Vec<Vec<(String, String)>>) {
 	let dir_location = setup::get_applejuice_dir();
@@ -10,7 +14,7 @@ pub fn main(raw_args: Vec<Vec<(String, String)>>) {
 	let channel = argparse::get_param_value(raw_args.clone(), "channel");
 	let version_hash = argparse::get_param_value(raw_args.clone(), "hash");
 	let skip_update_check = argparse::get_param_value(raw_args, "skipupdatecheck"); // Optional
-
+	
 	if skip_update_check.is_empty() {
 		status("Checking for updates...");
 		let latest_version = installation::get_latest_version_hash(&binary_type, &channel);
@@ -23,7 +27,7 @@ pub fn main(raw_args: Vec<Vec<(String, String)>>) {
 			create_notification("dialog-warning", "5000", "Version outdated!", &format!("You are on {} and the latest version for {} is {}\nConsider running \"{}\"", version_hash.replace("version-", ""), channel, latest_version.replace("version-", ""), formatted_install_command));
 		}
 	}
-	
+
 	status("Detecting Proton...");
 	let installation_configuration = configuration::get_config(&version_hash);
 	let installed_deployment_location = installation_configuration["install_path"].as_str().unwrap();
@@ -44,10 +48,15 @@ pub fn main(raw_args: Vec<Vec<(String, String)>>) {
 		}
 	}
 
+	status("Configuring args for DDL overrides...");
+	let mut configured_dll_overrides = "";
+
 	status("Launching Roblox...");
-	process::Command::new(format!("{}/wine64", binary_location))
-		.env("STEAM_COMPAT_DATA_PATH", format!("{}/prefixdata", setup::get_applejuice_dir()))
+	println!("{:?}", process::Command::new(format!("{}/wine", binary_location))
+		.env("WINEPREFIX", format!("{}/prefixdata", dir_location))
+		.env("STEAM_COMPAT_DATA_PATH", format!("{}/prefixdata", dir_location))
 		.arg(format!("{}/{}", installed_deployment_location, if binary_type == "Player" { "RobloxPlayerBeta.exe".to_string() } else { "RobloxStudioBeta.exe".to_string() }))
-		.spawn()
-		.expect("Failed to launch Roblox Player using Proton");
+	);		//.spawn()
+		//.expect("Failed to launch Roblox Player using Proton");
+	
 }
