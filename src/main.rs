@@ -3,17 +3,6 @@ mod utils; // Import utilities that are not necessarily commands
 mod args; // Import modules which act as a handler for certain command parameters
 use crate::utils::{terminal::*, *};
 
-use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
-
-fn create_rpc_instance() -> Result<(), Box<dyn std::error::Error>> {
-	let mut client = DiscordIpcClient::new("1005469189907173486")?;
-	client.connect()?;
-
-	let payload = activity::Activity::new().state("Hello world!").details("bar");
-	client.set_activity(payload)?;
-
-	Ok(())
-}
 fn main() {
 	utils::configuration::test_balls();
 
@@ -71,7 +60,8 @@ fn main() {
 		"purge" => args::purge::main(arguments),
 		"opendata" => args::opendata::main(),
 		"play" => args::play::main(),
-		"launch" => args::launch::main(arguments),
+		// TODO: fix this in above code
+		"launch" => args::launch::main(arguments.into_iter().flatten().collect()),
 		_ => {
 			error(format!("Unknown command parameter: '{}'\nRun '{} --help' for more information.", command, args[0]));
 		}

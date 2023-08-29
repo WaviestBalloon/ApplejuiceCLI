@@ -51,7 +51,7 @@ fn download_and_install(version_hash: &str, channel: &str, raw_args: Vec<Vec<(St
 	if !proton_instances.is_null() {
 		for (_key, value) in proton_instances.as_object().unwrap() {
 			if value.as_str().unwrap().contains("Proton") {
-				proton_instance = value.to_string();
+				proton_instance = value.as_str().unwrap().to_string();
 				break;
 			}
 		}
