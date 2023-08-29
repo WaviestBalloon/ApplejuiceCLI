@@ -7,9 +7,10 @@ use crate::utils::proton;
 use crate::utils::configuration;
 
 
-const ASSET_URLS: [&str; 2] = [
+const ASSET_URLS: [&str; 3] = [
 	"https://raw.githubusercontent.com/WaviestBalloon/ApplejuiceCLI/main/assets/player.png",
-	"https://raw.githubusercontent.com/WaviestBalloon/ApplejuiceCLI/main/assets/studio.png"
+	"https://raw.githubusercontent.com/WaviestBalloon/ApplejuiceCLI/main/assets/studio.png",
+	"https://raw.githubusercontent.com/WaviestBalloon/ApplejuiceCLI/main/assets/crudejuice.png"
 ];
 
 pub fn main() {
@@ -61,7 +62,7 @@ pub fn main() {
 
 	status("Finding a Proton installation...");
 	let detected_installations = proton::discover_proton_directory();
-	if detected_installations == "null" {
+	if detected_installations == serde_json::Value::Null {
 		warning("Failed to find a Proton installation! You might not have Steam or Proton installed.");
 	} else {
 		status("Found the following Proton installations: ");
@@ -73,7 +74,10 @@ pub fn main() {
 		success("config.json updated with Proton paths");
 	}
 
-	configuration::update_config(json!({ "global": {} }), "global");
+	configuration::update_config(json!({
+		"config_version": "0",
+		"global": {}
+	}), "global");
 
 	println!(); // "Print a newline (for aesthetics" -GitHub copilot, providing dumb crap since 2022
 	success("Applejuice has been initialised!\nTo get started, run 'applejuicecli --help'\nOr to dive right in, run 'applejuicecli --install client'");

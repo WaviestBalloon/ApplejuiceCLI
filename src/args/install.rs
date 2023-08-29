@@ -1,4 +1,4 @@
-use std::{fs, env::var};
+use std::{fs, env::var, process};
 use serde_json::json;
 
 use crate::utils::{terminal::*, installation, setup, configuration, argparse};
@@ -51,7 +51,7 @@ fn download_and_install(version_hash: &str, channel: &str, raw_args: Vec<Vec<(St
 	if !proton_instances.is_null() {
 		for (_key, value) in proton_instances.as_object().unwrap() {
 			if value.as_str().unwrap().contains("Proton") {
-				proton_instance = value.to_string();
+				proton_instance = value.as_str().unwrap().to_string();
 				break;
 			}
 		}
@@ -63,21 +63,28 @@ fn download_and_install(version_hash: &str, channel: &str, raw_args: Vec<Vec<(St
 	status("Creating application shortcut...");
 	let clean_version_hash = version_hash.replace("version-", "");
 	let desktop_shortcut_path = format!("{}/.local/share/applications/roblox-{}-{}.desktop", var("HOME").expect("$HOME not set"), binary_type.to_lowercase(), clean_version_hash);
-	let desktop_shortcut_contents = format!("[Desktop Entry]
+	let mut desktop_shortcut_contents = format!("[Desktop Entry]
 Name=Roblox {binary_type} ({channel}-{clean_version_hash})
 Comment=Launch Roblox with Proton
-Exec=env applejuicecli --launch --binary {binary_type} --channel {channel} --hash {version_hash}
+Exec=env applejuicecli --launch --binary {binary_type} --channel {channel} --hash {version_hash} --args %u
 Icon={folder_path}/content/textures/loading/robloxTilt.png
 Type=Application
-Categories=Game;");
+Categories=Game
+MimeType=x-scheme-handler/{}", if binary_type == "Studio" { "roblox-studio-auth" } else { "roblox-player" });
 	fs::write(desktop_shortcut_path.clone(), desktop_shortcut_contents).expect("Failed to write desktop shortcut");
+
+	status("Updating desktop database...");
+	process::Command::new("update-desktop-database")
+		.arg(format!("{}/.local/share/applications", var("HOME").expect("$HOME not set")))
+		.spawn()
+		.expect("Failed to execute update-desktop-database");
 
 	configuration::update_config(serde_json::json!({
 		format!("{}", version_hash): {
 			"version": version_hash,
 			"channel": channel,
 			"binary_type": binary_type,
-			"install_path": folder_path.to_string(),
+			"install_path": folder_path,
 			"shortcut_path": desktop_shortcut_path,
 			"preferred_proton": proton_instance
 		}

@@ -35,7 +35,7 @@ fi
 # Compile everything!!
 echo "Compiling the Applejuice CLI... (With --release)"
 echo "---------------------------"
-cargo build --release --verbose
+cargo build --release
 echo "---------------------------"
 
 echo "Installing the Applejuice CLI to /usr/local/bin..."
