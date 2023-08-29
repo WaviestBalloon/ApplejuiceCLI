@@ -32,23 +32,7 @@ pub fn main(raw_args: Vec<(String, String)>) {
 	status("Detecting Proton...");
 	let installation_configuration = configuration::get_config(&version_hash);
 	let installed_deployment_location = installation_configuration["install_path"].as_str().unwrap();
-	let mut binary_location = "".to_string();
-
-	let path_normal = format!("{}/dist/bin", installation_configuration["preferred_proton"].as_str().unwrap());
-	let path_experimental = format!("{}/files/bin", installation_configuration["preferred_proton"].as_str().unwrap());
-
-	if setup::confirm_existence_raw(&path_normal) {
-		binary_location = path_normal;
-	} else {
-		warning(format!("Failed to find the installation at {}, attempting a different location...", path_normal));
-		if setup::confirm_existence_raw(&path_experimental) {
-			binary_location = path_experimental;
-		} else {
-			create_notification("dialog-error", "10000", "Proton installation not found!", "Exhausted all possible locations, aborting...");
-			error(format!("Failed to find the installation at {}, aborting...", path_experimental));
-		}
-	}
-
+	
 	status("Starting RPC...");
 	let client = match DiscordIpcClient::new("1145934604444897410").and_then(|mut client| {
 		client.connect()?;

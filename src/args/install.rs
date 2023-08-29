@@ -63,7 +63,7 @@ fn download_and_install(version_hash: &str, channel: &str, raw_args: Vec<Vec<(St
 	status("Creating application shortcut...");
 	let clean_version_hash = version_hash.replace("version-", "");
 	let desktop_shortcut_path = format!("{}/.local/share/applications/roblox-{}-{}.desktop", var("HOME").expect("$HOME not set"), binary_type.to_lowercase(), clean_version_hash);
-	let mut desktop_shortcut_contents = format!("[Desktop Entry]
+	let desktop_shortcut_contents = format!("[Desktop Entry]
 Name=Roblox {binary_type} ({channel}-{clean_version_hash})
 Comment=Launch Roblox with Proton
 Exec=env applejuicecli --launch --binary {binary_type} --channel {channel} --hash {version_hash} --args %u
