@@ -61,7 +61,7 @@ pub fn main(raw_args: Vec<(String, String)>) {
 
 	status("Launching Roblox...");
 	create_notification(&format!("{}/assets/crudejuice.png", dir_location), "5000", &format!("Roblox {} is starting!", binary_type), "");
-	process::Command::new(dbg!(format!("{}/proton", installation_configuration["preferred_proton"].as_str().unwrap())))
+	let output = process::Command::new(dbg!(format!("{}/proton", installation_configuration["preferred_proton"].as_str().unwrap())))
 		.env("STEAM_COMPAT_DATA_PATH", format!("{}/prefixdata", dir_location))
 		.env("STEAM_COMPAT_CLIENT_INSTALL_PATH", format!("{}/not-steam", dir_location))
 		.arg("waitforexitandrun")
@@ -72,5 +72,8 @@ pub fn main(raw_args: Vec<(String, String)>) {
 		.wait()
 		.expect("Failed to wait on Roblox Player using Proton");
 
+	status("Roblox has exited");
+	create_notification(&format!("{}/assets/crudejuice.png", dir_location), "5000", &format!("Roblox {} has closed", binary_type), &format!("Exit code: {}", output.code().unwrap_or(0)));
+	
 	drop(client);
 }
