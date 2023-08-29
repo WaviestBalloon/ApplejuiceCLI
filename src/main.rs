@@ -4,8 +4,6 @@ mod args; // Import modules which act as a handler for certain command parameter
 use crate::utils::{terminal::*, *};
 
 fn main() {
-	utils::configuration::test_balls();
-
 	if env::consts::OS != "linux" {
 		error(format!("Applejuice is a Linux-only application and is not designed to be ran on any operating system other than a Linux-based system.\nYour OS identifies itself as {}!\n{}", env::consts::OS, if env::consts::OS == "windows" { "Since you are using Windows, consider using Bloxstrap: https://github.com/pizzaboxer/bloxstrap/\n" } else { "" }));
 	}
