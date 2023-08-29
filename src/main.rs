@@ -10,7 +10,7 @@ fn main() {
 		error(format!("Applejuice is a Linux-only application and is not designed to be ran on any operating system other than a Linux-based system.\nYour OS identifies itself as {}!\n{}", env::consts::OS, if env::consts::OS == "windows" { "Since you are using Windows, consider using Bloxstrap: https://github.com/pizzaboxer/bloxstrap/\n" } else { "" }));
 	}
 	let args: Vec<String> = env::args().collect();
-	if !setup::confirm_applejuice_data_folder_existence() { // Initialisation warning
+	if !setup::confirm_applejuice_data_folder_existence() && args[1] != "init" { // Initialisation warning
 		warning("Applejuice has not been initialised yet! Attempting to initialise...");
 		args::initialise::main();
 		status("Continuing with task...");
