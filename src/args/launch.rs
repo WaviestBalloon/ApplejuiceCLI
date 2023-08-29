@@ -1,8 +1,7 @@
 use crate::utils::{setup, terminal::*, argparse, installation, notification::create_notification};
 use crate::configuration;
-use std::{process, thread};
+use std::process;
 use std::time;
-use discord_rich_presence::activity::Timestamps;
 use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
 
 const HELP_TEXT: &str = "\nUsage: TODO";
