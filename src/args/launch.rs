@@ -13,6 +13,7 @@ pub fn main(raw_args: Vec<Vec<(String, String)>>) {
 	let binary_type = argparse::get_param_value(raw_args.clone(), "binary");
 	let channel = argparse::get_param_value(raw_args.clone(), "channel");
 	let version_hash = argparse::get_param_value(raw_args.clone(), "hash");
+	let protocol_arguments = argparse::get_param_value(raw_args.clone(), "args");
 	let skip_update_check = argparse::get_param_value(raw_args, "skipupdatecheck"); // Optional
 	
 	if skip_update_check.is_empty() {
@@ -26,6 +27,9 @@ pub fn main(raw_args: Vec<Vec<(String, String)>>) {
 			let formatted_install_command = format!("--install {} {}", if binary_type == "Player" { "client" } else { "studio" }, if channel == "LIVE" { "" } else { &channel });
 			create_notification("dialog-warning", "5000", "Version outdated!", &format!("You are on {} and the latest version for {} is {}\nConsider running \"{}\"", version_hash.replace("version-", ""), channel, latest_version.replace("version-", ""), formatted_install_command));
 		}
+	}
+	if !protocol_arguments.is_empty() {
+		create_notification("", "10000", "Protocol arguments detected!", &protocol_arguments);
 	}
 
 	status("Detecting Proton...");
@@ -48,15 +52,15 @@ pub fn main(raw_args: Vec<Vec<(String, String)>>) {
 		}
 	}
 
-	status("Configuring args for DDL overrides...");
+	status("Configuring DDL overrides...");
 	let mut configured_dll_overrides = "";
 
 	status("Launching Roblox...");
-	println!("{:?}", process::Command::new(format!("{}/wine", binary_location))
+	process::Command::new(format!("{}/wine", binary_location))
 		.env("WINEPREFIX", format!("{}/prefixdata", dir_location))
 		.env("STEAM_COMPAT_DATA_PATH", format!("{}/prefixdata", dir_location))
 		.arg(format!("{}/{}", installed_deployment_location, if binary_type == "Player" { "RobloxPlayerBeta.exe".to_string() } else { "RobloxStudioBeta.exe".to_string() }))
-	);		//.spawn()
-		//.expect("Failed to launch Roblox Player using Proton");
-	
+		.arg(protocol_arguments)
+		.spawn()
+		.expect("Failed to launch Roblox Player using Proton");
 }
