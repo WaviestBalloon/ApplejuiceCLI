@@ -70,7 +70,7 @@ Exec=env applejuicecli --launch --binary {binary_type} --channel {channel} --has
 Icon={folder_path}/content/textures/loading/robloxTilt.png
 Type=Application
 Categories=Game
-MimeType=x-scheme-handler/{}", if binary_type == "Studio" { "roblox-studio-auth" } else { "roblox-player" });
+MimeType=x-scheme-handler/{}", if binary_type == "Studio" { "roblox-studio\nMimeType=x-scheme-handler/roblox-studio-auth" } else { "roblox-player" });
 	fs::write(desktop_shortcut_path.clone(), desktop_shortcut_contents).expect("Failed to write desktop shortcut");
 
 	status("Updating desktop database...");
