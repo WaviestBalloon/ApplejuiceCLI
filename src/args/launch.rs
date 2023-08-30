@@ -13,6 +13,7 @@ pub fn main(raw_args: Vec<(String, String)>) {
 	let version_hash = argparse::get_param_value_new(&raw_args, "hash").unwrap();
 	let protocol_arguments = argparse::get_param_value_new(&raw_args, "args").unwrap();
 	let skip_update_check = argparse::get_param_value_new(&raw_args, "skipupdatecheck"); // Optional
+	let debug_notifications = argparse::get_param_value_new(&raw_args, "debug"); // Optional
 	
 	if skip_update_check.is_none() {
 		status("Checking for updates...");
@@ -27,6 +28,7 @@ pub fn main(raw_args: Vec<(String, String)>) {
 		}
 	}
 	status(format!("Protocol parameter(s): {}", protocol_arguments));
+	if debug_notifications.is_some() { create_notification("dialog-info", "15000", "Debug protocol parameters", protocol_arguments); }
 
 	status("Detecting Proton...");
 	let installation_configuration = configuration::get_config(&version_hash);
@@ -49,12 +51,14 @@ pub fn main(raw_args: Vec<(String, String)>) {
 
 		client.set_activity(payload)?;
 		success("RPC instance started");
+		if debug_notifications.is_some() { create_notification("dialog-info", "15000", "Debug RPC", "Rich presence connected"); }
 
 		Ok(client)
 	}) {
 		Ok(client) => Some(client),
-		Err(_) => {
+		Err(errmsg) => {
 			warning("Failed to start RPC instance");
+			if debug_notifications.is_some() { create_notification("dialog-info", "15000", "Debug RPC", &format!("Rich presence failed to start!\n{}", errmsg)); }
 			None
 		}
 	};
@@ -72,8 +76,9 @@ pub fn main(raw_args: Vec<(String, String)>) {
 		.wait()
 		.expect("Failed to wait on Roblox Player using Proton");
 
-	status("Roblox has exited");
+	status(format!("Roblox has exited with code {}", output.code().unwrap_or(0)));
 	create_notification(&format!("{}/assets/crudejuice.png", dir_location), "5000", &format!("Roblox {} has closed", binary_type), &format!("Exit code: {}", output.code().unwrap_or(0)));
 	
+	status("Dropping RPC...");
 	drop(client);
 }
