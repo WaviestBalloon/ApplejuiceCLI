@@ -3,7 +3,7 @@ use crate::utils::terminal::*;
 use crate::setup;
 
 const LATEST_VERSION_PLAYER_CHANNEL: &str = "https://clientsettings.roblox.com/v2/client-version/WindowsPlayer/channel/";
-const LATEST_VERSION_STUDIO_CHANNEL: &str = "https://clientsettings.roblox.com/v2/client-version/WindowsStudio/channel/";
+const LATEST_VERSION_STUDIO_CHANNEL: &str = "https://clientsettings.roblox.com/v2/client-version/WindowsStudio64/channel/";
 const LIVE_DEPLOYMENT_CDN: &str = "https://setup.rbxcdn.com/";
 const CHANNEL_DEPLOYMENT_CDN: &str = "https://roblox-setup.cachefly.net/channel/";
 
