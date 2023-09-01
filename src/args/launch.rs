@@ -17,13 +17,13 @@ pub fn main(raw_args: Vec<(String, String)>) {
 	
 	if skip_update_check.is_none() {
 		status("Checking for updates...");
-		let latest_version = installation::get_latest_version_hash(&binary_type, &channel);
+		let latest_version = installation::get_latest_version_hash(binary_type, channel);
 
 		if &latest_version == version_hash {
 			success("You are on the latest version!");
 		} else {
 			warning(format!("You are not on the latest version! You are on {} and the latest version for {} is {}", version_hash, channel, latest_version));
-			let formatted_install_command = format!("--install {} {}", if binary_type == "Player" { "client" } else { "studio" }, if channel == "LIVE" { "" } else { &channel });
+			let formatted_install_command = format!("--install {} {}", if binary_type == "Player" { "client" } else { "studio" }, if channel == "LIVE" { "" } else { channel });
 			create_notification("dialog-warning", "5000", "Version outdated!", &format!("You are on {} and the latest version for {} is {}\nConsider running \"{}\"", version_hash.replace("version-", ""), channel, latest_version.replace("version-", ""), formatted_install_command));
 		}
 	}
@@ -31,7 +31,7 @@ pub fn main(raw_args: Vec<(String, String)>) {
 	if debug_notifications.is_some() { create_notification("dialog-info", "15000", "Debug protocol parameters", protocol_arguments); }
 
 	status("Detecting Proton...");
-	let installation_configuration = configuration::get_config(&version_hash);
+	let installation_configuration = configuration::get_config(version_hash);
 	let installed_deployment_location = installation_configuration["install_path"].as_str().unwrap();
 	
 	status("Starting RPC...");

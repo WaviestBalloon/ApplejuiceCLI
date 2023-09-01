@@ -30,24 +30,17 @@ fn main() {
 			if arg_command.is_empty() && arg_command_value.is_empty() {
 				arg_command = argument.replace("--", "");
 			}
+		} else if arg_command_value.is_empty() {
+			arg_command_value = argument.to_string(); // Construct first argument
 		} else {
-			if arg_command_value.is_empty() {
-				arg_command_value = argument.to_string(); // Construct first argument
-			} else {
-				arg_command_value = format!("{} {}", arg_command_value, argument); // Construct argument value and concatenate :3
-			}
+			arg_command_value = format!("{} {}", arg_command_value, argument); // Construct argument value and concatenate :3
 		}
 
-		if index == args.len() - 1 { // Last argument so just push to vec
+		// If this is the last argument or next argument is a command, push to vec
+		if index == args.len() - 1 || args[index + 1].contains("--") {
 			arguments.push(vec![(arg_command, arg_command_value)]);
 			arg_command = String::new();
 			arg_command_value = String::new();
-		} else {
-			if args[index + 1].contains("--") { // Next argument is a command
-				arguments.push(vec![(arg_command, arg_command_value)]);
-				arg_command = String::new();
-				arg_command_value = String::new();
-			}
 		}
 	}
 

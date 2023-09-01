@@ -49,7 +49,7 @@ pub fn main() {
 		status("Downloading assets...");
 		let client = reqwest::blocking::Client::new();
 		for url in ASSET_URLS.iter() {
-			let filename = url.split("/").last().unwrap().to_lowercase();
+			let filename = url.split('/').last().unwrap().to_lowercase();
 			let output = client.get(url.to_string())
 				.send()
 				.expect("Failed to download asset")

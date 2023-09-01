@@ -8,20 +8,20 @@ const HELP_TEXT: &str = "\nUsage: --install [type] [?removeolder] [?migratefflag
 fn download_and_install(version_hash: &str, channel: &str, raw_args: Vec<Vec<(String, String)>>) {
 	let _remove_older = argparse::get_param_value(raw_args.clone(), "removeolder").is_empty();
 	let _migrate_fflags = argparse::get_param_value(raw_args.clone(), "migratefflags").is_empty();
-	let disallow_multithreading = argparse::get_param_value(raw_args, "nothreads").is_empty() == false; // If there is no --nothreads flag it will return true, which means we need to invert it
+	let disallow_multithreading = !argparse::get_param_value(raw_args, "nothreads").is_empty(); // If there is no --nothreads flag it will return true, which means we need to invert it
 
 	status(format!("Resolving package manifest for version hash {}...", version_hash));
 	let package_manifest = installation::get_package_manifest(version_hash.to_string(), channel.to_string());
 	success("Obtained rbxPkgManifest.txt successfully");
 
 	status("Parsing package manifest...");
-	let mut package_manifest_parsed: Vec<&str> = package_manifest.split("\n").collect();
+	let mut package_manifest_parsed: Vec<&str> = package_manifest.split('\n').collect();
 	package_manifest_parsed.remove(package_manifest_parsed.len() - 1); // Remove last element which is an empty string
 	let binary_type = installation::get_binary_type(package_manifest_parsed);
 	status(format!("Discovered Binary type: {}", binary_type));
 
-	let folder_path = format!("{}/roblox/{}/{}/{}", setup::get_applejuice_dir(), channel, binary_type, version_hash.to_string());
-	if setup::create_dir(&folder_path) == true {
+	let folder_path = format!("{}/roblox/{}/{}/{}", setup::get_applejuice_dir(), channel, binary_type, version_hash);
+	if setup::create_dir(&folder_path) {
 		status(format!("Constructed install directory at '{}'", folder_path));
 	} else {
 		error(format!("Failed to create directory at '{}'", folder_path));
@@ -88,32 +88,31 @@ MimeType=x-scheme-handler/{}", if binary_type == "Studio" { "roblox-studio;x-sch
 			"shortcut_path": desktop_shortcut_path,
 			"preferred_proton": proton_instance
 		}
-	}), &version_hash);
+	}), version_hash);
 
 	success(format!("Roblox {} has been installed!\n\t{} {} located in {}", binary_type, binary_type, version_hash, folder_path));
 }
 
 fn install_client(channel_arg: Option<String>, version_hash_arg: Option<String>, raw_args: Vec<Vec<(String, String)>>) {
-	let version_hash: String;
 	let mut channel: String = "LIVE".to_string();
 	
-	if !channel_arg.is_some() {
+	if channel_arg.is_none() {
 		status("Defaulting to LIVE channel...");
 	} else {
 		channel = channel_arg.unwrap_or_else(|| "LIVE".to_string());
 		status(format!("Using channel: {}", channel));
 	}
-	if !version_hash_arg.is_some() {
-		status("Getting latest version hash...");
-		version_hash = installation::get_latest_version_hash("Player", &channel);
+	let version_hash = if let Some(hash) = version_hash_arg {
+		hash
 	} else {
-		version_hash = version_hash_arg.unwrap();
-	}
+		status("Getting latest version hash...");
+		installation::get_latest_version_hash("Player", &channel)
+	};
 
 	download_and_install(&version_hash, &channel, raw_args);
 }
 fn install_studio(channel_arg: Option<String>, version_hash_arg: Option<String>, raw_args: Vec<Vec<(String, String)>>) {
-	if !version_hash_arg.is_some() {
+	if version_hash_arg.is_none() {
 		warning("No version hash provided, getting latest version hash instead...");
 	}
 	let channel: String = channel_arg.unwrap_or_else(|| "LIVE".to_owned());
@@ -124,11 +123,11 @@ fn install_studio(channel_arg: Option<String>, version_hash_arg: Option<String>,
 
 pub fn main(args: Vec<Vec<(String, String)>>) {
 	let binding = argparse::get_param_value(args.clone(), "install");
-	let parsed_args = binding.split(" ").collect::<Vec<&str>>();
-	if parsed_args.len() == 0 || parsed_args[0] == "blank" {
+	let parsed_args = binding.split(' ').collect::<Vec<&str>>();
+	if parsed_args.is_empty() || parsed_args[0] == "blank" {
 		error(format!("No command line arguments provided for install!{}", HELP_TEXT));
 	}
-	let install_type: &str = &parsed_args[0];
+	let install_type: &str = parsed_args[0];
 
 	match install_type {
 		"client" => install_client(parsed_args.get(1).map(|&string| string.to_owned()), parsed_args.get(2).map(|&string| string.to_owned()), args),

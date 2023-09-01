@@ -6,11 +6,11 @@ const HELP_TEXT: &str = "\nUsage: --purge [type]\nPurges cache or installs, usef
 
 pub fn main(args: Vec<Vec<(String, String)>>) {
 	let binding = argparse::get_param_value(args, "purge");
-	let parsed_args = binding.split(" ").collect::<Vec<&str>>();
+	let parsed_args = binding.split(' ').collect::<Vec<&str>>();
 	if parsed_args[0].is_empty() {
 		error(format!("No command line arguments provided to purge!{}", HELP_TEXT));
 	}
-	let install_type: &str = &parsed_args[0];
+	let install_type: &str = parsed_args[0];
 
 	println!("{:?}", parsed_args.clone());
 

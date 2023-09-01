@@ -7,7 +7,7 @@ const LATEST_VERSION_STUDIO_CHANNEL: &str = "https://clientsettings.roblox.com/v
 const LIVE_DEPLOYMENT_CDN: &str = "https://setup.rbxcdn.com/";
 const CHANNEL_DEPLOYMENT_CDN: &str = "https://roblox-setup.cachefly.net/channel/";
 
-const PLAYER_EXTRACT_BINDINGS: [(&'static str, &'static str); 20] = [
+const PLAYER_EXTRACT_BINDINGS: [(&str, &str); 20] = [
 	("RobloxApp.zip", ""),
 	("shaders.zip", "shaders/"),
 	("ssl.zip", "ssl/"),
@@ -29,7 +29,7 @@ const PLAYER_EXTRACT_BINDINGS: [(&'static str, &'static str); 20] = [
 	("extracontent-textures.zip", "ExtraContent/textures/"),
 	("extracontent-places.zip", "ExtraContent/places/")
 ];
-const STUDIO_EXTRACT_BINDINGS: [(&'static str, &'static str); 32] = [
+const STUDIO_EXTRACT_BINDINGS: [(&str, &str); 32] = [
 	("RobloxStudio.zip", ""),
 	("redist.zip", ""),
 	("Libraries.zip", ""),
@@ -88,7 +88,7 @@ pub fn get_latest_version_hash(version_type: &str, channel: &str) -> String {
 
 	success(format!("Received latest version hash: {}", output));
 
-	return output;
+	output
 }
 
 pub fn get_binary_type(package_manifest: Vec<&str>) -> &str {
@@ -107,7 +107,7 @@ pub fn get_binary_type(package_manifest: Vec<&str>) -> &str {
 		error("Could not determine binary type for provided package menifest!");
 	}
 
-	return binary;
+	binary
 }
 
 pub fn write_appsettings_xml(path: String) {
@@ -158,8 +158,8 @@ pub fn download_deployment(binary: &str, version_hash: String, channel: &str) ->
 	}
 
 	progress_bar::finalize_progress_bar();
-	success("All compressed files downloaded, expanding files...".to_string());
-	return temp_path; // Return the cache path to continue with extraction
+	success("All compressed files downloaded, expanding files...");
+	temp_path// Return the cache path to continue with extraction
 }
 
 pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path: String, disallow_multithreading: bool) {
@@ -178,7 +178,7 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 				progress_bar::print_progress_bar_info("!", format!("{} is already extracted. Skipping extraction.", package).as_str(), progress_bar::Color::LightYellow, progress_bar::Style::Bold);
 				continue;
 			}
-			if path.to_string() != "" { // Create directory if it doesn't exist during extraction
+			if !path.is_empty() { // Create directory if it doesn't exist during extraction
 				progress_bar::print_progress_bar_info("•", format!("Creating path for {}/{}", extraction_path, path).as_str(), progress_bar::Color::Blue, progress_bar::Style::Bold);
 				setup::create_dir(&format!("{}/{}", extraction_path, path));
 			}
@@ -208,7 +208,7 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 						warning(format!("[Thread {_index}] {} is already extracted. Skipping extraction.", package));
 						continue;
 					}
-					if path.to_string() != "" { // Create directory if it doesn't exist during extraction
+					if !path.is_empty() { // Create directory if it doesn't exist during extraction
 						setup::create_dir(&format!("{}/{}", extract_bind, path));
 					}
 					status(format!("[Thread {_index}] Extracting {}...", package));
@@ -250,5 +250,5 @@ pub fn get_package_manifest(version_hash: String, channel: String) -> String {
 		error(format!("Unexpected server response when getting the rbxPkgManifest information.\nResponse: {}", output));
 	}
 
-	return output;
+	output
 }

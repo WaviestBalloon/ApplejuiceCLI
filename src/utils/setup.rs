@@ -8,10 +8,10 @@ pub fn confirm_applejuice_data_folder_existence() -> bool { // Check whether the
 
 	match fs::metadata(path.clone()) {
 		Ok(_) => {
-			return true;
+			true
 		},
 		Err(_) => {
-			return false;
+			false
 		}
 	}
 }
@@ -45,10 +45,10 @@ pub fn confirm_existence(providedpath: &str) -> bool { // Check whether a item e
 	
 	match fs::metadata(path.clone()) {
 		Ok(_) => {
-			return true;
+			true
 		},
 		Err(_) => {
-			return false;
+			false
 		}
 	}
 }
@@ -56,10 +56,10 @@ pub fn confirm_existence(providedpath: &str) -> bool { // Check whether a item e
 pub fn _confirm_existence_raw(providedpath: &str) -> bool { // Check whether a item exists in the .applejuice data folder or a ancestor to it
 	match fs::metadata(providedpath) {
 		Ok(_) => {
-			return true;
+			true
 		},
 		Err(_) => {
-			return false;
+			false
 		}
 	}
 }
@@ -72,14 +72,14 @@ pub fn create_dir(providedpath: &str) -> bool { // Create a directory in the .ap
 
 	match fs::create_dir_all(path.clone()) {
 		Ok(_) => {
-			return true;
+			true
 		},
 		Err(_) => {
-			return false;
+			false
 		}
 	}
 }
 
 pub fn get_applejuice_dir() -> String { // Returns where the .applejuice data folder *should* be
-	return format!("{}/.local/share/applejuice", var("HOME").expect("$HOME not set"));
+	format!("{}/.local/share/applejuice", var("HOME").expect("$HOME not set"))
 }

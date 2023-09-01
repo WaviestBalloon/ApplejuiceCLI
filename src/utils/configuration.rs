@@ -47,7 +47,7 @@ pub fn _test_balls() {
 }
 
 pub fn update_config(json: serde_json::Value, config_type: &str) {
-	status("Updating configuration file...".to_string());
+	status("Updating configuration file...");
 	let config_path = format!("{}/config.json", setup::get_applejuice_dir());
 	if !setup::confirm_existence(&config_path) {
 		warning(format!("Failed to find configuration file at '{}', calling to construct the data folder!", config_path));
@@ -71,5 +71,5 @@ pub fn get_config(config_type: &str) -> serde_json::Value {
 	let config_file = fs::read_to_string(config_path.clone()).unwrap();
 	let config_json: serde_json::Value = serde_json::from_str(&config_file).unwrap();
 
-	return config_json[config_type].clone();
+	config_json[config_type].clone()
 }
