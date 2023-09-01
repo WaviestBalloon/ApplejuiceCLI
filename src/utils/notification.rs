@@ -1,4 +1,4 @@
-use std::process;
+use std::process::{self, exit};
 
 pub fn create_notification(icon: &str, expire_time: &str, title: &str, body: &str) {
 	let output = process::Command::new("notify-send")
@@ -14,6 +14,7 @@ pub fn create_notification(icon: &str, expire_time: &str, title: &str, body: &st
 		Ok(_) => { },
 		Err(errmsg) => {
 			println!("Failed to create notification, raw: '{}'\nError: {}", icon, errmsg);
+			exit(1);
 		}
 	}
 }

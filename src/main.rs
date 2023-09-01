@@ -1,4 +1,4 @@
-use std::env;
+use std::{env, process::exit};
 mod utils; // Import utilities that are not necessarily commands
 mod args; // Import modules which act as a handler for certain command parameters
 use crate::utils::{terminal::*, *};
@@ -12,12 +12,14 @@ compile_error!("Since you are compiling for Windows, consider using Bloxstrap: h
 fn main() {
 	let args: Vec<String> = env::args().collect();
 	if !setup::confirm_applejuice_data_folder_existence() && args[1] != "init" { // Initialisation warning
-		warning("Applejuice has not been initialised yet! Attempting to initialise...");
+		warning!("Applejuice has not been initialised yet! Attempting to initialise...");
 		args::initialise::main();
-		status("Continuing with task...");
+		status!("Continuing with task...");
 	}
 	if args.len() == 1 {
-		error(format!("No command line arguments provided!\nRun '{} --help' for more information.", args[0]));
+		let _indentation = error!("No command line arguments provided!");
+		help!("Run '{} --help' for more information.", args[0]);
+		exit(1);
 	}
 
 	let command = &args[1];
@@ -57,7 +59,9 @@ fn main() {
 		// TODO: fix this in above code
 		"launch" => args::launch::main(arguments.into_iter().flatten().collect()),
 		_ => {
-			error(format!("Unknown command parameter: '{}'\nRun '{} --help' for more information.", command, args[0]));
+			let _indentation = error!("Unknown command parameter: '{:?}'", command);
+			help!("Run '{} --help' for more information.", args[0]);
+			exit(1);
 		}
 	}
 }

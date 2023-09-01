@@ -1,4 +1,4 @@
-use std::{fs, env::var};
+use std::{fs, env::var, process::exit};
 use serde_json::json;
 
 use crate::utils::terminal::*;
@@ -18,22 +18,23 @@ pub fn confirm_applejuice_data_folder_existence() -> bool { // Check whether the
 
 pub fn construct_applejuice_data_folder() { // Construct the .applejuice data folder, part of initialisation
 	let path: String = format!("{}/.local/share/applejuice", var("HOME").expect("$HOME not set"));
-	status(format!("Creating the Applejuice data directory at '{}'", path));
+	status!("Creating the Applejuice data directory at '{}'", path);
 
 	match fs::create_dir(path.clone()) {
 		Ok(_) => { },
 		Err(errmsg) => {
 			if errmsg.kind() == std::io::ErrorKind::AlreadyExists {
-				warning(format!("The Applejuice data directory already exists at '{}', skipping directory construction...", path));
+				warning!("The Applejuice data directory already exists at '{}', skipping directory construction...", path);
 			} else {
-				error(format!("Failed to create the Applejuice data directory, raw: '{}'\nError: {}", path, errmsg));
+				error!("Failed to create the Applejuice data directory, raw: '{}'\nError: {}", path, errmsg);
+				exit(1);
 			}
 		}
 	}
 
-	status("Creating README.txt...");
+	status!("Creating README.txt...");
 	fs::write(format!("{}/{}", path, "README.txt"), "Hey! Welcome to the cool zone...\n\tIf you want a fresh start, delete this folder and Applejuice will forget everything!\n\tGitHub: https://github.com/WaviestBalloon/ApplejuiceCLI\n\tKnown issues list: https://github.com/WaviestBalloon/ApplejuiceCLI/issues/1").expect("Failed to create the README file!");
-	status("Creating config.json...");
+	status!("Creating config.json...");
 	fs::write(format!("{}/{}", path, "config.json"), json!({}).to_string()).expect("Failed to create the config file!");
 }
 

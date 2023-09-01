@@ -1,3 +1,4 @@
+use std::process::exit;
 use std::{process, fs, path, io, thread, thread::available_parallelism};
 use crate::utils::terminal::*;
 use crate::setup;
@@ -71,7 +72,7 @@ pub fn get_latest_version_hash(version_type: &str, channel: &str) -> String {
 	} else if version_type == "Studio" {
 		version_url = format!("{}{}", LATEST_VERSION_STUDIO_CHANNEL, channel);
 	} else {
-		error(format!("Invalid version type: {}", version_type));
+		error!("Invalid version type: {}", version_type);
 		return "".to_string();
 	}
 
@@ -86,7 +87,7 @@ pub fn get_latest_version_hash(version_type: &str, channel: &str) -> String {
 	let version_hash = json["clientVersionUpload"].as_str().unwrap();
 	output = version_hash.to_string();
 
-	success(format!("Received latest version hash: {}", output));
+	success!("Received latest version hash: {}", output);
 
 	output
 }
@@ -104,7 +105,8 @@ pub fn get_binary_type(package_manifest: Vec<&str>) -> &str {
 		}
 	}
 	if binary.is_empty() {
-		error("Could not determine binary type for provided package menifest!");
+		error!("Could not determine binary type for provided package menifest!");
+		exit(1);
 	}
 
 	binary
@@ -124,20 +126,20 @@ pub fn download_deployment(binary: &str, version_hash: String, channel: &str) ->
 	let temp_path = format!("{}/cache/{}-download", root_path, version_hash);
 
 	if setup::confirm_existence(&temp_path) {
-		warning(format!("{} is already downloaded. Skipping download. Use --purge cache to delete previously downloaded files.", version_hash));
+		warning!("{} is already downloaded. Skipping download. Use --purge cache to delete previously downloaded files.", version_hash);
 		return temp_path;
 	}
 	setup::create_dir(&format!("cache/{}-download", version_hash));
-	success("Constructed cache directory");
-	status("Downloading deployment...");
-	status(format!("Using cache directory: {temp_path}"));
+	success!("Constructed cache directory");
+	status!("Downloading deployment...");
+	status!("Using cache directory: {temp_path}");
 	
 	let bindings: &[_] = if binary == "Player" { &PLAYER_EXTRACT_BINDINGS } else { &STUDIO_EXTRACT_BINDINGS };
 	let deployment_channel = if channel == "LIVE" { LIVE_DEPLOYMENT_CDN.to_string() } else { format!("{CHANNEL_DEPLOYMENT_CDN}{channel}/") };
 
 	//dbg!("{} {} {}", CHANNEL_DEPLOYMENT_CDN, channel, version_hash);
-	status(format!("Using deployment CDN URL: {}", deployment_channel));
-	status(format!("{} files will be downloaded from {}!", bindings.len(), deployment_channel));
+	status!("Using deployment CDN URL: {}", deployment_channel);
+	status!("{} files will be downloaded from {}!", bindings.len(), deployment_channel);
 
 	let client = reqwest::blocking::Client::new();
 	progress_bar::init_progress_bar_with_eta(bindings.len());
@@ -146,7 +148,7 @@ pub fn download_deployment(binary: &str, version_hash: String, channel: &str) ->
 
 		let mut response = client.get(format!("{}{}-{}", deployment_channel, version_hash, package)).send().unwrap();
 		if !response.status().is_success() {
-			warning(format!("Failed to download {} from CDN! Status code: {}", package, response.status()));
+			warning!("Failed to download {} from CDN! Status code: {}", package, response.status());
 			continue;
 		}
 		let path: path::PathBuf = format!("{}/{}", temp_path, package).into();
@@ -158,13 +160,13 @@ pub fn download_deployment(binary: &str, version_hash: String, channel: &str) ->
 	}
 
 	progress_bar::finalize_progress_bar();
-	success("All compressed files downloaded, expanding files...");
+	success!("All compressed files downloaded, expanding files...");
 	temp_path// Return the cache path to continue with extraction
 }
 
 pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path: String, disallow_multithreading: bool) {
 	let bindings: &[_] = if binary == "Player" { &PLAYER_EXTRACT_BINDINGS } else { &STUDIO_EXTRACT_BINDINGS };
-	status(format!("{} files will be extracted!", bindings.len()));
+	status!("{} files will be extracted!", bindings.len());
 
 	let start_time = std::time::Instant::now();
 	progress_bar::init_progress_bar_with_eta(bindings.len());
@@ -192,26 +194,26 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 			progress_bar::inc_progress_bar();
 		}
 	} else {
-		warning("Multi-threading is enabled for this part! This may cause issues with some files not being extracted properly; If you encounter any issues, re-run this command with the --nothreads flag");
+		warning!("Multi-threading is enabled for this part! This may cause issues with some files not being extracted properly; If you encounter any issues, re-run this command with the --nothreads flag");
 		let threads_available = available_parallelism().unwrap();
 		let mut threads = vec![];
 		let chunked_files = bindings.chunks(threads_available.into());
 
-		status(format!("{} threads available, {} chunks created from bindings", threads_available, threads_available));
+		status!("{} threads available, {} chunks created from bindings", threads_available, threads_available);
 		for (_index, chunk) in chunked_files.enumerate() {
-			status(format!("Preparing thread {}...", _index));
+			status!("Preparing thread {}...", _index);
 			let extract_bind = extraction_path.clone();
 			let temp_path_bind = temp_path.clone();
 			threads.push(thread::spawn(move || {
 				for (package, path) in chunk.iter() {
 					if setup::confirm_existence(&format!("{}/{}", extract_bind, path)) && !path.is_empty() {
-						warning(format!("[Thread {_index}] {} is already extracted. Skipping extraction.", package));
+						warning!("[Thread {_index}] {} is already extracted. Skipping extraction.", package);
 						continue;
 					}
 					if !path.is_empty() { // Create directory if it doesn't exist during extraction
 						setup::create_dir(&format!("{}/{}", extract_bind, path));
 					}
-					status(format!("[Thread {_index}] Extracting {}...", package));
+					status!("[Thread {_index}] Extracting {}...", package);
 					process::Command::new("unzip")
 						.arg(format!("{}/{}", temp_path_bind, package))
 						.arg("-d")
@@ -221,7 +223,7 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 
 				}
 
-				success(format!("[Thread {_index}] Thread quitting!"));
+				success!("[Thread {_index}] Thread quitting!");
 			}));
 		}
 
@@ -231,7 +233,7 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 	}
 
 	progress_bar::finalize_progress_bar();
-	success(format!("Decompression task finished in {} milliseconds!", start_time.elapsed().as_millis()));
+	success!("Decompression task finished in {} milliseconds!", start_time.elapsed().as_millis());
 }
 
 pub fn get_package_manifest(version_hash: String, channel: String) -> String {
@@ -245,9 +247,11 @@ pub fn get_package_manifest(version_hash: String, channel: String) -> String {
 		.unwrap();
 
 	if output.contains("AccessDenied") {
-		error(format!("Recieved AccessDenied response from server when getting rbxPkgManifest, the version hash is probably invalid.\nResponse: {}\nVersion hash: {}\nFull URL: {}", output, version_hash, url));
+		error!("Recieved AccessDenied response from server when getting rbxPkgManifest, the version hash is probably invalid.\nResponse: {}\nVersion hash: {}\nFull URL: {}", output, version_hash, url);
+		exit(1);
 	} else if output.contains("Error") {
-		error(format!("Unexpected server response when getting the rbxPkgManifest information.\nResponse: {}", output));
+		error!("Unexpected server response when getting the rbxPkgManifest information.\nResponse: {}", output);
+		exit(1);
 	}
 
 	output

@@ -5,11 +5,11 @@ use std::process;
 const _HELP_TEXT: &str = "\nUsage: TODO";
 
 pub fn main() {
-	status("Launching Roblox...");
+	status!("Launching Roblox...");
 	let dir_location = setup::get_applejuice_dir();
 
 	// TODO: Maybe make this only appear when prefixdata is first created?
-	warning("Log in with another device; web-view is currently broken. https://www.roblox.com/crossdevicelogin/ConfirmCode");
+	warning!("Log in with another device; web-view is currently broken. https://www.roblox.com/crossdevicelogin/ConfirmCode");
 	
 	process::Command::new("xdg-open")
 		.arg(dir_location)

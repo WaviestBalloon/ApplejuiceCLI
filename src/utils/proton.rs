@@ -8,7 +8,7 @@ pub fn discover_proton_directory() -> serde_json::Value { // Try to automaticall
 
 	match fs::read_dir(potential_path.clone()) {
 		Ok(_) => {
-			status(format!("Found Steam directory at '{}'", potential_path));
+			status!("Found Steam directory at '{}'", potential_path);
 
 			for entry in fs::read_dir(potential_path.clone()).unwrap() {
 				let unwrapped_entry = entry.unwrap();
@@ -16,7 +16,7 @@ pub fn discover_proton_directory() -> serde_json::Value { // Try to automaticall
 				let fsname = path.file_name().unwrap().to_str().unwrap();
 
 				if fsname.contains("Proton") {
-					success(format!("Found '{}' at '{}'", fsname, path.to_str().unwrap()));
+					success!("Found '{}' at '{}'", fsname, path.to_str().unwrap());
 					installations["proton_installations"][fsname] = serde_json::Value::String(path.to_str().unwrap().to_string());
 				}
 			}
@@ -24,7 +24,7 @@ pub fn discover_proton_directory() -> serde_json::Value { // Try to automaticall
 			installations
 		},
 		Err(_) => {
-			warning(format!("Failed to find the Steam directory at '{}'", potential_path));
+			warning!("Failed to find the Steam directory at '{}'", potential_path);
 			serde_json::Value::Null
 		}
 	}

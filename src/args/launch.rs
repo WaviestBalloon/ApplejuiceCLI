@@ -16,25 +16,25 @@ pub fn main(raw_args: Vec<(String, String)>) {
 	let debug_notifications = argparse::get_param_value_new(&raw_args, "debug"); // Optional
 	
 	if skip_update_check.is_none() {
-		status("Checking for updates...");
+		status!("Checking for updates...");
 		let latest_version = installation::get_latest_version_hash(binary_type, channel);
 
 		if &latest_version == version_hash {
-			success("You are on the latest version!");
+			success!("You are on the latest version!");
 		} else {
-			warning(format!("You are not on the latest version! You are on {} and the latest version for {} is {}", version_hash, channel, latest_version));
+			warning!("You are not on the latest version! You are on {} and the latest version for {} is {}", version_hash, channel, latest_version);
 			let formatted_install_command = format!("--install {} {}", if binary_type == "Player" { "client" } else { "studio" }, if channel == "LIVE" { "" } else { channel });
 			create_notification("dialog-warning", "5000", "Version outdated!", &format!("You are on {} and the latest version for {} is {}\nConsider running \"{}\"", version_hash.replace("version-", ""), channel, latest_version.replace("version-", ""), formatted_install_command));
 		}
 	}
-	status(format!("Protocol parameter(s): {}", protocol_arguments));
+	status!("Protocol parameter(s): {}", protocol_arguments);
 	if debug_notifications.is_some() { create_notification("dialog-info", "15000", "Debug protocol parameters", protocol_arguments); }
 
-	status("Detecting Proton...");
+	status!("Detecting Proton...");
 	let installation_configuration = configuration::get_config(version_hash);
 	let installed_deployment_location = installation_configuration["install_path"].as_str().unwrap();
 	
-	status("Starting RPC...");
+	status!("Starting RPC...");
 	let client = match DiscordIpcClient::new("1145934604444897410").and_then(|mut client| {
 		client.connect()?;
 
@@ -50,20 +50,20 @@ pub fn main(raw_args: Vec<(String, String)>) {
 					.duration_since(time::SystemTime::UNIX_EPOCH).unwrap().as_millis() as i64));
 
 		client.set_activity(payload)?;
-		success("RPC instance started");
+		success!("RPC instance started");
 		if debug_notifications.is_some() { create_notification("dialog-info", "15000", "Debug RPC", "Rich presence connected"); }
 
 		Ok(client)
 	}) {
 		Ok(client) => Some(client),
 		Err(errmsg) => {
-			warning("Failed to start RPC instance");
+			warning!("Failed to start RPC instance");
 			if debug_notifications.is_some() { create_notification("dialog-info", "15000", "Debug RPC", &format!("Rich presence failed to start!\n{}", errmsg)); }
 			None
 		}
 	};
 
-	status("Launching Roblox...");
+	status!("Launching Roblox...");
 	create_notification(&format!("{}/assets/crudejuice.png", dir_location), "5000", &format!("Roblox {} is starting!", binary_type), "");
 	let output = process::Command::new(dbg!(format!("{}/proton", installation_configuration["preferred_proton"].as_str().unwrap())))
 		.env("STEAM_COMPAT_DATA_PATH", format!("{}/prefixdata", dir_location))
@@ -76,9 +76,9 @@ pub fn main(raw_args: Vec<(String, String)>) {
 		.wait()
 		.expect("Failed to wait on Roblox Player using Proton");
 
-	status(format!("Roblox has exited with code {}", output.code().unwrap_or(0)));
+	status!("Roblox has exited with code {}", output.code().unwrap_or(0));
 	create_notification(&format!("{}/assets/crudejuice.png", dir_location), "5000", &format!("Roblox {} has closed", binary_type), &format!("Exit code: {}", output.code().unwrap_or(0)));
 	
-	status("Dropping RPC...");
+	status!("Dropping RPC...");
 	drop(client);
 }
