@@ -38,7 +38,7 @@ struct RobloxInstallation<'a> {
 	}
 */
 
-pub fn test_balls() {
+pub fn _test_balls() {
 	let mut x = Config::default();
 	x.proton_installations.insert("sex", Path::new("/balls"));
 	let a = serde_json::to_string(&x).unwrap();

@@ -53,7 +53,7 @@ pub fn confirm_existence(providedpath: &str) -> bool { // Check whether a item e
 	}
 }
 
-pub fn confirm_existence_raw(providedpath: &str) -> bool { // Check whether a item exists in the .applejuice data folder or a ancestor to it
+pub fn _confirm_existence_raw(providedpath: &str) -> bool { // Check whether a item exists in the .applejuice data folder or a ancestor to it
 	match fs::metadata(providedpath) {
 		Ok(_) => {
 			return true;

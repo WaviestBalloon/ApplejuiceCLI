@@ -2,7 +2,7 @@ use crate::utils::setup;
 use crate::utils::terminal::*;
 use std::process;
 
-const HELP_TEXT: &str = "\nUsage: TODO";
+const _HELP_TEXT: &str = "\nUsage: TODO";
 
 pub fn main() {
 	status("Launching Roblox...");

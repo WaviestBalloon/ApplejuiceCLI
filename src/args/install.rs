@@ -6,8 +6,8 @@ use crate::utils::{terminal::*, installation, setup, configuration, argparse};
 const HELP_TEXT: &str = "\nUsage: --install [type] [?removeolder] [?migratefflags] \nInstalls Roblox Client or Roblox Studio\n\nOptions:\n\tclient\tInstalls the Roblox Client\n\tstudio\tInstalls Roblox Studio\n\nExample: --install client zcanary --removeolder --migratefflags";
 
 fn download_and_install(version_hash: &str, channel: &str, raw_args: Vec<Vec<(String, String)>>) {
-	let remove_older = argparse::get_param_value(raw_args.clone(), "removeolder").is_empty();
-	let migrate_fflags = argparse::get_param_value(raw_args.clone(), "migratefflags").is_empty();
+	let _remove_older = argparse::get_param_value(raw_args.clone(), "removeolder").is_empty();
+	let _migrate_fflags = argparse::get_param_value(raw_args.clone(), "migratefflags").is_empty();
 	let disallow_multithreading = argparse::get_param_value(raw_args, "nothreads").is_empty() == false; // If there is no --nothreads flag it will return true, which means we need to invert it
 
 	status(format!("Resolving package manifest for version hash {}...", version_hash));

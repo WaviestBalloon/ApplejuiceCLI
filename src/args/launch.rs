@@ -4,7 +4,7 @@ use std::process;
 use std::time;
 use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
 
-const HELP_TEXT: &str = "\nUsage: TODO";
+const _HELP_TEXT: &str = "\nUsage: TODO";
 
 pub fn main(raw_args: Vec<(String, String)>) {
 	let dir_location = setup::get_applejuice_dir();
