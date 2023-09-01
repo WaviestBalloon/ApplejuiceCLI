@@ -5,11 +5,7 @@ use crate::utils::{terminal::*, installation, setup, configuration, argparse};
 
 const HELP_TEXT: &str = "\nUsage: --install [type] [?removeolder] [?migratefflags] \nInstalls Roblox Client or Roblox Studio\n\nOptions:\n\tclient\tInstalls the Roblox Client\n\tstudio\tInstalls Roblox Studio\n\nExample: --install client zcanary --removeolder --migratefflags";
 
-fn download_and_install(version_hash: &str, channel: &str, raw_args: Vec<Vec<(String, String)>>) {
-	let _remove_older = argparse::get_param_value(raw_args.clone(), "removeolder").is_empty();
-	let _migrate_fflags = argparse::get_param_value(raw_args.clone(), "migratefflags").is_empty();
-	let disallow_multithreading = !argparse::get_param_value(raw_args, "nothreads").is_empty(); // If there is no --nothreads flag it will return true, which means we need to invert it
-
+fn download_and_install(version_hash: &str, channel: &str, threading: bool) {
 	status!("Resolving package manifest for version hash {}...", version_hash);
 	let package_manifest = installation::get_package_manifest(version_hash.to_string(), channel.to_string());
 	success!("Obtained rbxPkgManifest.txt successfully");
@@ -35,7 +31,7 @@ fn download_and_install(version_hash: &str, channel: &str, raw_args: Vec<Vec<(St
 	success!("Downloaded deployment successfully!");
 
 	status!("Installing Roblox...");
-	installation::extract_deployment_zips(binary_type, cache_path, folder_path.clone(), disallow_multithreading);
+	installation::extract_deployment_zips(binary_type, cache_path, folder_path.clone(), !threading);
 	success!("Extracted deployment successfully!");
 
 	status!("Creating ClientSettings for FFlag configuration...");
@@ -94,47 +90,36 @@ MimeType=x-scheme-handler/{}", if binary_type == "Studio" { "roblox-studio;x-sch
 	success!("Roblox {} has been installed!\n\t{} {} located in {}", binary_type, binary_type, version_hash, folder_path);
 }
 
-fn install_client(channel_arg: Option<String>, version_hash_arg: Option<String>, raw_args: Vec<Vec<(String, String)>>) {
-	let mut channel: String = "LIVE".to_string();
-	
-	if channel_arg.is_none() {
-		status!("Defaulting to LIVE channel...");
-	} else {
-		channel = channel_arg.unwrap_or_else(|| "LIVE".to_string());
-		status!("Using channel: {}", channel);
-	}
-	let version_hash = if let Some(hash) = version_hash_arg {
-		hash
-	} else {
-		status!("Getting latest version hash...");
-		installation::get_latest_version_hash("Player", &channel)
-	};
-
-	download_and_install(&version_hash, &channel, raw_args);
-}
-fn install_studio(channel_arg: Option<String>, version_hash_arg: Option<String>, raw_args: Vec<Vec<(String, String)>>) {
-	if version_hash_arg.is_none() {
-		warning!("No version hash provided, getting latest version hash instead...");
-	}
-	let channel: String = channel_arg.unwrap_or_else(|| "LIVE".to_owned());
-	let version_hash: String = version_hash_arg.unwrap_or_else(|| installation::get_latest_version_hash("Studio", &channel));
-
-	download_and_install(&version_hash, "LIVE", raw_args);
-}
-
 pub fn main(args: Vec<Vec<(String, String)>>) {
 	let binding = argparse::get_param_value(args.clone(), "install");
 	let parsed_args = binding.split(' ').collect::<Vec<&str>>();
 	if parsed_args.is_empty() || parsed_args[0] == "blank" {
 		error!("No command line arguments provided for install!{}", HELP_TEXT);
+		exit(1);
 	}
-	let install_type: &str = parsed_args[0];
-
-	match install_type {
-		"client" => install_client(parsed_args.get(1).map(|&string| string.to_owned()), parsed_args.get(2).map(|&string| string.to_owned()), args),
-		"studio" => install_studio(parsed_args.get(1).map(|&string| string.to_owned()), parsed_args.get(2).map(|&string| string.to_owned()), args),
+	let install_type: &str = match parsed_args[0] {
+		"studio" => "Studio",
+		"player" => "Player",
 		_ => {
 			error!("Unknown type to install '{}'{}", parsed_args[0], HELP_TEXT);
+			exit(1);
 		}
+	};
+
+	let threading = !argparse::get_param_value(args, "nothreads").is_empty();
+	let channel = parsed_args.get(1).map_or("LIVE", |&channel| channel);
+	let version_hash = parsed_args.get(2).map_or_else(|| {
+		status!("Getting latest version hash...");
+		installation::get_latest_version_hash(install_type, channel)
+	}, |&string| string.to_owned());
+
+	// TODO: use these flags
+	// let _remove_older = argparse::get_param_value(raw_args.clone(), "removeolder").is_empty();
+	// let _migrate_fflags = argparse::get_param_value(raw_args.clone(), "migratefflags").is_empty();
+
+	match install_type {
+		"Client" => download_and_install(&version_hash, &channel, threading),
+		"Studio" => download_and_install(&version_hash, &channel, threading),
+		_ => unreachable!()
 	}
 }
