@@ -1,6 +1,8 @@
 use std::{env, process::exit};
 mod utils; // Import utilities that are not necessarily commands
-mod args; // Import modules which act as a handler for certain command parameters
+mod args; use utils::argparse::parse_arguments;
+
+// Import modules which act as a handler for certain command parameters
 use crate::utils::{terminal::*, *};
 
 #[cfg(not(target_os = "linux"))]
@@ -24,40 +26,17 @@ fn main() {
 
 	let command = &args[1];
 	let command_clean: &str = &command.replace("--", "");
-	let mut arguments: Vec<Vec<(String, String)>> = vec![]; // Collected args and their values
-	let mut arg_command = String::new(); // Current command parameter being collected
-	let mut arg_command_value = String::new(); // Current command parameter value being collected
-
-	for (index, argument) in args.iter().enumerate() {
-		if index == 0 { continue; }
-
-		if argument.contains("--") {
-			if arg_command.is_empty() && arg_command_value.is_empty() {
-				arg_command = argument.replace("--", "");
-			}
-		} else if arg_command_value.is_empty() {
-			arg_command_value = argument.to_string(); // Construct first argument
-		} else {
-			arg_command_value = format!("{} {}", arg_command_value, argument); // Construct argument value and concatenate :3
-		}
-
-		// If this is the last argument or next argument is a command, push to vec
-		if index == args.len() - 1 || args[index + 1].contains("--") {
-			arguments.push(vec![(arg_command, arg_command_value)]);
-			arg_command = String::new();
-			arg_command_value = String::new();
-		}
-	}
+	let arguments = parse_arguments(&args);
 
 	match command_clean {
 		"help" => args::help::main(),
 		"init" => args::initialise::main(),
-		"install" => args::install::main(arguments),
-		"purge" => args::purge::main(arguments),
+		"install" => args::install::main(arguments.into_iter().map(|item| vec![item]).collect()),
+		"purge" => args::purge::main(arguments.into_iter().map(|item| vec![item]).collect()),
 		"opendata" => args::opendata::main(),
 		"play" => args::play::main(),
 		// TODO: fix this in above code
-		"launch" => args::launch::main(arguments.into_iter().flatten().collect()),
+		"launch" => args::launch::main(&arguments),
 		_ => {
 			let _indentation = error!("Unknown command parameter: '{:?}'", command);
 			help!("Run '{} --help' for more information.", args[0]);

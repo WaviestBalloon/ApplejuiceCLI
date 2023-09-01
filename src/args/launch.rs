@@ -6,7 +6,7 @@ use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
 
 const _HELP_TEXT: &str = "\nUsage: TODO";
 
-pub fn main(raw_args: Vec<(String, String)>) {
+pub fn main(raw_args: &[(String, String)]) {
 	let dir_location = setup::get_applejuice_dir();
 	let binary_type = argparse::get_param_value_new(&raw_args, "binary").unwrap();
 	let channel = argparse::get_param_value_new(&raw_args, "channel").unwrap();
