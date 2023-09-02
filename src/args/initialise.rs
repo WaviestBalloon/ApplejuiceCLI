@@ -40,6 +40,12 @@ pub fn main() {
 		setup::create_dir("roblox");
 		success!("Created Roblox directory");
 	}
+	if setup::confirm_existence("prefixdata") {
+		warning!("Prefix directory already exists!");
+	} else {
+		setup::create_dir("prefixdata");
+		success!("Created prefix directory");
+	}
 
 	if setup::confirm_existence("assets") {
 		warning!("Assets directory already exists!");
