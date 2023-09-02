@@ -1,12 +1,60 @@
+use std::borrow::Cow;
 use std::process::exit;
 use std::{process, fs, path, io, thread, thread::available_parallelism};
 use crate::utils::terminal::*;
 use crate::setup;
+use serde::Deserialize;
+use serde_json::from_str;
+use reqwest::blocking::get;
 
 const LATEST_VERSION_PLAYER_CHANNEL: &str = "https://clientsettings.roblox.com/v2/client-version/WindowsPlayer/channel/";
 const LATEST_VERSION_STUDIO_CHANNEL: &str = "https://clientsettings.roblox.com/v2/client-version/WindowsStudio64/channel/";
 const LIVE_DEPLOYMENT_CDN: &str = "https://setup.rbxcdn.com/";
 const CHANNEL_DEPLOYMENT_CDN: &str = "https://roblox-setup.cachefly.net/channel/";
+
+pub struct ExactVersion<'a> {
+	pub channel: Cow<'a, str>,
+	pub hash: Cow<'a, str>
+}
+
+impl<'a> ExactVersion<'a> {
+	pub fn new(channel: impl Into<Cow<'a, str>>, hash: impl Into<Cow<'a, str>>) -> Self {
+		Self {channel: channel.into(), hash: hash.into()}
+	}
+}
+
+pub struct LatestVersion<'a> {
+	pub channel: Cow<'a, str>,
+	pub binary: Cow<'a, str>
+}
+
+impl<'a> LatestVersion<'a> {
+	pub fn new(channel: impl Into<Cow<'a, str>>, binary: impl Into<Cow<'a, str>>) -> Self {
+		Self {channel: channel.into(), binary: binary.into()}
+	}
+}
+
+pub enum Version<'a> {
+	Exact(ExactVersion<'a>),
+	Latest(LatestVersion<'a>)
+}
+
+impl<'a> Version<'a> {
+	pub fn exact(channel: impl Into<Cow<'a, str>>, hash: impl Into<Cow<'a, str>>) -> Self {
+		Self::Exact(ExactVersion::new(channel, hash))
+	}
+
+	pub fn latest(channel: impl Into<Cow<'a, str>>, binary: impl Into<Cow<'a, str>>) -> Self {
+		Self::Latest(LatestVersion::new(channel, binary))
+	}
+
+	pub fn fetch_latest(self) -> ExactVersion<'a> {
+		match self {
+			Self::Latest(latest) => fetch_latest_version(latest),
+			Self::Exact(exact) => exact
+		}
+	}
+}
 
 const PLAYER_EXTRACT_BINDINGS: [(&str, &str); 20] = [
 	("RobloxApp.zip", ""),
@@ -65,31 +113,41 @@ const STUDIO_EXTRACT_BINDINGS: [(&str, &str); 32] = [
 	("extracontent-models.zip", "ExtraContent/models/")
 ];
 
-pub fn get_latest_version_hash(version_type: &str, channel: &str) -> String {
-	let version_url: String ;
-	if version_type == "Player" {
-		version_url = format!("{}{}", LATEST_VERSION_PLAYER_CHANNEL, channel);
-	} else if version_type == "Studio" {
-		version_url = format!("{}{}", LATEST_VERSION_STUDIO_CHANNEL, channel);
-	} else {
-		error!("Invalid version type: {}", version_type);
-		return "".to_string();
+pub fn get_latest_version_hash(binary: &str, channel: &str) -> String {
+	fetch_latest_version(LatestVersion {
+		channel: Cow::Borrowed(channel),
+		binary: Cow::Borrowed(binary)
+	}).hash.into_owned()
+}
+
+pub fn fetch_latest_version(version: LatestVersion) -> ExactVersion {
+	#[derive(Deserialize)]
+	#[serde(rename_all = "camelCase")]
+	struct Response {
+		client_version_upload: String
 	}
 
-	let client = reqwest::blocking::Client::new();
-	let mut output = client.get(version_url)
-		.send()
+	let _indentation = status!("Fetching latest version hash");
+	let LatestVersion {channel, binary} = version;
+
+	let version = match &*binary.to_lowercase() {
+		"player" => format!("{}{}", LATEST_VERSION_PLAYER_CHANNEL, channel),
+		"studio" => format!("{}{}", LATEST_VERSION_STUDIO_CHANNEL, channel),
+		_ => {
+			error!("Unknown binary type {:?}", binary);
+			exit(1);
+		}
+	};
+
+	let output = get(version)
 		.expect("Failed to get the latest available version hash.")
 		.text()
 		.unwrap();
 
-	let json: serde_json::Value = serde_json::from_str(&output).unwrap();
-	let version_hash = json["clientVersionUpload"].as_str().unwrap();
-	output = version_hash.to_string();
-
-	success!("Received latest version hash: {}", output);
-
-	output
+	let Response {client_version_upload: hash} = from_str(&output).unwrap();
+	help!("Resolved to {}", hash);
+	success!("Done");
+	ExactVersion {channel, hash: Cow::Owned(hash)}
 }
 
 pub fn get_binary_type(package_manifest: Vec<&str>) -> &str {
@@ -166,12 +224,12 @@ pub fn download_deployment(binary: &str, version_hash: String, channel: &str) ->
 
 pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path: String, disallow_multithreading: bool) {
 	let bindings: &[_] = if binary == "Player" { &PLAYER_EXTRACT_BINDINGS } else { &STUDIO_EXTRACT_BINDINGS };
-	status!("{} files will be extracted!", bindings.len());
+	help!("{} files will be extracted", bindings.len());
 
-	let start_time = std::time::Instant::now();
+	//let start_time = std::time::Instant::now();
 	progress_bar::init_progress_bar_with_eta(bindings.len());
 
-	println!("{}", disallow_multithreading);
+	//println!("{}", disallow_multithreading);
 	if disallow_multithreading {
 		for (_index, (package, path)) in bindings.iter().enumerate() {
 			progress_bar::print_progress_bar_info("•", format!("Extracting {package}...").as_str(), progress_bar::Color::Blue, progress_bar::Style::Bold);
@@ -194,36 +252,42 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 			progress_bar::inc_progress_bar();
 		}
 	} else {
-		warning!("Multi-threading is enabled for this part! This may cause issues with some files not being extracted properly; If you encounter any issues, re-run this command with the --nothreads flag");
+		//warning!("Multi-threading is enabled for this part! This may cause issues with some files not being extracted properly; If you encounter any issues, re-run this command with the --nothreads flag");
 		let threads_available = available_parallelism().unwrap();
-		let mut threads = vec![];
-		let chunked_files = bindings.chunks(threads_available.into());
+		let chunked_files = bindings.chunks((bindings.len() + threads_available.get() - 1) / threads_available);
 
-		status!("{} threads available, {} chunks created from bindings", threads_available, threads_available);
+		let indentation = status!("Multi-threading is enabled");
+		help!("You can disable this with --nothreads");
+		help!("{} threads available, {} chunks created from bindings", threads_available, chunked_files.size_hint().0);
+		drop(indentation);
+
+		let mut threads = vec![];
+		//dbg!(&bindings);
+
 		for (_index, chunk) in chunked_files.enumerate() {
-			status!("Preparing thread {}...", _index);
+			//dbg!(&chunk);
+			//status!("Preparing thread {}...", _index);
 			let extract_bind = extraction_path.clone();
 			let temp_path_bind = temp_path.clone();
+			let indentation = LogContext::get_indentation();
 			threads.push(thread::spawn(move || {
+				LogContext::set_indentation(indentation);
 				for (package, path) in chunk.iter() {
 					if setup::confirm_existence(&format!("{}/{}", extract_bind, path)) && !path.is_empty() {
-						warning!("[Thread {_index}] {} is already extracted. Skipping extraction.", package);
+						warning!("Skipping extracting {}", package);
 						continue;
 					}
 					if !path.is_empty() { // Create directory if it doesn't exist during extraction
 						setup::create_dir(&format!("{}/{}", extract_bind, path));
 					}
-					status!("[Thread {_index}] Extracting {}...", package);
 					process::Command::new("unzip")
 						.arg(format!("{}/{}", temp_path_bind, package))
 						.arg("-d")
 						.arg(format!("{}/{}", extract_bind, path))
 						.output()
 						.expect("Failed to execute unzip command");
-
+					success!("Extracted {}", package);
 				}
-
-				success!("[Thread {_index}] Thread quitting!");
 			}));
 		}
 
@@ -233,7 +297,7 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 	}
 
 	progress_bar::finalize_progress_bar();
-	success!("Decompression task finished in {} milliseconds!", start_time.elapsed().as_millis());
+	//success!("Decompression task finished in {} milliseconds!", start_time.elapsed().as_millis());
 }
 
 pub fn get_package_manifest(version_hash: String, channel: String) -> String {

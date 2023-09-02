@@ -31,7 +31,7 @@ fn main() {
 	match command_clean {
 		"help" => args::help::main(),
 		"init" => args::initialise::main(),
-		"install" => args::install::main(arguments.into_iter().map(|item| vec![item]).collect()),
+		"install" => args::install::main(&arguments),
 		"purge" => args::purge::main(arguments.into_iter().map(|item| vec![item]).collect()),
 		"opendata" => args::opendata::main(),
 		"play" => args::play::main(),

@@ -11,7 +11,7 @@ pub fn get_param_value(command_vector: Vec<Vec<(String, String)>>, value_to_find
 	String::new()
 }
 
-pub fn get_param_value_new<'v>(command_vector: &'v [(String, String)], argument_to_find: &str) -> Option<&'v String> {
+pub fn get_param_value_new<'v>(command_vector: &'v [(String, String)], argument_to_find: &str) -> Option<&'v str> {
 	for command in command_vector.iter() {
 		if command.0 == *argument_to_find {
 			return Some(&command.1)

@@ -7,6 +7,14 @@ thread_local! {
 }
 
 impl LogContext {
+	pub fn set_indentation(indentation: usize) {
+		_INDENTATION.with(|cell| cell.set(indentation));
+	}
+
+	pub fn get_indentation() -> usize {
+		_INDENTATION.with(|cell| cell.get())
+	}
+
 	pub fn _new() -> Self {
 		_INDENTATION.with(|indentation| indentation.set(indentation.get() + 1));
 		LogContext(())
