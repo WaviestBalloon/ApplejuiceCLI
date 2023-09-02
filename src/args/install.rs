@@ -118,7 +118,7 @@ pub fn main(args: Vec<Vec<(String, String)>>) {
 	// let _migrate_fflags = argparse::get_param_value(raw_args.clone(), "migratefflags").is_empty();
 
 	match install_type {
-		"Client" => download_and_install(&version_hash, &channel, threading),
+		"Player" => download_and_install(&version_hash, &channel, threading),
 		"Studio" => download_and_install(&version_hash, &channel, threading),
 		_ => unreachable!()
 	}
