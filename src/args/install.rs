@@ -3,7 +3,7 @@ use serde_json::json;
 
 use crate::utils::{terminal::*, installation::{self, ExactVersion, Version}, setup, configuration, argparse::get_param_value_new};
 
-const HELP_TEXT: &str = "\nUsage: --install <hash | binary> [channel] [--exact] [--removeolder] [--migratefflags] \nInstalls the Roblox Player or Roblox Studio\n\nbinary:\n\tPlayer\tInstalls the Roblox Player\n\tStudio\tInstalls Roblox Studio\n\nExample: --install client zcanary --removeolder --migratefflags";
+const HELP_TEXT: &str = "\nUsage: --install <hash | binary> [channel] [--exact] [--removeolder] [--migratefflags]\nInstalls the Roblox Player or Roblox Studio\n\nbinary:\n\tPlayer\tInstalls the Roblox Player\n\tStudio\tInstalls Roblox Studio\n\nExample: --install client zcanary --removeolder --migratefflags";
 
 fn download_and_install(version: ExactVersion, threading: bool) {
 	let ExactVersion {hash: version_hash, channel} = version;
@@ -39,7 +39,9 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 	status!("Creating ClientSettings for FFlag configuration...");
 	if !setup::confirm_existence(format!("{}/ClientSettings", folder_path).as_str()) {
 		fs::create_dir(format!("{}/ClientSettings", folder_path)).expect("Failed to create ClientSettings directory");
-		fs::write(format!("{}/ClientSettings/ClientAppSettings.json", folder_path), json!({}).to_string()).expect("Failed to create the config file!");
+		fs::write(format!("{}/ClientSettings/ClientAppSettings.json", folder_path), json!({
+			"FLogNetwork": 7 // Level 7 logs prints and thingys, needed for BloxstrapRPC integration
+		}).to_string()).expect("Failed to create the config file!");
 	} else {
 		warning!("Not creating ClientSettings directory as it already exists!");
 	}
@@ -80,12 +82,12 @@ MimeType=x-scheme-handler/{}", if binary_type == "Studio" { "roblox-studio;x-sch
 
 	configuration::update_config(serde_json::json!({
 		format!("{}", version_hash): {
-			"version": version_hash,
 			"channel": channel,
 			"binary_type": binary_type,
 			"install_path": folder_path,
 			"shortcut_path": desktop_shortcut_path,
-			"preferred_proton": proton_instance
+			"preferred_proton": proton_instance,
+			"enable_rpc": true
 		}
 	}), &version_hash);
 

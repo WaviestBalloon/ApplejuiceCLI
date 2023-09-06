@@ -53,6 +53,8 @@ pub fn main(raw_args: &[(String, String)]) {
 		success!("RPC instance started");
 		if debug_notifications.is_some() { create_notification("dialog-info", "15000", "Debug RPC", "Rich presence connected"); }
 
+		// TODO: Get latest log file and tail stdout it for BloxstrapRPC
+
 		Ok(client)
 	}) {
 		Ok(client) => Some(client),

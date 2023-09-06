@@ -51,7 +51,7 @@ macro_rules! status {
 }
 
 macro_rules! help {
-	($($token:tt)*) => {$crate::utils::terminal::_log!("\x1b[92m\x1b[1m! \x1b[0m", $($token)*)}
+	($($token:tt)*) => {$crate::utils::terminal::_log!("\x1b[92m\x1b[1m? \x1b[0m", $($token)*)}
 }
 
 macro_rules! success {
@@ -63,7 +63,7 @@ macro_rules! warning {
 }
 
 macro_rules! error {
-	($($token:tt)*) => {$crate::utils::terminal::_log!("\x1b[91m\x1b[1m✗ \x1b[0m", $($token)*)}
+	($($token:tt)*) => {$crate::utils::terminal::_log!("\x1b[91m\x1b[1mX \x1b[0m", $($token)*)}
 }
 
 pub(crate) use {error, help, status, success, warning, _log};
