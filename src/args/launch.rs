@@ -1,8 +1,11 @@
 use crate::utils::{setup, terminal::*, argparse, installation, notification::create_notification};
 use crate::configuration;
-use std::process;
-use std::time;
+use std::fs;
+use std::io::Read;
+use std::{process, thread, time, ffi::OsStr};
 use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
+use inotify::{Inotify, WatchMask, EventMask};
+use serde_json::json;
 
 const _HELP_TEXT: &str = "\nUsage: TODO";
 
@@ -54,6 +57,36 @@ pub fn main(raw_args: &[(String, String)]) {
 		if debug_notifications.is_some() { create_notification("dialog-info", "15000", "Debug RPC", "Rich presence connected"); }
 
 		// TODO: Get latest log file and tail stdout it for BloxstrapRPC
+		thread::spawn(|| {
+			let mut inotify = Inotify::init().expect("Failed to initialise inotify");
+			let log_directory = format!("{}/prefixdata/pfx/drive_c/users/steamuser/AppData/Local/Roblox/logs/", setup::get_applejuice_dir());
+			let mut buffer = [0; 1024];
+			
+			inotify.watches().add(log_directory.clone(), WatchMask::CREATE).expect("Error adding watch");
+			status!("Waiting for log file on separate thread...");
+
+			let mut event = inotify.read_events_blocking(&mut buffer).expect("Failed to read_events");
+			let file = loop {
+				match event.next() {
+					Some(x) => {
+						let filename = x.name.unwrap().to_string_lossy();
+						if filename.contains("last.log") {
+							inotify.watches().remove(x.wd).expect("Error removing watch");
+							break Some(filename)
+						}
+					},
+					None => break None
+				}
+			};
+			if let Some(file) = file {
+				success!("Log found: {file} was created - {log_directory}{file}");
+				inotify.watches().add(format!("{log_directory}{file}"), WatchMask::ACCESS).expect("Error adding watch to tail log file");
+				
+				let mut event = inotify.into_event_stream(&mut buffer).expect("Failed to into_event_stream");
+			} else {
+				warning!("A file was created, but it is not a log file");
+			}
+		});
 
 		Ok(client)
 	}) {

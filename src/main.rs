@@ -2,8 +2,7 @@ use std::{env, process::exit};
 mod utils; // Import utilities that are not necessarily commands
 mod args; use utils::argparse::parse_arguments;
 
-// Import modules which act as a handler for certain command parameters
-use crate::utils::{terminal::*, *};
+use crate::utils::{terminal::*, *}; // Import modules which act as a handler for certain command parameters
 
 #[cfg(not(target_os = "linux"))]
 compile_error!("Applejuice is a Linux-only application and is not designed to be ran on any operating system other than a Linux-based system.");
