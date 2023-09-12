@@ -86,5 +86,5 @@ pub fn main() {
 	}), "global");
 
 	println!(); // "Print a newline (for aesthetics" -GitHub copilot, providing dumb crap since 2022
-	success!("Applejuice has been initialised!\nTo get started, run 'applejuicecli --help'\nOr to dive right in, run 'applejuicecli --install client'");
+	success!("Applejuice has been initialised!\nTo get started, run 'applejuicecli --help'\nOr to dive right in, run 'applejuicecli --install player'");
 }
