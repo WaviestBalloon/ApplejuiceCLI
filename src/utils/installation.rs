@@ -294,7 +294,7 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 
 pub fn get_package_manifest(version_hash: String, channel: String) -> String {
 	let channel = if channel == "LIVE" { "".to_string() } else { format!("channel/{}/", channel) };
-	let url = format!("https://setup.rbxcdn.com/{channel}{version_hash}-rbxPkgManifest.txt");
+	let url = format!("{LIVE_DEPLOYMENT_CDN}{channel}{version_hash}-rbxPkgManifest.txt");
 	let client = reqwest::blocking::Client::new();
 	let output = client.get(url.clone())
 		.send()
