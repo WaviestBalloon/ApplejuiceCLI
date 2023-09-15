@@ -197,7 +197,7 @@ pub fn download_deployment(binary: &str, version_hash: String, channel: &str) ->
 
 	//dbg!("{} {} {}", CHANNEL_DEPLOYMENT_CDN, channel, version_hash);
 	status!("Using deployment CDN URL: {}", deployment_channel);
-	status!("{} files will be downloaded from {}!", bindings.len(), deployment_channel);
+	status!("{} files will be downloaded", bindings.len());
 
 	let client = reqwest::blocking::Client::new();
 	progress_bar::init_progress_bar_with_eta(bindings.len());
