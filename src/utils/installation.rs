@@ -195,7 +195,6 @@ pub fn download_deployment(binary: &str, version_hash: String, channel: &str) ->
 	let bindings: &[_] = if binary == "Player" { &PLAYER_EXTRACT_BINDINGS } else { &STUDIO_EXTRACT_BINDINGS };
 	let deployment_channel = if channel == "LIVE" { LIVE_DEPLOYMENT_CDN.to_string() } else { format!("{CHANNEL_DEPLOYMENT_CDN}{channel}/") };
 
-	//dbg!("{} {} {}", CHANNEL_DEPLOYMENT_CDN, channel, version_hash);
 	status!("Using deployment CDN URL: {}", deployment_channel);
 	status!("{} files will be downloaded", bindings.len());
 
@@ -226,10 +225,8 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 	let bindings: &[_] = if binary == "Player" { &PLAYER_EXTRACT_BINDINGS } else { &STUDIO_EXTRACT_BINDINGS };
 	help!("{} files will be extracted", bindings.len());
 
-	//let start_time = std::time::Instant::now();
 	progress_bar::init_progress_bar_with_eta(bindings.len());
 
-	//println!("{}", disallow_multithreading);
 	if disallow_multithreading {
 		for (_index, (package, path)) in bindings.iter().enumerate() {
 			progress_bar::print_progress_bar_info("•", format!("Extracting {package}...").as_str(), progress_bar::Color::Blue, progress_bar::Style::Bold);
@@ -252,7 +249,6 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 			progress_bar::inc_progress_bar();
 		}
 	} else {
-		//warning!("Multi-threading is enabled for this part! This may cause issues with some files not being extracted properly; If you encounter any issues, re-run this command with the --nothreads flag");
 		let threads_available = available_parallelism().unwrap();
 		let chunked_files = bindings.chunks((bindings.len() + threads_available.get() - 1) / threads_available);
 
@@ -262,11 +258,8 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 		drop(indentation);
 
 		let mut threads = vec![];
-		//dbg!(&bindings);
 
 		for (_index, chunk) in chunked_files.enumerate() {
-			//dbg!(&chunk);
-			//status!("Preparing thread {}...", _index);
 			let extract_bind = extraction_path.clone();
 			let temp_path_bind = temp_path.clone();
 			let indentation = LogContext::get_indentation();
@@ -297,7 +290,6 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 	}
 
 	progress_bar::finalize_progress_bar();
-	//success!("Decompression task finished in {} milliseconds!", start_time.elapsed().as_millis());
 }
 
 pub fn get_package_manifest(version_hash: String, channel: String) -> String {
