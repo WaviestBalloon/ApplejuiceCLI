@@ -124,7 +124,7 @@ pub fn main(args: Vec<Vec<(String, String)>>) {
 					let desktop_shortcut_path = format!("{}/.local/share/applications/roblox-{}-{}.desktop", var("HOME").expect("$HOME not set"), binary_type.to_lowercase(), clean_version_hash);
 					std::fs::remove_file(desktop_shortcut_path).unwrap()
 				});
-				status("Updating desktop database...");
+				status!("Updating desktop database...");
 				process::Command::new("update-desktop-database")
 					.arg(format!("{}/.local/share/applications", var("HOME").expect("$HOME not set")))
 					.spawn()
@@ -179,6 +179,7 @@ pub fn main(args: Vec<Vec<(String, String)>>) {
 			}
 
 			success("Purged Roblox installation(s) successfully");*/
+			error!("Not implemented yet!");
 		},
 		_ => {
 			error!("Unknown type to purge {:?}", parsed_args[0]);
