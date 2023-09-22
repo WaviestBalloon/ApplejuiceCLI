@@ -22,7 +22,7 @@ struct RobloxInstallation<'a> {
 	binary_type: BinaryType,
 	channel: &'a str,
 	install_path: &'a Path,
-	prefferred_proton: &'a Path,
+	preferred_proton: &'a Path,
 	shortcut_path: &'a Path,
 	version: &'a str
 }
