@@ -11,6 +11,14 @@ ApplejuiceCLI is the backbone and bootstrapper of Applejuice, you can either use
 
 ## Installation
 
+### Lazy™
+
+1. Run this command:
+   ```bash
+   git clone https://github.com/WaviestBalloon/ApplejuiceCLI.git ; cd ApplejuiceCLI ; chmod +x ./install.sh ; bash ./install.sh
+   ```
+2. Run `applejuicecli --install player` to install the Roblox Player!
+
 ### Using the install script
 
 1. Clone this repository.
