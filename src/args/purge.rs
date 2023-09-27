@@ -13,9 +13,7 @@ pub fn main(args: Vec<Vec<(String, String)>>) {
 		exit(1);
 	}
 	let install_type: &str = parsed_args[0];
-
-	println!("{:?}", parsed_args.clone());
-
+	
 	match install_type {
 		"cache" => {
 			status!("Purging cache...");

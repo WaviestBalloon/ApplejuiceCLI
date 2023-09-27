@@ -1,13 +1,11 @@
 use crate::utils::{setup, terminal::*, argparse, installation, notification::create_notification};
+use crate::args::{install};
 use crate::configuration;
-use std::fs;
-use std::io::Read;
-use std::{process, thread, time, ffi::OsStr};
+use std::{process, thread, time};
 use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
 use inotify::{Inotify, WatchMask, EventMask};
-use serde_json::json;
 
-const _HELP_TEXT: &str = "\nUsage: TODO";
+const HELP_TEXT: &str = "No help information is currently documented\nUsage: ?";
 
 pub fn main(raw_args: &[(String, String)]) {
 	let dir_location = setup::get_applejuice_dir();
@@ -17,7 +15,8 @@ pub fn main(raw_args: &[(String, String)]) {
 	let protocol_arguments = argparse::get_param_value_new(&raw_args, "args").unwrap();
 	let skip_update_check = argparse::get_param_value_new(&raw_args, "skipupdatecheck"); // Optional
 	let debug_notifications = argparse::get_param_value_new(&raw_args, "debug"); // Optional
-	
+	let shall_we_bootstrap = argparse::get_param_value_new(&raw_args, "bootstrap"); // Optional
+
 	if skip_update_check.is_none() {
 		status!("Checking for updates...");
 		let latest_version = installation::get_latest_version_hash(binary_type, channel);
@@ -25,9 +24,16 @@ pub fn main(raw_args: &[(String, String)]) {
 		if &latest_version == version_hash {
 			success!("You are on the latest version!");
 		} else {
-			warning!("You are not on the latest version! You are on {} and the latest version for {} is {}", version_hash, channel, latest_version);
-			let formatted_install_command = format!("--install {} {}", if binary_type == "Player" { "client" } else { "studio" }, if channel == "LIVE" { "" } else { channel });
-			create_notification("dialog-warning", "5000", "Version outdated!", &format!("You are on {} and the latest version for {} is {}\nConsider running \"{}\"", version_hash.replace("version-", ""), channel, latest_version.replace("version-", ""), formatted_install_command));
+			warning!("You are not on the latest version! You are on {version_hash} and the latest version for {channel} is {latest_version}");
+			if shall_we_bootstrap.is_some() {
+				status!("Downloading and installing latest version...");
+				create_notification(&format!("{}/assets/crudejuice.png", dir_location), "5000", &format!("Updating Roblox {}...", binary_type), &format!("Updating to deployment {latest_version}"));
+				
+				//args::install()
+			} else {
+				let formatted_install_command = format!("--install {} {}", if binary_type == "Player" { "client" } else { "studio" }, if channel == "LIVE" { "" } else { channel });
+				create_notification("dialog-warning", "5000", "Version outdated!", &format!("You are on {} and the latest version for {} is {}\nConsider running \"{}\"", version_hash.replace("version-", ""), channel, latest_version.replace("version-", ""), formatted_install_command));
+			}
 		}
 	}
 	status!("Protocol parameter(s): {}", protocol_arguments);

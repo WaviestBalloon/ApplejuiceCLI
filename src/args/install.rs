@@ -1,14 +1,28 @@
 use std::{fs, env::var, process::{self, exit}};
 use serde_json::json;
+use sdl2::init;
 
 use crate::utils::{terminal::*, installation::{self, ExactVersion, Version}, setup, configuration, argparse::get_param_value_new};
 
 const HELP_TEXT: &str = "\nUsage: --install <hash | binary> [channel] [--exact] [--removeolder] [--migratefflags]\nInstalls the Roblox Player or Roblox Studio\n\nbinary:\n\tPlayer\tInstalls the Roblox Player\n\tStudio\tInstalls Roblox Studio\n\nExample: --install player zcanary --removeolder --migratefflags";
 
+fn detect_display_hertz() -> i32 {
+	match init() {
+		Ok(sdl_context) => {
+			let display_mode = sdl_context.video().unwrap().desktop_display_mode(0).unwrap();
+			display_mode.refresh_rate
+		},
+		Err(_) => {
+			warning!("Failed to detect display refresh rate! Defaulting to 60Hz");
+			60
+		}
+	}
+}
+
 fn download_and_install(version: ExactVersion, threading: bool) {
 	let ExactVersion {hash: version_hash, channel} = version;
 
-	let indentation = status!("Fetching manifest");
+	let indentation = status!("Fetching package manifest...");
 	let package_manifest = installation::get_package_manifest(version_hash.to_string(), channel.to_string());
 	success!("Done");
 	drop(indentation);
@@ -17,12 +31,12 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 	package_manifest_parsed.remove(package_manifest_parsed.len() - 1); // Remove last element which is an empty string
 	let binary_type = installation::get_binary_type(package_manifest_parsed);
 
-	let indentation = status!("Downloading");
+	let indentation = status!("Downloading deployment...");
 	let cache_path = installation::download_deployment(binary_type, version_hash.to_string(), &channel);
 	success!("Done");
 	drop(indentation);
 
-	let indentation = status!("Extracting");
+	let indentation = status!("Extracting deployment...");
 	let folder_path = format!("{}/roblox/{}/{}/{}", setup::get_applejuice_dir(), channel, binary_type, version_hash);
 	if setup::create_dir(&folder_path) {
 		success!("Constructed install directory at {:?}", folder_path);
@@ -30,23 +44,29 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 		error!("Failed to create directory at '{}'", folder_path);
 		exit(1);
 	}
+	status!("Writing AppSettings.xml...");
 	installation::write_appsettings_xml(folder_path.clone());
-	success!("Wrote AppSettings.xml");
+	status!("Extracting deployment...");
 	installation::extract_deployment_zips(binary_type, cache_path, folder_path.clone(), !threading);
 	success!("Done");
 	drop(indentation);
 
 	status!("Creating ClientSettings for FFlag configuration...");
 	if !setup::confirm_existence(format!("{}/ClientSettings", folder_path).as_str()) {
+		let display_refresh_rate = detect_display_hertz();
+		let mut target_fps = display_refresh_rate;
+		if target_fps <= 100 { target_fps *= 2 }
+		status!("Setting target FPS to {} based on your display refresh rate of {}Hz", target_fps, display_refresh_rate);
 		fs::create_dir(format!("{}/ClientSettings", folder_path)).expect("Failed to create ClientSettings directory");
 		fs::write(format!("{}/ClientSettings/ClientAppSettings.json", folder_path), json!({
-			"FLogNetwork": 7 // Level 7 logs prints and thingys, needed for BloxstrapRPC integration
+			"FLogNetwork": 7, // Level 7 logs prints and thingys, needed for BloxstrapRPC integration
+			"DFIntTaskSchedulerTargetFps": target_fps, // Uncapping FPS to the monitor's refresh rate
 		}).to_string()).expect("Failed to create the config file!");
 	} else {
 		warning!("Not creating ClientSettings directory as it already exists!");
 	}
 
-	status!("Reading available Proton instances from configuration...");
+	status!("Finding available Proton instances from configuration...");
 	let proton_instances = configuration::get_config("proton_installations");
 	let mut proton_instance: String = "".to_string();
 	if !proton_instances.is_null() {

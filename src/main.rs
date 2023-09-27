@@ -37,7 +37,7 @@ fn main() {
 		// TODO: fix this in above code
 		"launch" => args::launch::main(&arguments),
 		_ => {
-			let _indentation = error!("Unknown command parameter: '{:?}'", command);
+			let _indentation = error!("Unknown command parameter: {:?}", command);
 			help!("Run '{} --help' for more information.", args[0]);
 			exit(1);
 		}

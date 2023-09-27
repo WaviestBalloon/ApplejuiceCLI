@@ -1,11 +1,10 @@
-use std::fs;
+use std::{fs, env::var};
 use serde_json::json;
 
 use crate::utils::setup;
 use crate::utils::terminal::*;
 use crate::utils::proton;
 use crate::utils::configuration;
-
 
 const ASSET_URLS: [&str; 3] = [
 	"https://raw.githubusercontent.com/WaviestBalloon/ApplejuiceCLI/main/assets/player.png",
@@ -85,6 +84,19 @@ pub fn main() {
 		"global": {}
 	}), "global");
 
+	status!("Creating bootstrapper shortcut...");
+	let location = setup::get_applejuice_dir();
+	let desktop_shortcut_path = format!("{}/.local/share/applications/robloxbootstrap.desktop", var("HOME").expect("$HOME not set"));
+	let desktop_shortcut_contents = format!("[Desktop Entry]
+Name=Roblox Bootstrap
+Comment=Launch Roblox with Proton and download latest version
+Exec=env applejuicecli --launch --bootstrap --args %u
+Icon={location}/assets/crudejuice.png
+Type=Application
+Categories=Game
+MimeType=x-scheme-handler/roblox-player");
+	fs::write(desktop_shortcut_path.clone(), desktop_shortcut_contents).expect("Failed to write desktop shortcut");
+
 	println!(); // "Print a newline (for aesthetics" -GitHub copilot, providing dumb crap since 2022
-	success!("Applejuice has been initialised!\nTo get started, run 'applejuicecli --help'\nOr to dive right in, run 'applejuicecli --install player'");
+	success!("Applejuice has been initialised!\nTo get started, run 'applejuicecli --help'\nOr to dive right in, run 'applejuicecli --install player' OR 'applejuicecli --bootstrap player'");
 }

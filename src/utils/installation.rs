@@ -127,7 +127,7 @@ pub fn fetch_latest_version(version: LatestVersion) -> ExactVersion {
 		client_version_upload: String
 	}
 
-	let _indentation = status!("Fetching latest version hash");
+	status!("Fetching latest version hash...");
 	let LatestVersion {channel, binary} = version;
 
 	let version = match &*binary.to_lowercase() {
@@ -145,8 +145,7 @@ pub fn fetch_latest_version(version: LatestVersion) -> ExactVersion {
 		.unwrap();
 
 	let Response {client_version_upload: hash} = from_str(&output).unwrap();
-	help!("Resolved to {}", hash);
-	success!("Done");
+	success!("Resolved hash to {}", hash);
 	ExactVersion {channel, hash: Cow::Owned(hash)}
 }
 
@@ -218,7 +217,7 @@ pub fn download_deployment(binary: &str, version_hash: String, channel: &str) ->
 
 	progress_bar::finalize_progress_bar();
 	success!("All compressed files downloaded, expanding files...");
-	temp_path// Return the cache path to continue with extraction
+	temp_path // Return the cache path to continue with extraction
 }
 
 pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path: String, disallow_multithreading: bool) {
@@ -251,13 +250,12 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 	} else {
 		let threads_available = available_parallelism().unwrap();
 		let chunked_files = bindings.chunks((bindings.len() + threads_available.get() - 1) / threads_available);
+		let mut threads = vec![];
 
 		let indentation = status!("Multi-threading is enabled");
 		help!("You can disable this with --nothreads");
 		help!("{} threads available, {} chunks created from bindings", threads_available, chunked_files.size_hint().0);
 		drop(indentation);
-
-		let mut threads = vec![];
 
 		for (_index, chunk) in chunked_files.enumerate() {
 			let extract_bind = extraction_path.clone();
