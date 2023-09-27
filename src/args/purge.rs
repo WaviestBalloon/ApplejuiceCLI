@@ -1,6 +1,5 @@
 use crate::utils::{setup, terminal::*, argparse, configuration::{get_config, update_config}};
-use std::{fs::{read_dir, remove_dir_all}, process::exit};
-use std::{env::var, process};
+use std::{fs::{read_dir, remove_dir_all, remove_file, metadata}, process::exit, env::var, process};
 
 const HELP_TEXT: &str = "\nUsage: --purge [type]\nPurges cache or installs, useful for a fresh start or if you are having issues\n\nOptions:\n\tcache\tDeletes all compressed files that were downloaded from the CDN\n\tinstalls\tNukes every install of Roblox you have\n\tinstall\tDeletes a specific version of Roblox, can purge multiple versions at once";
 
@@ -120,7 +119,9 @@ pub fn main(args: Vec<Vec<(String, String)>>) {
 					let binary_type = config.get("binary_type").unwrap().as_str().unwrap();
 					let clean_version_hash = version.replace("version-", "");
 					let desktop_shortcut_path = format!("{}/.local/share/applications/roblox-{}-{}.desktop", var("HOME").expect("$HOME not set"), binary_type.to_lowercase(), clean_version_hash);
-					std::fs::remove_file(desktop_shortcut_path).unwrap()
+					if metadata(desktop_shortcut_path.clone()).is_ok() {
+						remove_file(desktop_shortcut_path).unwrap();
+					}
 				});
 				status!("Updating desktop database...");
 				process::Command::new("update-desktop-database")
