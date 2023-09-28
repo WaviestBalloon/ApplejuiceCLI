@@ -4,9 +4,6 @@ version = "0.1.0"
 edition = "2021"
 opt-level = "s"
 
-[profile.release]
-debug = true
-
 [dependencies]
 discord-rich-presence = "0.2.3"
 inotify = "0.10.2"
