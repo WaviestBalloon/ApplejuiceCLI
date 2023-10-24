@@ -5,3 +5,4 @@ pub mod proton;
 pub mod configuration;
 pub mod argparse;
 pub mod notification;
+pub mod rpc;

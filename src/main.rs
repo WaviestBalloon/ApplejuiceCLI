@@ -12,7 +12,7 @@ compile_error!("Since you are compiling for Windows, consider using Bloxstrap: h
 
 fn main() {
 	let args: Vec<String> = env::args().collect();
-	if !setup::confirm_applejuice_data_folder_existence() && args[1] != "init" { // Initialisation warning
+	if !setup::confirm_applejuice_data_folder_existence() && args[1] != "--init" { // Initialisation warning
 		warning!("Applejuice has not been initialised yet! Attempting to initialise...");
 		args::initialise::main();
 		status!("Continuing with task...");
@@ -33,7 +33,6 @@ fn main() {
 		"install" => args::install::main(&arguments),
 		"purge" => args::purge::main(arguments.into_iter().map(|item| vec![item]).collect()),
 		"opendata" => args::opendata::main(),
-		"play" => args::play::main(),
 		// TODO: fix this in above code
 		"launch" => args::launch::main(&arguments),
 		_ => {

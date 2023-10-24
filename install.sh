@@ -41,6 +41,11 @@ echo "---------------------------"
 echo "Installing the Applejuice CLI to /usr/local/bin..."
 sudo cp ./target/release/applejuice_cli /usr/local/bin/applejuicecli || doas cp ./target/release/applejuice_cli /usr/local/bin/applejuicecli
 
+echo "Copying asset files..."
+mkdir -p ~/.local/share/applejuice
+mkdir -p ~/.local/share/applejuice/assets
+cp -r ./assets/* ~/.local/share/applejuice/assets
+
 echo "Initialising Applejuice..."
 echo "---------------------------"
 applejuicecli --init

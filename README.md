@@ -11,13 +11,12 @@ ApplejuiceCLI is the backbone and bootstrapper of Applejuice, you can either use
 
 ## Installation
 
-### Lazy™
+> [!IMPORTANT]
+> If compile fails, you might be missing a dependency with SDL. So far, Ubuntu seems to be the one that has issues with compiling, make sure you run `sudo apt-get -y install libsdl2-dev` before installing and it should successfully compile.
 
-1. Run this command:
-   ```bash
-   git clone https://github.com/WaviestBalloon/ApplejuiceCLI.git ; cd ApplejuiceCLI ; chmod +x ./install.sh ; bash ./install.sh
-   ```
-2. Run `applejuicecli --install player` to install the Roblox Player!
+```bash
+git clone https://github.com/WaviestBalloon/ApplejuiceCLI.git ; cd ApplejuiceCLI ; chmod +x ./install.sh ; bash ./install.sh
+```
 
 ### Using the install script
 
