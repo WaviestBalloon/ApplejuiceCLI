@@ -1,4 +1,4 @@
-# ApplejuiceCLI
+# <img src="assets/crudejuice.png" width=85px> ApplejuiceCLI
 ApplejuiceCLI is the backbone and bootstrapper of Applejuice, you can either use the interface or if you're big brain, use the CLI instead. (**Less bloat! Wow!**)
 
 *Applejuice is a manager to get Roblox to run on Linux using Valve's Proton.*
