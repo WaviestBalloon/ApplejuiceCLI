@@ -10,6 +10,7 @@ pub fn main(raw_args: &[(String, String)]) {
 	let channel = argparse::get_param_value_new(&raw_args, "channel").unwrap();
 	let version_hash = argparse::get_param_value_new(&raw_args, "hash").unwrap();
 	let protocol_arguments = argparse::get_param_value_new(&raw_args, "args").unwrap();
+
 	let skip_update_check = argparse::get_param_value_new(&raw_args, "skipupdatecheck"); // Optional
 	let debug_notifications = argparse::get_param_value_new(&raw_args, "debug"); // Optional
 	let shall_we_bootstrap = argparse::get_param_value_new(&raw_args, "bootstrap"); // Optional

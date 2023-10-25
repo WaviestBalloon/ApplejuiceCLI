@@ -194,12 +194,12 @@ pub fn init_rpc(binary_type: String, debug_notifications: Option<&str>) {
 									let large_image = parsed_data.data.large_image;
 
 									status!("RPC Protocol command: {}", command.unwrap_or_default());
-									status!("Updating RPC based on BloxstrapRPC protocol data from server... {}", line_split); // can't put the data here for now idc
+									status!("Updating RPC based on BloxstrapRPC protocol data from server... {}", line_split);
 
 									construct_rpc_assets!(rpc_assets, small_image, large_image);
 									let state = &state.unwrap();
 									let details = &details.unwrap();
-									let activity = activity::Activity::new()
+									let mut activity = activity::Activity::new()
 										.state(state)
 										.details(details)
 										.timestamps(
@@ -213,24 +213,23 @@ pub fn init_rpc(binary_type: String, debug_notifications: Option<&str>) {
 													time_start.unwrap()
 												},
 											)
-											.end(
-												if time_end.unwrap_or_default() == 0 && !time_end.is_some() { // If `timeEnd` does not exist
-													time::SystemTime::now()
-														.duration_since(time::SystemTime::UNIX_EPOCH)
-														.unwrap()
-														.as_millis() as i64
-												} else {
-													time_end.unwrap()
-												}
-											)
 										)
 										.assets(rpc_assets);
+
+									if time_end.unwrap_or_default() != 0 && time_end.is_some() {
+										activity = activity.timestamps(activity::Timestamps::new().end(time_end.unwrap()));
+									}
 
 									let _ = rpc_handler.set_activity(activity);
 									match rpc_handler.recv() {
 										Ok(output) => {
-											status!("RPC output: {:?}", output);
+											let output_string = format!("{:?}", output);
 											last_successful_rec_unwrap = output;
+
+											if output_string.contains("ERROR") {
+												warning!("Error occurred when attempting to send new RPC");
+												status!("RPC output: {}", output_string);
+											}
 										}
 										Err(error) => {
 											warning!("Error occurred when attempting to display RPC request receive: {error}\nRPC may not display correctly or at all anymore\nLast successful receive unwrap: {:?}", last_successful_rec_unwrap);
