@@ -2,9 +2,21 @@ use crate::configuration;
 use crate::utils::{argparse, installation, notification::create_notification, setup, terminal::*, rpc};
 use std::process;
 
-const HELP_TEXT: &str = "No help information is currently documented\nUsage: ?";
+static ACCEPTED_PARAMS: [(&str, &str); 7] = [
+	("binary", "The binary type to launch, either Player or Studio"),
+	("channel", "The deployment channel to launch"),
+	("hash", "The version hash to launch"),
+	("args", "The protocol arguments to launch with, usually given by a protocol"),
+	("skipupdatecheck", "Skip checking for updates from clientsettings.roblox.com"),
+	("debug", "Enable debug notifications"),
+	("bootstrap", "Bootstrap the latest version (NOT IMPLEMENTED)"),
+];
 
 pub fn main(raw_args: &[(String, String)]) {
+	if argparse::get_param_value_new(&raw_args, "help").is_some() {
+		help!("Accepted parameters:\n{}", argparse::generate_help(ACCEPTED_PARAMS.to_vec()));
+		return;
+	}
 	let dir_location = setup::get_applejuice_dir();
 	let binary_type = argparse::get_param_value_new(&raw_args, "binary").unwrap();
 	let channel = argparse::get_param_value_new(&raw_args, "channel").unwrap();

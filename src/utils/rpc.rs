@@ -161,6 +161,7 @@ pub fn init_rpc(binary_type: String, debug_notifications: Option<&str>) {
 
 				let mut detected_bloxstrap = false;
 				let mut last_successful_rec_unwrap: (u32, Value) = (0, Value::Null);
+				//let mut old_presence = activity::Activity::new();
 				for result in rx {
 					match result {
 						Ok(_event) => {
@@ -225,10 +226,10 @@ pub fn init_rpc(binary_type: String, debug_notifications: Option<&str>) {
 										Ok(output) => {
 											let output_string = format!("{:?}", output);
 											last_successful_rec_unwrap = output;
-
+											
+											status!("RPC output: {}", output_string);
 											if output_string.contains("ERROR") {
 												warning!("Error occurred when attempting to send new RPC");
-												status!("RPC output: {}", output_string);
 											}
 										}
 										Err(error) => {

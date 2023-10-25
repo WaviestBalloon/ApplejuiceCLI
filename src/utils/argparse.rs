@@ -49,3 +49,11 @@ pub fn parse_arguments(args: &[String]) -> Vec<(String, String)> {
 
 	arguments
 }
+
+pub fn generate_help(accepted_params: Vec<(&str, &str)>) -> String {
+	let mut help_string = String::new();
+	for (index, (param, description)) in accepted_params.iter().enumerate() {
+		help_string = format!("{help_string}\t\x1b[1m{param}\x1b[0m - {description}{}", if index == accepted_params.len() - 1 { "" } else { "\n" });
+	}
+	help_string
+}
