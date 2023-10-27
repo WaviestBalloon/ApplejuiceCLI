@@ -56,10 +56,10 @@ macro_rules! construct_rpc_assets {
 
 		let mut $rpc_assets = activity::Assets::new();
 		if let Some(RichPresenceImage {
-			clear,
+			clear: _,
 			asset_id,
 			hover_text,
-			reset,
+			reset: _,
 		}) = $large_image {
 			if let Some(asset_id) = asset_id {
 				xd = convert_into_assetdelivery_url(asset_id);
@@ -71,10 +71,10 @@ macro_rules! construct_rpc_assets {
 			}
 		}
 		if let Some(RichPresenceImage {
-			clear,
+			clear: _,
 			asset_id,
 			hover_text,
-			reset,
+			reset: _,
 		}) = $small_image
 		{
 			if let Some(asset_id) = asset_id {

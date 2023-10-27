@@ -56,6 +56,25 @@ impl<'a> Version<'a> {
 	}
 }
 
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Response {
+	client_version_upload: String
+}
+
+/* Response error handling for fetch_latest_version fn */
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ResponseErrorMeat {
+	code: i32,
+	message: String
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ResponseError {
+	errors: Vec<ResponseErrorMeat>
+}
+
 const PLAYER_EXTRACT_BINDINGS: [(&str, &str); 20] = [
 	("RobloxApp.zip", ""),
 	("shaders.zip", "shaders/"),
@@ -121,12 +140,6 @@ pub fn get_latest_version_hash(binary: &str, channel: &str) -> String {
 }
 
 pub fn fetch_latest_version(version: LatestVersion) -> ExactVersion {
-	#[derive(Deserialize)]
-	#[serde(rename_all = "camelCase")]
-	struct Response {
-		client_version_upload: String
-	}
-
 	status!("Fetching latest version hash...");
 	let LatestVersion {channel, binary} = version;
 
@@ -144,7 +157,19 @@ pub fn fetch_latest_version(version: LatestVersion) -> ExactVersion {
 		.text()
 		.unwrap();
 
-	let Response {client_version_upload: hash} = from_str(&output).unwrap();
+	let Response {client_version_upload: hash} = match from_str(&output) {
+		Ok(json_parsed) => json_parsed,
+		Err(error) => {
+			let ResponseError {errors} = from_str(&output).expect(&format!("Failed to parse error response from server.\nResponse: {}\nError: {}", output, error));
+			match errors[0].code {
+				1 => { error!("Could not find version details for channel {}, make sure you have spelt the deployment channel name correctly.", channel); },
+				5 => { error!("The deployment channel {} is restricted by Roblox!", channel); },
+				_ => { error!("Unknown error response.\nResponse: {}\nError: {}", output, error); }
+			}
+
+			exit(1);
+		}
+	};
 	success!("Resolved hash to {}", hash);
 	ExactVersion {channel, hash: Cow::Owned(hash)}
 }
@@ -162,14 +187,14 @@ pub fn get_binary_type(package_manifest: Vec<&str>) -> &str {
 		}
 	}
 	if binary.is_empty() {
-		error!("Could not determine binary type for provided package menifest!");
+		error!("Could not determine binary type for provided package manifest!");
 		exit(1);
 	}
 
 	binary
 }
 
-pub fn write_appsettings_xml(path: String) {
+pub fn write_appsettings_xml(path: String) { // spaghetti
 	fs::write(format!("{}/AppSettings.xml", path), "\
 <?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <Settings>
