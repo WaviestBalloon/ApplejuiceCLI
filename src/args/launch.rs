@@ -41,7 +41,7 @@ pub fn main(raw_args: &[(String, String)]) {
 				//args::install()
 			} else {
 				let formatted_install_command = format!("--install {} {}",
-					if binary_type == "Player" { "client" } else { "studio" },
+					if binary_type == "Player" { "player" } else { "studio" },
 					if channel == "LIVE" { "" } else { channel }
 				);
 				create_notification("dialog-warning", "5000", "Version outdated!", &format!("You are on {} and the latest version for {} is {}\nConsider running \"{}\"", version_hash.replace("version-", ""), channel, latest_version.replace("version-", ""), formatted_install_command));
