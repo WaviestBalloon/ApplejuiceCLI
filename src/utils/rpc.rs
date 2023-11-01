@@ -33,7 +33,7 @@ struct RichPresenceData {
 #[serde(rename_all = "camelCase")]
 struct RichPresence {
 	command: Option<String>,
-	data: RichPresenceData,
+	data: Option<RichPresenceData>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -161,7 +161,7 @@ pub fn init_rpc(binary_type: String, debug_notifications: Option<&str>) {
 
 				let mut detected_bloxstrap = false;
 				let mut last_successful_rec_unwrap: (u32, Value) = (0, Value::Null);
-				//let mut old_presence = activity::Activity::new();
+				//let mut old_presence = activity::Activity::new(); TODO
 				for result in rx {
 					match result {
 						Ok(_event) => {
@@ -183,26 +183,37 @@ pub fn init_rpc(binary_type: String, debug_notifications: Option<&str>) {
 									}
 									status!("Parsing Log line for RPC: {}", line_usable);
 									let line_split = line_usable.split("[BloxstrapRPC] ").collect::<Vec<&str>>()[1];
-									let parsed_data: RichPresence = serde_json::from_str(line_split).unwrap();
+
+									let parsed_data: RichPresence = match serde_json::from_str(line_split) {
+										Ok(parsed_data) => parsed_data,
+										Err(error) => {
+											warning!("Error occurred when attempting to parse RPC data: {error}");
+											continue;
+										}
+									};
 									// Make our lives easier, and move all elements in `data` to the root
-
+									
 									let command = parsed_data.command;
-									let state = parsed_data.data.state;
-									let details = parsed_data.data.details;
-									let time_start = parsed_data.data.time_start;
-									let time_end = parsed_data.data.time_end;
-									let small_image = parsed_data.data.small_image;
-									let large_image = parsed_data.data.large_image;
+									let data: RichPresenceData = parsed_data.data.unwrap();
+									let state = data.state;
+									let details = data.details;
+									let time_start = data.time_start;
+									let time_end = data.time_end;
+									let small_image = data.small_image;
+									let large_image = data.large_image;
 
-									status!("RPC Protocol command: {}", command.unwrap_or_default());
-									status!("Updating RPC based on BloxstrapRPC protocol data from server... {}", line_split);
+									if command.is_none() {
+										warning!("RPC command is none");
+										continue;
+									} else if command.unwrap() != "SetRichPresence" {
+										warning!("RPC command is not SetRichPresence; ignoring");
+										continue;
+									}
 
 									construct_rpc_assets!(rpc_assets, small_image, large_image);
-									let state = &state.unwrap();
-									let details = &details.unwrap();
+									let state = &state.unwrap_or_default();
+									let details = &details.unwrap_or_default();
 									let mut activity = activity::Activity::new()
-										.state(state)
-										.details(details)
 										.timestamps(
 											activity::Timestamps::new().start(
 												if time_start.unwrap_or_default() == 0 {
@@ -217,6 +228,12 @@ pub fn init_rpc(binary_type: String, debug_notifications: Option<&str>) {
 										)
 										.assets(rpc_assets);
 
+									if !state.is_empty() {
+										activity = activity.state(state);
+									}
+									if !details.is_empty() {
+										activity = activity.state(details);
+									}
 									if time_end.unwrap_or_default() != 0 && time_end.is_some() {
 										activity = activity.timestamps(activity::Timestamps::new().end(time_end.unwrap()));
 									}

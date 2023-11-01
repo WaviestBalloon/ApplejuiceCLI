@@ -67,7 +67,6 @@ struct Response {
 #[serde(rename_all = "camelCase")]
 struct ResponseErrorMeat {
 	code: i32,
-	message: String
 }
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -164,7 +163,7 @@ pub fn fetch_latest_version(version: LatestVersion) -> ExactVersion {
 			match errors[0].code {
 				1 => { error!("Could not find version details for channel {}, make sure you have spelt the deployment channel name correctly.", channel); },
 				5 => { error!("The deployment channel {} is restricted by Roblox!", channel); },
-				_ => { error!("Unknown error response.\nResponse: {}\nError: {}", output, error); }
+				_ => { error!("Unknown error response when attempting to resolve channel {}!\nResponse: {}\nError: {}", channel, output, error); }
 			}
 
 			exit(1);
