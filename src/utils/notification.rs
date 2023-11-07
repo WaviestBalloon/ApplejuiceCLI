@@ -2,7 +2,7 @@ use std::process;
 use crate::utils::terminal::*;
 
 pub fn create_notification(icon: &str, expire_time: &str, title: &str, body: &str) {
-	let output = process::Command::new("notify-sesnd")
+	let output = process::Command::new("notify-send")
 		.arg("--app-name=Applejuice")
 		.arg(format!("--icon={}", "aaaaa"))
 		.arg("--urgency=normal")

@@ -32,6 +32,7 @@ fn get_all_valid_installations() {
 				//let path_unwrap = version_path.unwrap().path().to_str().unwrap();
 
 				//println!("{}", path_unwrap);
+				println!("{:?}", version_path.unwrap().path());
 			}
 		}
 	}

@@ -175,6 +175,7 @@ pub fn init_rpc(binary_type: String, debug_notifications: Option<&str>) {
 							let reader = BufReader::new(&file);
 							for line in reader.lines() {
 								let line_usable = line.unwrap_or_default(); // Sometimes Roblox likes to just throw vomit into the log file causing a panic
+								let mut was_rpc_updated = false;
 
 								if line_usable.contains("[BloxstrapRPC] ") {
 									if detected_bloxstrap == false {
@@ -232,13 +233,42 @@ pub fn init_rpc(binary_type: String, debug_notifications: Option<&str>) {
 										activity = activity.state(state);
 									}
 									if !details.is_empty() {
-										activity = activity.state(details);
+										activity = activity.details(details);
 									}
 									if time_end.unwrap_or_default() != 0 && time_end.is_some() {
 										activity = activity.timestamps(activity::Timestamps::new().end(time_end.unwrap()));
 									}
 
 									let _ = rpc_handler.set_activity(activity);
+									was_rpc_updated = true;
+								} else if line_usable.contains("leaveUGCGameInternal") {
+									status!("Detected game leave; resetting RPC");
+									
+									let state = format!("Using Roblox {} on Linux!", binary_type.clone()); // TODO: move this into it's own function to avoid violating D.R.Y
+									let payload = activity::Activity::new()
+										.state(&state)
+										.details("With Applejuice")
+										.assets(
+											activity::Assets::new()
+												.large_image("crudejuice")
+												.large_text("Bitdancer Approved"),
+										)
+										.timestamps(
+											activity::Timestamps::new()
+											.start(
+												time::SystemTime::now()
+													.duration_since(time::SystemTime::UNIX_EPOCH)
+													.unwrap()
+													.as_millis() as i64,
+											)
+										);
+
+									let _ = rpc_handler.set_activity(payload);
+									was_rpc_updated = true;
+								}
+
+								if was_rpc_updated == true {
+									was_rpc_updated = false;
 									match rpc_handler.recv() {
 										Ok(output) => {
 											let output_string = format!("{:?}", output);
