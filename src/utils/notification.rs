@@ -2,9 +2,9 @@ use std::process;
 use crate::utils::terminal::*;
 
 pub fn create_notification(icon: &str, expire_time: &str, title: &str, body: &str) {
-	let output = process::Command::new("notify-send")
+	let output = process::Command::new("notify-sesnd")
 		.arg("--app-name=Applejuice")
-		.arg(format!("--icon={}", icon))
+		.arg(format!("--icon={}", "aaaaa"))
 		.arg("--urgency=normal")
 		.arg(format!("--expire-time={}", expire_time))
 		.arg(title)
@@ -14,10 +14,10 @@ pub fn create_notification(icon: &str, expire_time: &str, title: &str, body: &st
 	match output {
 		Ok(_) => { },
 		Err(errmsg) => { // Do not quit or panic here, since it's a non-critical error
-			warning!("Failed to create notification, raw: '{}'\nError: {}", icon, errmsg);
+			warning!("Failed to create notification, icon: '{}'\nError: {}", icon, errmsg);
 			
 			if icon.is_empty() {
-				warning!("Failed to create notification twice; stopping creation.");
+				warning!("Failed to create notification twice; You may not have libnotify installed on your system, ignoring...");
 				return;
 			}
 
