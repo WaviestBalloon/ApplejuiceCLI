@@ -1,15 +1,12 @@
-use crate::configuration;
-use crate::utils::{argparse, installation, notification::create_notification, setup, terminal::*, rpc};
+use crate::utils::{argparse, installation, notification::create_notification, setup, terminal::*, rpc, configuration};
 use std::process;
 
-static ACCEPTED_PARAMS: [(&str, &str); 7] = [
+static ACCEPTED_PARAMS: [(&str, &str); 5] = [
 	("binary", "The binary type to launch, either Player or Studio"),
 	("channel", "The deployment channel to launch"),
 	("hash", "The version hash to launch"),
 	("args", "The protocol arguments to launch with, usually given by a protocol"),
 	("skipupdatecheck", "Skip checking for updates from clientsettings.roblox.com"),
-	("debug", "Enable debug notifications"),
-	("bootstrap", "Bootstrap the latest version (NOT IMPLEMENTED)"),
 ];
 
 pub fn main(raw_args: &[(String, String)]) {
@@ -17,81 +14,78 @@ pub fn main(raw_args: &[(String, String)]) {
 		help!("Accepted parameters:\n{}", argparse::generate_help(ACCEPTED_PARAMS.to_vec()));
 		return;
 	}
+	
 	let dir_location = setup::get_applejuice_dir();
-	let binary_type = argparse::get_param_value_new(&raw_args, "binary").unwrap();
-	let channel = argparse::get_param_value_new(&raw_args, "channel").unwrap();
-	let version_hash = argparse::get_param_value_new(&raw_args, "hash").unwrap();
-	let protocol_arguments = argparse::get_param_value_new(&raw_args, "args").unwrap();
-
+	let binary_type = argparse::get_param_value_new(&raw_args, "binary");
+	let protocol_arguments = argparse::get_param_value_new(&raw_args, "args").unwrap_or_default();
 	let skip_update_check = argparse::get_param_value_new(&raw_args, "skipupdatecheck"); // Optional
-	let debug_notifications = argparse::get_param_value_new(&raw_args, "debug"); // Optional
 	let shall_we_bootstrap = argparse::get_param_value_new(&raw_args, "bootstrap"); // Optional
+	if binary_type.is_none() {
+		error!("Missing binary type, either Player or Studio");
+		help!("Accepted parameters:\n{}", argparse::generate_help(ACCEPTED_PARAMS.to_vec()));
+		process::exit(1);
+	}
+
+	status!("Finding installation in configuration file...");
+	let binary = binary_type.unwrap();
+	let installations = configuration::get_config("roblox_installations");
+	let found_installation: &serde_json::Value = match installations.get(&binary) {
+		Some(installation) => installation,
+		None => {
+			error!("No installation was found for {}, you can install it using '--install' or by starting it from your application launcher", binary_type.unwrap());
+			process::exit(1);
+		}
+	};
+	let install_configuration = found_installation["configuration"].clone();
+	
+	println!("{}", found_installation);
+	println!("{}", install_configuration);
+
+	println!("{}", found_installation["install_path"]);
 
 	if skip_update_check.is_none() {
 		status!("Checking for updates...");
-		let latest_version = installation::get_latest_version_hash(binary_type, channel);
+		let latest_version = installation::get_latest_version_hash(binary, &found_installation["channel"].as_str().unwrap());
+		let version = found_installation["version_hash"].as_str().unwrap();
+		let deployment_channel = found_installation["channel"].as_str().unwrap();
 
-		if &latest_version == version_hash {
-			success!("You are on the latest version!");
-		} else {
-			warning!("You are not on the latest version! You are on {version_hash} and the latest version for {channel} is {latest_version}");
+		if latest_version != version {
+			warning!("You are not on the latest version! You are on {version} and the latest version for {deployment_channel} is {latest_version}!");
+
 			if shall_we_bootstrap.is_some() {
 				status!("Downloading and installing latest version...");
-				create_notification(&format!("{}/assets/crudejuice.png", dir_location), "5000", &format!("Updating Roblox {}...", binary_type), &format!("Updating to deployment {latest_version}"));
-				//args::install()
+				create_notification(&format!("{}/assets/crudejuice.png", dir_location), "5000", &format!("Updating Roblox {}...", binary), &format!("Updating to deployment {latest_version}"));
+
+				let version_hash = installation::get_latest_version_hash(binary, "LIVE");
+				create_notification(&format!("{}/assets/crudejuice.png", dir_location), "10000", &format!("Downloading Roblox {}...", binary), &format!("Updating to deployment {latest_version}"));
+				let cache_path = installation::download_deployment(binary, version_hash.to_string(), "LIVE");
+				create_notification(&format!("{}/assets/crudejuice.png", dir_location), "10000", &format!("Installing Roblox {}...", binary), &format!("Updating to deployment {latest_version}"));
+
+				// TODO: remove old version when finished downloading
+
+				let folder_path = format!("{}/roblox/{}/{}/{}", setup::get_applejuice_dir(), deployment_channel, binary, version_hash);
+				installation::extract_deployment_zips(binary, cache_path, folder_path, false);
+				create_notification(&format!("{}/assets/crudejuice.png", dir_location), "5000", &format!("Updated Roblox {}!", binary), &format!("Launching will now continue..."));
+				
+				main(raw_args);
+				return;
 			} else {
 				let formatted_install_command = format!("--install {} {}",
-					if binary_type == "Player" { "player" } else { "studio" },
-					if channel == "LIVE" { "" } else { channel }
+					if binary == "Player" { "player" } else { "studio" },
+					if deployment_channel == "LIVE" { "" } else { deployment_channel }
 				);
-				create_notification("dialog-warning", "5000", "Version outdated!", &format!("You are on {} and the latest version for {} is {}\nConsider running \"{}\"", version_hash.replace("version-", ""), channel, latest_version.replace("version-", ""), formatted_install_command));
+				create_notification("dialog-warning", "5000", "Version outdated!", &format!("You are on {} and the latest version for {} is {}\nConsider running \"{}\"", version.replace("version-", ""), deployment_channel, latest_version.replace("version-", ""), formatted_install_command));
 			}
 		}
 	}
+
+	println!("{:?}", installations);
+	println!("{:?}", found_installation);
 	status!("Protocol parameter(s): {}", protocol_arguments);
-	if debug_notifications.is_some() {
-		create_notification("dialog-info", "15000", "Debug protocol parameters", protocol_arguments);
+
+	if install_configuration["enable_rpc"].as_bool().unwrap_or_default() {
+		status!("Starting RPC...");
+		rpc::init_rpc(binary.to_owned(), None);
 	}
 
-	status!("Detecting Proton...");
-	let installation_configuration = configuration::get_config(version_hash);
-	let installed_deployment_location = installation_configuration["install_path"].as_str().unwrap();
-
-	status!("Starting RPC...");
-	rpc::init_rpc(binary_type.to_owned(), debug_notifications);
-
-	status!("Launching Roblox...");
-	create_notification(
-		&format!("{}/assets/crudejuice.png", dir_location),
-		"5000",
-		&format!("Roblox {} is starting!", binary_type),
-		"",
-	);
-	let output = process::Command::new(dbg!(format!("{}/proton", installation_configuration["preferred_proton"].as_str().unwrap())))
-		.env(
-			"STEAM_COMPAT_DATA_PATH",
-			format!("{}/prefixdata", dir_location),
-		)
-		.env(
-			"STEAM_COMPAT_CLIENT_INSTALL_PATH",
-			format!("{}/not-steam", dir_location),
-		)
-		.arg("waitforexitandrun")
-		.arg(format!(
-			"{}/{}",
-			installed_deployment_location,
-			if binary_type == "Player" {
-				"RobloxPlayerBeta.exe".to_string()
-			} else {
-				"RobloxStudioBeta.exe".to_string()
-			}
-		))
-		.arg(protocol_arguments)
-		.spawn()
-		.expect("Failed to launch Roblox Player using Proton")
-		.wait()
-		.expect("Failed to wait on Roblox Player using Proton");
-
-	status!("Roblox has exited with code {}", output.code().unwrap_or(0));
-	create_notification(&format!("{}/assets/crudejuice.png", dir_location), "5000", &format!("Roblox {} has closed", binary_type), &format!("Exit code: {}", output.code().unwrap_or(0)));
 }

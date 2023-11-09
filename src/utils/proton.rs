@@ -8,7 +8,7 @@ pub fn discover_proton_directory() -> serde_json::Value { // Try to automaticall
 
 	match fs::read_dir(potential_path.clone()) {
 		Ok(_) => {
-			status!("Found Steam directory at '{}'", potential_path);
+			success!("Found Steam directory at '{}'", potential_path);
 
 			for entry in fs::read_dir(potential_path.clone()).unwrap() {
 				let unwrapped_entry = entry.unwrap();

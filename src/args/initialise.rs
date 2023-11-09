@@ -1,4 +1,4 @@
-use std::{fs, env::var};
+use std::{fs, env::var, process};
 use serde_json::json;
 
 use crate::utils::setup;
@@ -51,7 +51,7 @@ pub fn main() {
 	} else {
 		setup::create_dir("assets");
 		success!("Created assets directory");
-		status!("Downloading assets...");
+		status!("Downloading assets from GitHub...");
 		let client = reqwest::blocking::Client::new();
 		for url in ASSET_URLS.iter() {
 			let filename = url.split('/').last().unwrap().to_lowercase();
@@ -65,38 +65,51 @@ pub fn main() {
 		}
 	}
 
+	configuration::update_config(json!({
+		"config_version": "0",
+		"global": {},
+		"roblox_installations": {}
+	}), "global");
+
 	status!("Finding a Proton installation...");
 	let detected_installations = proton::discover_proton_directory();
 	if detected_installations == serde_json::Value::Null {
 		warning!("Failed to find a Proton installation! You might not have Steam or Proton installed.");
 	} else {
-		status!("Found the following Proton installations: ");
-		for (key, _value) in detected_installations["proton_installations"].as_object().unwrap() {
-			status!("{}", key);
-		}
-
 		configuration::update_config(detected_installations, "proton_installations");
 		success!("config.json updated with Proton paths");
 	}
 
-	configuration::update_config(json!({
-		"config_version": "0",
-		"global": {}
-	}), "global");
-
-	status!("Creating bootstrapper shortcut...");
+	status!("Creating Roblox shortcuts...");
 	let location = setup::get_applejuice_dir();
-	let desktop_shortcut_path = format!("{}/.local/share/applications/robloxbootstrap.desktop", var("HOME").expect("$HOME not set"));
-	let desktop_shortcut_contents = format!("[Desktop Entry]
-Name=Roblox Bootstrap
-Comment=Launch Roblox with Proton and download latest version
+	let desktop_shortcut_path = format!("{}/.local/share/applications/", var("HOME").expect("$HOME not set"));
+	
+	let player_shortcut_contents = format!("[Desktop Entry]
+Name=Roblox Player
+Comment=Launch Roblox Player with Applejuice and download latest version
 Exec=env applejuicecli --launch --bootstrap --args %u
-Icon={location}/assets/crudejuice.png
+Icon={location}/assets/player.png
 Type=Application
 Categories=Game
 MimeType=x-scheme-handler/roblox-player");
-	fs::write(desktop_shortcut_path.clone(), desktop_shortcut_contents).expect("Failed to write desktop shortcut");
+	let studio_shortcut_contents = format!("[Desktop Entry]
+Name=Roblox Studio
+Comment=Launch Roblox Studio with Applejuice and download latest version
+Exec=env applejuicecli --launch --bootstrap --args %u
+Icon={location}/assets/studio.png
+Type=Application
+Categories=Game
+MimeType=x-scheme-handler/roblox-studio;x-scheme-handler/roblox-studio-auth");
 
-	println!(); // "Print a newline (for aesthetics" -GitHub copilot, providing dumb crap since 2022
+	fs::write(format!("{desktop_shortcut_path}/roblox-player.desktop"), player_shortcut_contents).expect("Failed to write desktop shortcut for Player");
+	fs::write(format!("{desktop_shortcut_path}/roblox-studio.desktop"), studio_shortcut_contents).expect("Failed to write desktop shortcut for Studio");
+
+	status!("Updating desktop database...");
+	process::Command::new("update-desktop-database")
+		.arg(format!("{}/.local/share/applications", var("HOME").expect("$HOME not set")))
+		.spawn()
+		.expect("Failed to execute update-desktop-database");
+
+	println!(); 
 	success!("Applejuice has been initialised!\nTo get started, run 'applejuicecli --help'\nOr to dive right in, run 'applejuicecli --install player' OR 'applejuicecli --bootstrap player'");
 }
