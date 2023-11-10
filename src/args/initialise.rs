@@ -62,14 +62,25 @@ pub fn main() {
 				.unwrap();
 
 			fs::write(format!("{}/assets/{}", setup::get_applejuice_dir(), filename), output).expect("Failed to write asset");
+			success!("Downloaded {}!", filename);
 		}
 	}
 
+	// Initialise entries for config.json
 	configuration::update_config(json!({
 		"config_version": "0",
-		"global": {},
-		"roblox_installations": {}
+		"ui": {},
+		"cli": {},
+		"misc": {
+			"overrides": {
+				"LATEST_VERSION_PLAYER_CHANNEL": null,
+				"LATEST_VERSION_STUDIO_CHANNEL": null,
+				"LIVE_DEPLOYMENT_CDN": null,
+				"CHANNEL_DEPLOYMENT_CDN": null,
+			}
+		}
 	}), "global");
+	configuration::update_config(json!({ }), "roblox_installations");
 
 	status!("Finding a Proton installation...");
 	let detected_installations = proton::discover_proton_directory();
@@ -104,12 +115,8 @@ MimeType=x-scheme-handler/roblox-studio;x-scheme-handler/roblox-studio-auth");
 	fs::write(format!("{desktop_shortcut_path}/roblox-player.desktop"), player_shortcut_contents).expect("Failed to write desktop shortcut for Player");
 	fs::write(format!("{desktop_shortcut_path}/roblox-studio.desktop"), studio_shortcut_contents).expect("Failed to write desktop shortcut for Studio");
 
-	status!("Updating desktop database...");
-	process::Command::new("update-desktop-database")
-		.arg(format!("{}/.local/share/applications", var("HOME").expect("$HOME not set")))
-		.spawn()
-		.expect("Failed to execute update-desktop-database");
+	configuration::update_desktop_database();
 
-	println!(); 
-	success!("Applejuice has been initialised!\nTo get started, run 'applejuicecli --help'\nOr to dive right in, run 'applejuicecli --install player' OR 'applejuicecli --bootstrap player'");
+	println!();
+	success!("Applejuice has been initialised!\nTo get started, run 'applejuicecli --help'\nOr to dive right in, run 'applejuicecli --install player'");
 }

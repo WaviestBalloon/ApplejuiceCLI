@@ -1,4 +1,4 @@
-use std::{fs, env::var, process::{self, exit}};
+use std::{fs, env::var, process::exit, time};
 use serde_json::json;
 use sdl2::init;
 
@@ -20,6 +20,7 @@ fn detect_display_hertz() -> i32 {
 }
 
 fn download_and_install(version: ExactVersion, threading: bool) {
+	let start_time = time::Instant::now();
 	let ExactVersion {hash: version_hash, channel} = version;
 
 	let indentation = status!("Fetching package manifest...");
@@ -94,24 +95,24 @@ Categories=Game
 MimeType=x-scheme-handler/{}", if binary_type == "Studio" { "roblox-studio;x-scheme-handler/roblox-studio-auth" } else { "roblox-player" });
 	fs::write(desktop_shortcut_path.clone(), desktop_shortcut_contents).expect("Failed to write desktop shortcut");
 
-	status!("Updating desktop database...");
-	process::Command::new("update-desktop-database")
-		.arg(format!("{}/.local/share/applications", var("HOME").expect("$HOME not set")))
-		.spawn()
-		.expect("Failed to execute update-desktop-database");
+	configuration::update_desktop_database();
 
 	configuration::update_config(serde_json::json!({
-		format!("{}", version_hash): {
+		binary_type: {
 			"channel": channel,
-			"binary_type": binary_type,
+			"version_hash": version_hash,
 			"install_path": folder_path,
 			"shortcut_path": desktop_shortcut_path,
 			"preferred_proton": proton_instance,
-			"enable_rpc": true
+			"configuration": {
+				"preferred_compat": "proton",
+				"parameters": "%command%",
+				"enable_rpc": true
+			}
 		}
-	}), &version_hash);
+	}), "roblox_installations");
 
-	success!("Roblox {} has been installed!\n\t{} {} located in {}", binary_type, binary_type, version_hash, folder_path);
+	success!("Roblox {} has been installed!\n\t{} {} located in {}\n\tTook {:?} to complete", binary_type, binary_type, version_hash, folder_path, start_time.elapsed());
 }
 
 pub fn main(arguments: &[(String, String)]) {

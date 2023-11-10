@@ -89,7 +89,7 @@ macro_rules! construct_rpc_assets {
 	}
 }
 
-pub fn init_rpc(binary_type: String, debug_notifications: Option<&str>) {
+pub fn init_rpc(binary_type: String) {
 	let client = DiscordIpcClient::new("1160530617117712384").and_then(|mut client| {
 		client.connect()?;
 
@@ -114,16 +114,10 @@ pub fn init_rpc(binary_type: String, debug_notifications: Option<&str>) {
 
 		client.set_activity(payload)?;
 		success!("RPC instance started");
-		if debug_notifications.is_some() {
-			create_notification("dialog-info", "15000", "Debug RPC", "Rich presence connected");
-		}
 
 		Ok(client)
 	}).or_else(|errmsg| {
 		warning!("Failed to start RPC instance");
-		if debug_notifications.is_some() {
-			create_notification("dialog-info", "15000", "Debug RPC", &format!("Rich presence failed to start!\n{}", errmsg));
-		}
 		Err(errmsg)
 	});
 	if let Ok(mut rpc_handler) = client { // If the RPC Client had successfully initialised
@@ -192,7 +186,6 @@ pub fn init_rpc(binary_type: String, debug_notifications: Option<&str>) {
 											continue;
 										}
 									};
-									// Make our lives easier, and move all elements in `data` to the root
 									
 									let command = parsed_data.command;
 									let data: RichPresenceData = parsed_data.data.unwrap();
@@ -241,7 +234,7 @@ pub fn init_rpc(binary_type: String, debug_notifications: Option<&str>) {
 
 									let _ = rpc_handler.set_activity(activity);
 									was_rpc_updated = true;
-								} else if line_usable.contains("leaveUGCGameInternal") {
+								} else if line_usable.contains("leaveUGCGameInternal") { // When the user leaves a game and enters the LuaApp
 									status!("Detected game leave; resetting RPC");
 									
 									let state = format!("Using Roblox {} on Linux!", binary_type.clone()); // TODO: move this into it's own function to avoid violating D.R.Y
@@ -267,7 +260,7 @@ pub fn init_rpc(binary_type: String, debug_notifications: Option<&str>) {
 									was_rpc_updated = true;
 								}
 
-								if was_rpc_updated == true {
+								if was_rpc_updated == true { // Debug related
 									was_rpc_updated = false;
 									match rpc_handler.recv() {
 										Ok(output) => {

@@ -85,7 +85,8 @@ pub fn main(raw_args: &[(String, String)]) {
 
 	if install_configuration["enable_rpc"].as_bool().unwrap_or_default() {
 		status!("Starting RPC...");
-		rpc::init_rpc(binary.to_owned(), None);
+		rpc::init_rpc(binary.to_owned());
 	}
 
+	std::thread::sleep(std::time::Duration::from_secs(50));
 }

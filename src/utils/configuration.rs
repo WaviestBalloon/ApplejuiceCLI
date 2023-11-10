@@ -1,8 +1,6 @@
-use std::fs;
-use std::{collections::HashMap, path::Path};
+use std::{fs, process, env::var, collections::HashMap, path::Path};
 use serde::{Serialize, Deserialize};
-use crate::utils::terminal::*;
-use crate::utils::setup;
+use crate::utils::{terminal::*, setup};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 struct Config<'a> {
@@ -27,25 +25,16 @@ struct RobloxInstallation<'a> {
 	version: &'a str
 }
 
-/*
-	{
-		"binary_type": "Player",
-		"channel": "zcanary",
-		"install_path": "/home/wav/.local/share/applejuice/roblox/zcanary/Player/version-d44ee8435ee04b51",
-		"preferred_proton": "/home/wav/.steam/steam/steamapps/common/Proton - Experimental",
-		"shortcut_path": "/home/wav/.local/share/applications/roblox-player-d44ee8435ee04b51.desktop",
-		"version": "version-d44ee8435ee04b51"
-	}
-*/
-
-pub fn _test_balls() {
+#[warn(dead_code)]
+pub fn test() {
 	let mut x = Config::default();
-	x.proton_installations.insert("sex", Path::new("/balls"));
+	x.proton_installations.insert("test_key", Path::new("/pathtest"));
 	let a = serde_json::to_string(&x).unwrap();
 	let y: Config = serde_json::from_str(&a).unwrap();
 	println!("{:?}", y);
 }
 
+// Update a certain element in the configuration JSON file
 pub fn update_config(json: serde_json::Value, config_type: &str) {
 	status!("Updating configuration file...");
 	let config_path = format!("{}/config.json", setup::get_applejuice_dir());
@@ -57,10 +46,21 @@ pub fn update_config(json: serde_json::Value, config_type: &str) {
 	let config_file = fs::read_to_string(config_path.clone()).unwrap();
 	let mut config_json: serde_json::Value = serde_json::from_str(&config_file).unwrap();
 
-	config_json[config_type] = json[config_type].clone();
+	// do not overwrite everything inside of config_type, just append onto it
+	let mut config_type_json = config_json[config_type].clone();
+	for (key, value) in json.as_object().unwrap() {
+		config_type_json[key] = value.clone();
+	}
+	config_json[config_type] = config_type_json;
+
+
+	//config_json[config_type] = json;
+
+	//serde_json::from_str::<Config>(&config_file)
 	fs::write(config_path, serde_json::to_string_pretty(&config_json).unwrap()).unwrap();
 }
 
+// Fetch element from configuration JSON file
 pub fn get_config(config_type: &str) -> serde_json::Value {
 	let config_path = format!("{}/config.json", setup::get_applejuice_dir());
 	if !setup::confirm_existence(&config_path) {
@@ -72,4 +72,17 @@ pub fn get_config(config_type: &str) -> serde_json::Value {
 	let config_json: serde_json::Value = serde_json::from_str(&config_file).unwrap();
 
 	config_json[config_type].clone()
+}
+
+// Update desktop database which is used for protocols for browser launching
+pub fn update_desktop_database() -> bool {
+	status!("Updating desktop database...");
+	
+	match process::Command::new("update-desktop-database").arg(format!("{}/.local/share/applications", var("HOME").expect("$HOME not set"))).spawn() {
+		Ok(_) => true,
+		Err(_) => {
+			warning!("Failed to update desktop database; protocols might not work correctly!");
+			false
+		}
+	}
 }
