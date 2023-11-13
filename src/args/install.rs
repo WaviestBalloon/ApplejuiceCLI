@@ -6,6 +6,9 @@ use crate::utils::{terminal::*, installation::{self, ExactVersion, Version}, set
 
 const HELP_TEXT: &str = "\nUsage: --install <hash | binary> [channel] [--exact] [--removeolder] [--migratefflags]\nInstalls the Roblox Player or Roblox Studio\n\nbinary:\n\tPlayer\tInstalls the Roblox Player\n\tStudio\tInstalls Roblox Studio\n\nExample: --install player zcanary --removeolder --migratefflags";
 
+const ROBLOX_PLAYER_MIMES: &str = "x-scheme-handler/roblox-player;x-scheme-handler/roblox";
+const ROBLOX_STUDIO_MIMES: &str = "x-scheme-handler/roblox-studio;x-scheme-handler/roblox-studio-auth";
+
 fn detect_display_hertz() -> i32 {
 	match init() {
 		Ok(sdl_context) => {
@@ -92,7 +95,7 @@ Exec=env applejuicecli --launch --binary {binary_type} --channel {channel} --has
 Icon={folder_path}/content/textures/loading/robloxTilt.png
 Type=Application
 Categories=Game
-MimeType=x-scheme-handler/{}", if binary_type == "Studio" { "roblox-studio;x-scheme-handler/roblox-studio-auth" } else { "roblox-player" });
+MimeType={}", if binary_type == "Studio" { ROBLOX_STUDIO_MIMES } else { ROBLOX_PLAYER_MIMES });
 	fs::write(desktop_shortcut_path.clone(), desktop_shortcut_contents).expect("Failed to write desktop shortcut");
 
 	configuration::update_desktop_database();
