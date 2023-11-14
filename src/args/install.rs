@@ -24,6 +24,10 @@ fn detect_display_hertz() -> i32 {
 
 fn download_and_install(version: ExactVersion, threading: bool) {
 	let start_time = time::Instant::now();
+	let global_config = configuration::get_config("global");
+	let overrides = global_config["misc"]["overrides"].clone();
+	let remove_deployment_postinstall = global_config["misc"]["purge_cache_deployment_after_install"].clone();
+
 	let ExactVersion {hash: version_hash, channel} = version;
 
 	let indentation = status!("Fetching package manifest...");
@@ -51,9 +55,11 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 	status!("Writing AppSettings.xml...");
 	installation::write_appsettings_xml(folder_path.clone());
 	status!("Extracting deployment...");
-	installation::extract_deployment_zips(binary_type, cache_path, folder_path.clone(), !threading);
+	installation::extract_deployment_zips(binary_type, cache_path.clone(), folder_path.clone(), !threading);
 	success!("Done");
 	drop(indentation);
+
+	status!("Carrying out post-install tasks... (Cleanup, FFlag configuration, etc)");
 
 	status!("Creating ClientSettings for FFlag configuration...");
 	if !setup::confirm_existence(format!("{}/ClientSettings", folder_path).as_str()) {
@@ -97,6 +103,11 @@ Type=Application
 Categories=Game
 MimeType={}", if binary_type == "Studio" { ROBLOX_STUDIO_MIMES } else { ROBLOX_PLAYER_MIMES });
 	fs::write(desktop_shortcut_path.clone(), desktop_shortcut_contents).expect("Failed to write desktop shortcut");
+
+	if remove_deployment_postinstall == true {
+		status!("Deleting cached deployment...");
+		fs::remove_dir_all(cache_path).expect("Failed to remove deployment from cache post-install!");
+	}
 
 	configuration::update_desktop_database();
 
