@@ -91,19 +91,6 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 		warning!("Failed to find a Proton instance! Do you have one specified in your config.json file?");
 	}
 
-	status!("Creating application shortcut...");
-	let clean_version_hash = version_hash.replace("version-", "");
-	let desktop_shortcut_path = format!("{}/.local/share/applications/roblox-{}-{}.desktop", var("HOME").expect("$HOME not set"), binary_type.to_lowercase(), clean_version_hash);
-	let desktop_shortcut_contents = format!("[Desktop Entry]
-Name=Roblox {binary_type} ({channel}-{clean_version_hash})
-Comment=Launch Roblox with Proton
-Exec=env applejuicecli --launch --binary {binary_type} --channel {channel} --hash {version_hash} --args %u
-Icon={folder_path}/content/textures/loading/robloxTilt.png
-Type=Application
-Categories=Game
-MimeType={}", if binary_type == "Studio" { ROBLOX_STUDIO_MIMES } else { ROBLOX_PLAYER_MIMES });
-	fs::write(desktop_shortcut_path.clone(), desktop_shortcut_contents).expect("Failed to write desktop shortcut");
-
 	if remove_deployment_postinstall == true {
 		status!("Deleting cached deployment...");
 		fs::remove_dir_all(cache_path).expect("Failed to remove deployment from cache post-install!");
@@ -116,7 +103,6 @@ MimeType={}", if binary_type == "Studio" { ROBLOX_STUDIO_MIMES } else { ROBLOX_P
 			"channel": channel,
 			"version_hash": version_hash,
 			"install_path": folder_path,
-			"shortcut_path": desktop_shortcut_path,
 			"preferred_proton": proton_instance,
 			"configuration": {
 				"preferred_compat": "proton",
