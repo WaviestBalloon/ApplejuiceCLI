@@ -26,7 +26,7 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 	let start_time = time::Instant::now();
 	let global_config = configuration::get_config("global");
 	let overrides = global_config["misc"]["overrides"].clone();
-	let remove_deployment_postinstall = global_config["misc"]["purge_cache_deployment_after_install"].clone();
+	let remove_deployment_postinstall = global_config["misc"]["purge_cached_deployment_after_install"].clone();
 
 	let ExactVersion {hash: version_hash, channel} = version;
 
