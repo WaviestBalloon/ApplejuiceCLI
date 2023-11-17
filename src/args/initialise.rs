@@ -11,6 +11,8 @@ const ASSET_URLS: [&str; 3] = [
 	"https://raw.githubusercontent.com/WaviestBalloon/ApplejuiceCLI/main/assets/studio.png",
 	"https://raw.githubusercontent.com/WaviestBalloon/ApplejuiceCLI/main/assets/crudejuice.png"
 ];
+const ROBLOX_PLAYER_MIMES: &str = "x-scheme-handler/roblox-player;x-scheme-handler/roblox";
+const ROBLOX_STUDIO_MIMES: &str = "x-scheme-handler/roblox-studio;x-scheme-handler/roblox-studio-auth";
 
 pub fn main() {
 	status!("Initialising Applejuice...");
@@ -103,7 +105,7 @@ Exec=env applejuicecli --launch --binary Player --bootstrap --args %u
 Icon={location}/assets/player.png
 Type=Application
 Categories=Game
-MimeType=x-scheme-handler/roblox-player");
+MimeType={ROBLOX_PLAYER_MIMES}");
 	let studio_shortcut_contents = format!("[Desktop Entry]
 Name=Roblox Studio
 Comment=Launch Roblox Studio with Applejuice and download latest version
@@ -111,7 +113,7 @@ Exec=env applejuicecli --launch --binary Studio --bootstrap --args %u
 Icon={location}/assets/studio.png
 Type=Application
 Categories=Game
-MimeType=x-scheme-handler/roblox-studio;x-scheme-handler/roblox-studio-auth");
+MimeType={ROBLOX_STUDIO_MIMES}");
 
 	fs::write(format!("{desktop_shortcut_path}/roblox-player.desktop"), player_shortcut_contents).expect("Failed to write desktop shortcut for Player");
 	fs::write(format!("{desktop_shortcut_path}/roblox-studio.desktop"), studio_shortcut_contents).expect("Failed to write desktop shortcut for Studio");
@@ -119,5 +121,5 @@ MimeType=x-scheme-handler/roblox-studio;x-scheme-handler/roblox-studio-auth");
 	configuration::update_desktop_database();
 
 	println!();
-	success!("Applejuice has been initialised!\n\tTo get started, run 'applejuicecli --help'\nOr to dive right in, launch Roblox Player or Roblox Studio!");
+	success!("Applejuice has been initialised!\n\tTo get started, run 'applejuicecli --help'\n\tOr to dive right in, launch Roblox Player or Roblox Studio!");
 }

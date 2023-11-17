@@ -6,9 +6,6 @@ use crate::utils::{terminal::*, installation::{self, ExactVersion, Version}, set
 
 const HELP_TEXT: &str = "\nUsage: --install <hash | binary> [channel] [--exact] [--removeolder] [--migratefflags]\nInstalls the Roblox Player or Roblox Studio\n\nbinary:\n\tPlayer\tInstalls the Roblox Player\n\tStudio\tInstalls Roblox Studio\n\nExample: --install player zcanary --removeolder --migratefflags";
 
-const ROBLOX_PLAYER_MIMES: &str = "x-scheme-handler/roblox-player;x-scheme-handler/roblox";
-const ROBLOX_STUDIO_MIMES: &str = "x-scheme-handler/roblox-studio;x-scheme-handler/roblox-studio-auth";
-
 fn detect_display_hertz() -> i32 {
 	match init() {
 		Ok(sdl_context) => {
