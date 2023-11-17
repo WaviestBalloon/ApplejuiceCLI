@@ -78,7 +78,7 @@ pub fn main() {
 				"LIVE_DEPLOYMENT_CDN": null,
 				"CHANNEL_DEPLOYMENT_CDN": null,
 			},
-			"purge_cache_deployment_after_install": false,
+			"purge_cached_deployment_after_install": false,
 		}
 	}), "global");
 	configuration::update_config(json!({ }), "roblox_installations");
