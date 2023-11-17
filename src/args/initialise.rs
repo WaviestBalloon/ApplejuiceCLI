@@ -99,7 +99,7 @@ pub fn main() {
 	let player_shortcut_contents = format!("[Desktop Entry]
 Name=Roblox Player
 Comment=Launch Roblox Player with Applejuice and download latest version
-Exec=env applejuicecli --launch --bootstrap --args %u
+Exec=env applejuicecli --launch --binary Player --bootstrap --args %u
 Icon={location}/assets/player.png
 Type=Application
 Categories=Game
@@ -107,7 +107,7 @@ MimeType=x-scheme-handler/roblox-player");
 	let studio_shortcut_contents = format!("[Desktop Entry]
 Name=Roblox Studio
 Comment=Launch Roblox Studio with Applejuice and download latest version
-Exec=env applejuicecli --launch --bootstrap --args %u
+Exec=env applejuicecli --launch --binary Studio --bootstrap --args %u
 Icon={location}/assets/studio.png
 Type=Application
 Categories=Game

@@ -96,12 +96,12 @@ const PLAYER_EXTRACT_BINDINGS: [(&str, &str); 19] = [
 	("extracontent-textures.zip", "ExtraContent/textures/"),
 	("extracontent-places.zip", "ExtraContent/places/")
 ];
-const STUDIO_EXTRACT_BINDINGS: [(&str, &str); 30] = [
+const STUDIO_EXTRACT_BINDINGS: [(&str, &str); 31] = [
 	("RobloxStudio.zip", ""),
 	("redist.zip", ""),
 	("Libraries.zip", ""),
 	("LibrariesQt5.zip", ""),
-	// ("WebView2.zip", ""), (Unnecessary)
+	("WebView2.zip", ""),
 	// ("WebView2RuntimeInstaller.zip", ""), (Unnecessary)
 	("shaders.zip", "shaders/"),
 	("ssl.zip", "ssl/"),

@@ -41,7 +41,7 @@ pub fn main(raw_args: &[(String, String)]) {
 			} else {
 				warning!("Unable to find a Roblox installation, bootstrapping now...");
 				status!("Downloading and installing latest version...");
-				create_notification(&format!("{}/assets/crudejuice.png", dir_location), "5000", "Installing Roblox...", "");
+				create_notification(&format!("{}/assets/crudejuice.png", dir_location), "15000", "Installing Roblox...", "");
 
 				let channel = match configuration["misc"]["overrides"]["deployment_channel"].as_str() {
 					Some(channel) => channel,
@@ -74,6 +74,7 @@ pub fn main(raw_args: &[(String, String)]) {
 
 			if shall_we_bootstrap.is_some() { // TODO: move to seperate module
 				status!("Downloading and installing latest version...");
+				help!("Install info: \n\tInstalling: {}\nOld version: {}\nUsing deployment channel: {}", latest_version, version, deployment_channel);
 				create_notification(&format!("{}/assets/crudejuice.png", dir_location), "5000", &format!("Updating Roblox {}...", binary), &format!("Updating to deployment {latest_version}"));
 
 				args::install::main(&[("install".to_string(), binary.to_string())]);
