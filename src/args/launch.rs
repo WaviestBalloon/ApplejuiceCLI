@@ -2,12 +2,13 @@ use crate::utils::{argparse, installation, notification::create_notification, se
 use crate::args;
 use std::process;
 
-static ACCEPTED_PARAMS: [(&str, &str); 4] = [
+static ACCEPTED_PARAMS: [(&str, &str); 5] = [
 	("binary", "The binary type to launch, either Player or Studio"),
 	//("channel", "The deployment channel to launch"),
 	("hash", "The version hash to launch"),
 	("args", "The protocol arguments to launch with, usually given by a protocol"),
 	("skipupdatecheck", "Skip checking for updates from clientsettings.roblox.com"),
+	("bootstrap", "Automatically install the provided binary is missing or outdated")
 ];
 
 pub fn main(raw_args: &[(String, String)]) {
