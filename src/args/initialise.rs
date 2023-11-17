@@ -119,5 +119,5 @@ MimeType=x-scheme-handler/roblox-studio;x-scheme-handler/roblox-studio-auth");
 	configuration::update_desktop_database();
 
 	println!();
-	success!("Applejuice has been initialised!\nTo get started, run 'applejuicecli --help'\nOr to dive right in, run 'applejuicecli --install player'");
+	success!("Applejuice has been initialised!\n\tTo get started, run 'applejuicecli --help'\nOr to dive right in, launch Roblox Player or Roblox Studio!");
 }
