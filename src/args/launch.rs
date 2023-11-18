@@ -5,10 +5,10 @@ use std::process;
 static ACCEPTED_PARAMS: [(&str, &str); 5] = [
 	("binary", "The binary type to launch, either Player or Studio"),
 	//("channel", "The deployment channel to launch"),
-	("hash", "The version hash to launch"),
+	("hash", "The version hash to use (Automatic)"),
 	("args", "The protocol arguments to launch with, usually given by a protocol"),
 	("skipupdatecheck", "Skip checking for updates from clientsettings.roblox.com"),
-	("bootstrap", "Automatically install the provided binary is missing or outdated")
+	("bootstrap", "Automatically install the provided binary if missing or outdated")
 ];
 
 pub fn main(raw_args: &[(String, String)]) {
