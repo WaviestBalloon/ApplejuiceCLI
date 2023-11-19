@@ -237,27 +237,7 @@ pub fn init_rpc(binary_type: String) {
 								} else if line_usable.contains("leaveUGCGameInternal") { // When the user leaves a game and enters the LuaApp
 									status!("Detected game leave; resetting RPC");
 									
-									let state = format!("Using Roblox {} on Linux!", binary_type.clone()); // TODO: move this into it's own function to avoid violating D.R.Y
-									let payload = activity::Activity::new()
-										.state(&state)
-										.details("With Applejuice")
-										.assets(
-											activity::Assets::new()
-												.large_image("crudejuice")
-												.large_text("Bitdancer Approved"),
-										)
-										.timestamps(
-											activity::Timestamps::new()
-											.start(
-												time::SystemTime::now()
-													.duration_since(time::SystemTime::UNIX_EPOCH)
-													.unwrap()
-													.as_millis() as i64,
-											)
-										);
-
-									let _ = rpc_handler.set_activity(payload);
-									was_rpc_updated = true;
+									self::init_rpc(binary_type.clone());
 								}
 
 								if was_rpc_updated == true { // Debug related
@@ -273,7 +253,10 @@ pub fn init_rpc(binary_type: String) {
 											}
 										}
 										Err(error) => {
-											warning!("Error occurred when attempting to display RPC request receive: {error}\nRPC may not display correctly or at all anymore\nLast successful receive unwrap: {:?}", last_successful_rec_unwrap);
+											warning!("Error occurred when attempting to display RPC request receive: {error}\nLast successful receive unwrap: {:?}", last_successful_rec_unwrap);
+											
+											status!("Attempting to re-initialise RPC...");
+											self::init_rpc(binary_type.clone());
 										}
 									}
 								}
