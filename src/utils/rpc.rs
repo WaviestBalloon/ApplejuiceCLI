@@ -237,7 +237,24 @@ pub fn init_rpc(binary_type: String) {
 								} else if line_usable.contains("leaveUGCGameInternal") { // When the user leaves a game and enters the LuaApp
 									status!("Detected game leave; resetting RPC");
 									
-									self::init_rpc(binary_type.clone());
+									let state = format!("Using Roblox {} on Linux!", binary_type.clone());
+									let payload = activity::Activity::new()
+										.state(&state)
+										.details("With Applejuice")
+										.assets(
+											activity::Assets::new()
+												.large_image("crudejuice")
+												.large_text("Bitdancer Approved"),
+										)
+										.timestamps(
+											activity::Timestamps::new()
+											.start(
+												time::SystemTime::now()
+													.duration_since(time::SystemTime::UNIX_EPOCH)
+													.unwrap()
+													.as_millis() as i64,
+											)
+										);
 								}
 
 								if was_rpc_updated == true { // Debug related
