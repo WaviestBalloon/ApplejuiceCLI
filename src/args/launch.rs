@@ -28,6 +28,8 @@ pub fn main(raw_args: &[(String, String)]) {
 		process::exit(1);
 	}
 
+	let studio_oauthing = protocol_arguments.contains("roblox-studio-auth");
+
 	status!("Finding installation in configuration file...");
 	let binary = binary_type.unwrap();
 	let installations = configuration::get_config("roblox_installations");
@@ -57,11 +59,6 @@ pub fn main(raw_args: &[(String, String)]) {
 	};
 	let install_configuration = found_installation["configuration"].clone();
 	let install_path = found_installation["install_path"].as_str().unwrap_or_default();
-	
-	/*println!("{}", found_installation);
-	println!("{}", install_configuration);
-
-	println!("{}", found_installation["install_path"]);*/
 
 	if skip_update_check.is_none() {
 		status!("Checking for updates...");
@@ -91,7 +88,6 @@ pub fn main(raw_args: &[(String, String)]) {
 		}
 	}
 
-	//println!("{:?}", installations);
 	println!("{:?}", found_installation);
 	status!("Protocol parameter(s): {}", protocol_arguments);
 
@@ -101,12 +97,22 @@ pub fn main(raw_args: &[(String, String)]) {
 	}
 
 	status!("Launching Roblox...");
-	create_notification(
-		&format!("{}/assets/crudejuice.png", dir_location),
-		"5000",
-		&format!("Roblox {} is starting!", binary),
-		"",
-	);
+	if studio_oauthing {
+		create_notification(
+			&format!("{}/assets/studio.png", dir_location),
+			"5000",
+			"Studio OAuth",
+			"Launching Studio to authenticate...",
+		);
+	} else {
+		create_notification(
+			&format!("{}/assets/crudejuice.png", dir_location),
+			"5000",
+			&format!("Roblox {} is starting!", binary),
+			"",
+		);
+	}
+
 	let output = process::Command::new(dbg!(format!("{}/proton", found_installation["preferred_proton"].as_str().unwrap())))
 		.env(
 			"STEAM_COMPAT_DATA_PATH",
@@ -116,7 +122,7 @@ pub fn main(raw_args: &[(String, String)]) {
 			"STEAM_COMPAT_CLIENT_INSTALL_PATH",
 			format!("{}/not-steam", dir_location),
 		)
-		.arg("waitforexitandrun")
+		.arg("run") // Verb `waitforexitandrun` prevents other instances from launching and queues them, not good, using `run`
 		.arg(format!(
 			"{}/{}",
 			install_path,
@@ -132,6 +138,16 @@ pub fn main(raw_args: &[(String, String)]) {
 		.wait()
 		.expect("Failed to wait on Roblox Player using Proton");
 
-	status!("Roblox has exited with code {}", output.code().unwrap_or(0));
-	create_notification(&format!("{}/assets/crudejuice.png", dir_location), "5000", &format!("Roblox {} has closed", binary), &format!("Exit code: {}", output.code().unwrap_or(0)));
+	let exitcode = output.code().unwrap_or(0);
+	status!("Roblox has exited with code {}", exitcode);
+	
+	if studio_oauthing {
+		if exitcode == 0 {
+			create_notification(&format!("{}/assets/studio.png", dir_location), "5000", "Studio OAuth", "You should now be logged into Roblox Studio successfully!");
+		} else {
+			create_notification(&format!("{}/assets/studio.png", dir_location), "5000", "Studio OAuth",&format!("An error may have occured during the authentication process, please try again.\nExit code: {}", exitcode));
+		}
+	} else {
+		create_notification(&format!("{}/assets/crudejuice.png", dir_location), "5000", &format!("Roblox {} has closed", binary), &format!("Exit code: {}", exitcode));
+	}
 }
