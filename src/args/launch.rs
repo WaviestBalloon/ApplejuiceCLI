@@ -116,7 +116,7 @@ pub fn main(raw_args: &[(String, String)]) {
 			"STEAM_COMPAT_CLIENT_INSTALL_PATH",
 			format!("{}/not-steam", dir_location),
 		)
-		.arg("waitforexitandrun")
+		.arg("run") // Verb `waitforexitandrun` prevents other instances from launching and queues them, not good, using `run`
 		.arg(format!(
 			"{}/{}",
 			install_path,
