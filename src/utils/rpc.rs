@@ -1,11 +1,10 @@
 use crate::utils::{terminal::*, notification::create_notification, setup};
+use crate::args::launch;
 use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
-use inotify::{Inotify, WatchMask};
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::io::{BufRead, BufReader, Seek};
-use std::{fs, sync::mpsc, thread, time};
+use std::{fs, sync::mpsc, thread, time, io::{BufRead, BufReader, Seek}};
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -47,12 +46,13 @@ fn convert_into_assetdelivery_url(asset_id: i64) -> String {
 
 macro_rules! construct_rpc_assets {
 	($rpc_assets:ident, $small_image:expr, $large_image:expr) => {
+		// `clear` and `reset` have not been implemented yet, and may never be fully implemented due to how unstable RPC is
 		// DO NOT TOUCH OR SCREW WITH THIS CODE IT WILL BREAK EVERYTHING AND CAUSE YOU HOURS UPON MONT HSOF DEBUGGING FOR THE LOVE OF GOD DO NOT CHANGE
-		// 	Implementation time: over 2 months (https://github.com/WaviestBalloon/ApplejuiceCLI/issues/3)
-		let xd;
-		let yd;
-		let xe;
-		let ye;
+
+		let large_image_url;
+		let large_image_hover_text;
+		let small_image_url;
+		let small_image_hover_text;
 
 		let mut $rpc_assets = activity::Assets::new();
 		if let Some(RichPresenceImage {
@@ -62,12 +62,12 @@ macro_rules! construct_rpc_assets {
 			reset: _,
 		}) = $large_image {
 			if let Some(asset_id) = asset_id {
-				xd = convert_into_assetdelivery_url(asset_id);
-				$rpc_assets = $rpc_assets.large_image(&xd);
+				large_image_url = convert_into_assetdelivery_url(asset_id);
+				$rpc_assets = $rpc_assets.large_image(&large_image_url);
 			}
 			if let Some(hover_text) = hover_text {
-				yd = hover_text;
-				$rpc_assets = $rpc_assets.large_text(&yd);
+				large_image_hover_text = hover_text;
+				$rpc_assets = $rpc_assets.large_text(&large_image_hover_text);
 			}
 		}
 		if let Some(RichPresenceImage {
@@ -78,18 +78,18 @@ macro_rules! construct_rpc_assets {
 		}) = $small_image
 		{
 			if let Some(asset_id) = asset_id {
-				xe = convert_into_assetdelivery_url(asset_id);
-				$rpc_assets = $rpc_assets.small_image(&xe);
+				small_image_url = convert_into_assetdelivery_url(asset_id);
+				$rpc_assets = $rpc_assets.small_image(&small_image_url);
 			}
 			if let Some(hover_text) = hover_text {
-				ye = hover_text;
-				$rpc_assets = $rpc_assets.small_text(&ye);
+				small_image_hover_text = hover_text;
+				$rpc_assets = $rpc_assets.small_text(&small_image_hover_text);
 			}
 		}
 	}
 }
 
-pub fn init_rpc(binary_type: String) {
+pub fn init_rpc(binary_type: String, already_known_log_file: Option<String>) {
 	let client = DiscordIpcClient::new("1160530617117712384").and_then(|mut client| {
 		client.connect()?;
 
@@ -120,32 +120,17 @@ pub fn init_rpc(binary_type: String) {
 		warning!("Failed to start RPC instance");
 		Err(errmsg)
 	});
+	
 	if let Ok(mut rpc_handler) = client { // If the RPC Client had successfully initialised
 		thread::spawn(move || {
-			let mut inotify = Inotify::init().expect("Failed to initialise inotify");
-			let log_directory = format!("{}/prefixdata/pfx/drive_c/users/steamuser/AppData/Local/Roblox/logs/", setup::get_applejuice_dir());
-			let mut buffer = [0; 1024];
-
-			inotify.watches().add(log_directory.clone(), WatchMask::CREATE).expect("Error adding watch");
-			status!("Waiting for log file on separate thread...");
-
-			let mut event = inotify.read_events_blocking(&mut buffer).expect("Failed to read_events");
-			let file = loop {
-				match event.next() {
-					Some(x) => {
-						let filename = x.name.unwrap().to_string_lossy();
-						if filename.contains("last.log") {
-							inotify.watches().remove(x.wd).expect("Error removing watch");
-							break Some(filename);
-						}
-					},
-					None => break None,
-				}
-			};
-			if let Some(file) = file {
-				let log_path = format!("{log_directory}{file}");
-				success!("Log found: {file} was created at path {log_path}");
-
+			let log_path;
+			if already_known_log_file.is_some() {
+				log_path = already_known_log_file;
+			} else {
+				log_path = launch::resolve_active_logfile(format!("{}/prefixdata/pfx/drive_c/users/steamuser/AppData/Local/Roblox/logs/", setup::get_applejuice_dir()));
+			}
+			
+			if let Some(log_path) = log_path {
 				let mut file = fs::File::open(log_path.clone()).unwrap();
 				let mut position = fs::metadata(log_path.clone()).unwrap().len();
 
@@ -235,7 +220,7 @@ pub fn init_rpc(binary_type: String) {
 									let _ = rpc_handler.set_activity(activity);
 									was_rpc_updated = true;
 								} else if line_usable.contains("leaveUGCGameInternal") { // When the user leaves a game and enters the LuaApp
-									status!("Detected game leave; resetting RPC");
+									status!("Detected game leave; resetting RPC...");
 									
 									let state = format!("Using Roblox {} on Linux!", binary_type.clone());
 									let payload = activity::Activity::new()
@@ -273,7 +258,7 @@ pub fn init_rpc(binary_type: String) {
 											warning!("Error occurred when attempting to display RPC request receive: {error}\nLast successful receive unwrap: {:?}", last_successful_rec_unwrap);
 											
 											status!("Attempting to re-initialise RPC...");
-											self::init_rpc(binary_type.clone());
+											self::init_rpc(binary_type.clone(), Some(log_path.clone()));
 										}
 									}
 								}

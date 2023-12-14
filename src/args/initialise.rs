@@ -1,4 +1,4 @@
-use std::{fs, env::var, process};
+use std::{fs, env::var};
 use serde_json::json;
 
 use crate::utils::setup;

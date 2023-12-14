@@ -1,8 +1,5 @@
-use crate::utils::setup;
-use crate::utils::terminal::*;
+use crate::utils::{setup, terminal::*};
 use std::process;
-
-const _HELP_TEXT: &str = "\nUsage: --opendata [type]\nOpens the data folder for Applejuice, where installations, cache, configuration files and more are located\nxdg-open is require for this command to function correctly";
 
 pub fn main() {
 	let dir_location = setup::get_applejuice_dir();

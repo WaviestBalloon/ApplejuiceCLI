@@ -1,10 +1,13 @@
-use std::{fs, env::var, process::exit, time};
+use std::{fs, process, time};
 use serde_json::json;
 use sdl2::init;
 
-use crate::utils::{terminal::*, installation::{self, ExactVersion, Version}, setup, configuration, argparse::get_param_value_new};
+use crate::utils::{terminal::*, installation::{self, ExactVersion, Version}, setup, configuration, argparse::get_param_value_new, argparse};
 
-const HELP_TEXT: &str = "\nUsage: --install <hash | binary> [channel] [--exact] [--removeolder] [--migratefflags]\nInstalls the Roblox Player or Roblox Studio\n\nbinary:\n\tPlayer\tInstalls the Roblox Player\n\tStudio\tInstalls Roblox Studio\n\nExample: --install player zcanary --removeolder --migratefflags";
+static ACCEPTED_PARAMS: [(&str, &str); 2] = [
+	("binary", "Player or Studio"),
+	("--migratefflags", "Copy FFlag configuration from the Roblox installation to the new one")
+];
 
 fn detect_display_hertz() -> i32 {
 	match init() {
@@ -47,7 +50,7 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 		success!("Constructed install directory at {:?}", folder_path);
 	} else {
 		error!("Failed to create directory at '{}'", folder_path);
-		exit(1);
+		process::exit(1);
 	}
 	status!("Writing AppSettings.xml...");
 	installation::write_appsettings_xml(folder_path.clone());
@@ -126,9 +129,15 @@ pub fn main(arguments: &[(String, String)]) {
 	// Process Arguments
 	let Some(hash_or_binary) = inline_arguments.next()
 		.filter(|hash_or_binary| !hash_or_binary.is_empty())
-			else {error!("{}", HELP_TEXT); exit(1)};
+			else {
+				help!("Accepted parameters:\n{}", argparse::generate_help(ACCEPTED_PARAMS.to_vec()));
+				process::exit(1)
+			};
 	let channel = inline_arguments.next().unwrap_or("LIVE");
-	if inline_arguments.next().is_some() {error!("{}", HELP_TEXT); exit(1)}
+	if inline_arguments.next().is_some() {
+		help!("Accepted parameters:\n{}", argparse::generate_help(ACCEPTED_PARAMS.to_vec()));
+		process::exit(1)
+	}
 	let version = match exact {
 		true => Version::exact(channel, hash_or_binary),
 		false => Version::latest(channel, hash_or_binary)

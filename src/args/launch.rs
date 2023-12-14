@@ -1,15 +1,48 @@
+use inotify::{Inotify, WatchMask};
+
 use crate::utils::{argparse, installation, notification::create_notification, setup, terminal::*, rpc, configuration};
 use crate::args;
 use std::process;
 
 static ACCEPTED_PARAMS: [(&str, &str); 5] = [
-	("binary", "The binary type to launch, either Player or Studio"),
-	//("channel", "The deployment channel to launch"),
-	("hash", "The version hash to use (Automatic)"),
-	("args", "The protocol arguments to launch with, usually given by a protocol"),
-	("skipupdatecheck", "Skip checking for updates from clientsettings.roblox.com"),
-	("bootstrap", "Automatically install the provided binary if missing or outdated")
+	("--binary", "The binary type to launch, either Player or Studio"),
+	("--hash", "The version hash to use (Automatic)"),
+	("--args", "The protocol arguments to launch with, usually given by a protocol"),
+	("--skipupdatecheck", "Skip checking for updates from clientsettings.roblox.com"),
+	("--bootstrap", "Automatically install the provided binary if missing or outdated")
 ];
+
+pub fn resolve_active_logfile(expected_log_directory: String) -> Option<String> {
+	let mut inotify = Inotify::init().expect("Failed to initialise inotify");
+	let mut buffer = [0; 1024];
+
+	let _ = inotify.watches().add(expected_log_directory.clone(), WatchMask::CREATE);
+	status!("Waiting for log file...");
+
+	let mut event = inotify.read_events_blocking(&mut buffer).expect("Failed to read_events_blocking");
+	let file = loop {
+		match event.next() {
+			Some(received_event) => {
+				let filename = received_event.name.unwrap().to_string_lossy();
+				if filename.contains("last.log") {
+					inotify.watches().remove(received_event.wd).expect("Error removing watch");
+					break Some(filename);
+				}
+			},
+			None => break None,
+		}
+	};
+
+	if let Some(file) = file {
+		let log_path = format!("{expected_log_directory}{file}");
+		success!("Found log file at {}", log_path);
+
+		return Some(log_path);
+	} else {
+		error!("Failed to find log file");
+		return None;
+	}
+}
 
 pub fn main(raw_args: &[(String, String)]) {
 	if argparse::get_param_value_new(&raw_args, "help").is_some() {
@@ -38,25 +71,27 @@ pub fn main(raw_args: &[(String, String)]) {
 		Some(installation) => installation,
 		None => {
 			if shall_we_bootstrap.is_none() {
-				error!("No installation was found for {}, you can install it using '--install' or by starting it from your application launcher", binary_type.unwrap());
+				error!("No installation was found for {}, you can install it by appending '--bootstrap' onto this command or by starting it from your application launcher", binary_type.unwrap());
 				process::exit(1);
-			} else {
-				warning!("Unable to find a Roblox installation, bootstrapping now...");
-				status!("Downloading and installing latest version...");
-				create_notification(&format!("{}/assets/crudejuice.png", dir_location), "15000", "Installing Roblox...", "");
-
-				let channel = match configuration["misc"]["overrides"]["deployment_channel"].as_str() {
-					Some(channel) => channel,
-					None => "LIVE",
-				};
-				
-				args::install::main(&[("install".to_string(), binary.to_string())]);
-
-				main(raw_args);
-				return;
 			}
+
+			warning!("Unable to find a Roblox installation, bootstrapping now...");
+			status!("Downloading and installing latest version...");
+			create_notification(&format!("{}/assets/crudejuice.png", dir_location), "15000", "Installing Roblox...", "");
+
+			// TODO: Remove this, as Roblox has now locked all non-prod deployment channels :c
+			let channel = match configuration["misc"]["overrides"]["deployment_channel"].as_str() {
+				Some(channel) => channel,
+				None => "LIVE",
+			};
+			
+			args::install::main(&[("install".to_string(), binary.to_string())]);
+
+			main(raw_args);
+			return;
 		}
 	};
+
 	let install_configuration = found_installation["configuration"].clone();
 	let install_path = found_installation["install_path"].as_str().unwrap_or_default();
 
@@ -93,7 +128,7 @@ pub fn main(raw_args: &[(String, String)]) {
 
 	if install_configuration["enable_rpc"].as_bool().unwrap_or_default() {
 		status!("Starting RPC...");
-		rpc::init_rpc(binary.to_owned());
+		rpc::init_rpc(binary.to_owned(), None);
 	}
 
 	status!("Launching Roblox...");
