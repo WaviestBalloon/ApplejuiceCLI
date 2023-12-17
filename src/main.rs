@@ -14,7 +14,7 @@ fn main() {
 	let args: Vec<String> = env::args().collect();
 	if !setup::confirm_applejuice_data_folder_existence() && args[1] != "--init" { // Initialisation warning
 		warning!("Applejuice has not been initialised yet! Attempting to initialise...");
-		args::initialise::main();
+		args::initialise::main(&[("".to_string(), "".to_string())]);
 		status!("Continuing with task...");
 	}
 	if args.len() == 1 {
@@ -29,7 +29,7 @@ fn main() {
 
 	match command_clean {
 		"help" => args::help::main(),
-		"init" => args::initialise::main(),
+		"init" => args::initialise::main(&arguments),
 		"install" => args::install::main(&arguments),
 		"purge" => args::purge::main(arguments.into_iter().map(|item| vec![item]).collect()),
 		"opendata" => args::opendata::main(),

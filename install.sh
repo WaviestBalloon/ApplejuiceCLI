@@ -17,7 +17,7 @@ fi
 if [[ -f /usr/local/bin/applejuicecli ]]; then
 	echo "Applejuice is already installed, the binary will be overwritten but your configuration will be kept unharmed."
 fi
-if pgrep -x "firefox" > /dev/null; then
+if pgrep -x "applejuicecli" > /dev/null; then
 	echo "Applejuice is already running and cannot be installed, please quit out of Roblox and Applejuice in order to continue!"
 	exit 1
 fi

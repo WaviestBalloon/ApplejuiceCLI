@@ -1,7 +1,7 @@
 use std::{fs, env::var};
 use serde_json::json;
 
-use crate::utils::{setup, terminal::*, proton, configuration, steamos};
+use crate::utils::{setup, terminal::*, proton, configuration, steamos, argparse};
 
 const ROOT_GITHUB_URL: &str = "https://raw.githubusercontent.com/WaviestBalloon/ApplejuiceCLI/main";
 const ASSET_URLS: [&str; 3] = [
@@ -12,8 +12,17 @@ const ASSET_URLS: [&str; 3] = [
 const ROBLOX_PLAYER_MIMES: &str = "x-scheme-handler/roblox-player;x-scheme-handler/roblox";
 const ROBLOX_STUDIO_MIMES: &str = "x-scheme-handler/roblox-studio;x-scheme-handler/roblox-studio-auth";
 
-pub fn main() {
+static ACCEPTED_PARAMS: [(&str, &str); 1] = [
+	("--sosoverride", "Overrides the check for SteamOS, adds Roblox to your Steam library")
+];
+
+pub fn main(raw_args: &[(String, String)]) {
+	if argparse::get_param_value_new(&raw_args, "help").is_some() {
+		help!("Accepted parameters:\n{}", argparse::generate_help(ACCEPTED_PARAMS.to_vec()));
+		return;
+	}
 	status!("Initialising Applejuice...");
+	let override_steamos_check = argparse::get_param_value_new(&raw_args, "sosoverride");
 
 	if setup::confirm_applejuice_data_folder_existence() {
 		warning!("Configuration directory already exists!");
@@ -118,7 +127,7 @@ MimeType={ROBLOX_STUDIO_MIMES}");
 
 	configuration::update_desktop_database();
 
-	if steamos::is_running_on_steamos() {
+	if steamos::is_running_on_steamos() || override_steamos_check.is_some() {
 		status!("Detected SteamOS, automatically adding to Steam...");
 		steamos::add_item_to_steam_library(format!("{desktop_shortcut_path}/roblox-player.desktop"));
 		steamos::add_item_to_steam_library(format!("{desktop_shortcut_path}/roblox-studio.desktop"));

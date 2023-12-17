@@ -129,12 +129,12 @@ pub fn main(arguments: &[(String, String)]) {
 		.filter(|hash_or_binary| !hash_or_binary.is_empty())
 			else {
 				help!("Accepted parameters:\n{}", argparse::generate_help(ACCEPTED_PARAMS.to_vec()));
-				process::exit(1)
+				process::exit(1);
 			};
 	let channel = inline_arguments.next().unwrap_or("LIVE");
 	if inline_arguments.next().is_some() {
 		help!("Accepted parameters:\n{}", argparse::generate_help(ACCEPTED_PARAMS.to_vec()));
-		process::exit(1)
+		process::exit(1);
 	}
 	let version = match exact {
 		true => Version::exact(channel, hash_or_binary),
@@ -142,5 +142,5 @@ pub fn main(arguments: &[(String, String)]) {
 	};
 
 	// Download
-	download_and_install(version.fetch_latest(), threading)
+	download_and_install(version.fetch_latest(), threading);
 }
