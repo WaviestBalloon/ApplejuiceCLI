@@ -25,14 +25,15 @@ When running the install script, it will compile the binary for you as of now be
 > If compile fails, you might be missing dependencies: 
 > - SDL (Monitor Hertz detection, FPS uncapping)
 > - libnotify (Desktop notifications)
+> - build-essentials/base-devel (Compiling)
 >
 > Debian/Ubuntu: 
 > ```
-> sudo apt-get -y install libsdl2-dev libnotify
+> sudo apt-get -y install build-essentials libsdl2-dev libnotify
 > ```
 > Arch: 
 > ```
-> sudo pacman -S sdl2 libnotify --noconfirm
+> sudo pacman -S base-devel sdl2 libnotify --noconfirm
 > ```
 
 ### Using the install script
