@@ -131,15 +131,15 @@ pub fn main(raw_args: &[(String, String)]) {
 	}
 
 	let old_fullscreen_value = steamos::get_fullscreen_value_from_rbxxml().unwrap_or_default();
-	if steamos::is_running_on_steamos() || override_steamos_check.is_some() {
-		status!("Running in SteamOS, determining if we should force fullscreen...");
-
-		if env::var("SteamOS").unwrap_or_default() == "1" && env::var("SteamGamepadUI").unwrap_or_default() == "1" || override_steamos_check.is_some() {
-			status!("Applejuice is running in Big Picture mode, forcing fullscreen...");
-			
-			if old_fullscreen_value == "false" {
-				steamos::set_rbx_fullscreen_value(true);
-			}
+	let running_in_big_picture = steamos::is_running_deck_big_picture_mode();
+	if steamos::is_running_on_steamos() && override_steamos_check.is_none() {
+		help!("Running in SteamOS, support is experimental and may not work correctly.");
+	}
+	if running_in_big_picture || override_steamos_check.is_some() {
+		status!("Applejuice is running in Big Picture mode, forcing fullscreen...");
+		
+		if old_fullscreen_value == "false" {
+			steamos::set_rbx_fullscreen_value(true);
 		}
 	}
 
@@ -198,7 +198,7 @@ pub fn main(raw_args: &[(String, String)]) {
 		create_notification(&format!("{}/assets/crudejuice.png", dir_location), "5000", &format!("Roblox {} has closed", binary), &format!("Exit code: {}", exitcode));
 	}
 
-	if steamos::is_running_on_steamos() || override_steamos_check.is_some() {
+	if running_in_big_picture || override_steamos_check.is_some() {
 		status!("Fullscreen was forced; restoring previous fullscreen XML value...");
 		steamos::set_rbx_fullscreen_value(old_fullscreen_value.parse::<bool>().unwrap());
 	}

@@ -1,4 +1,4 @@
-use std::{fs::{self, File}, io::{BufReader, BufRead}, process};
+use std::{fs::{self, File}, io::{BufReader, BufRead}, process, env};
 use urlencoding;
 use crate::utils::{terminal::*, setup};
 
@@ -40,10 +40,8 @@ pub fn set_rbx_fullscreen_value(toggle: bool) {
 	let mut new_rbxxml = String::new();
 
 	for line in rbxxml {
-		println!("{}", line);
 		if line.contains("Fullscreen") {
 			let line = line.split(">").collect::<Vec<&str>>()[0];
-			println!("{}", line);
 			let line = format!("{line}>{toggle}</bool>");
 			new_rbxxml.push_str(&line);
 		} else {
@@ -72,6 +70,14 @@ pub fn is_running_on_steamos() -> bool { // Check if we are running SteamOS
 	}
 
 	is_steamos
+}
+
+pub fn is_running_deck_big_picture_mode() -> bool {
+	if env::var("SteamOS").unwrap_or_default() == "1" && env::var("SteamGamepadUI").unwrap_or_default() == "1" {
+		return true;
+	}
+	
+	false
 }
 
 pub fn add_item_to_steam_library(path: String) {
