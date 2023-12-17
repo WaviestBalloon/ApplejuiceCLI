@@ -1,15 +1,15 @@
+use crate::utils::{argparse, installation, notification::create_notification, setup, terminal::*, rpc, configuration, steamos};
+use crate::args;
+use std::{process, env};
 use inotify::{Inotify, WatchMask};
 
-use crate::utils::{argparse, installation, notification::create_notification, setup, terminal::*, rpc, configuration};
-use crate::args;
-use std::process;
-
-static ACCEPTED_PARAMS: [(&str, &str); 5] = [
+static ACCEPTED_PARAMS: [(&str, &str); 6] = [
 	("--binary", "The binary type to launch, either Player or Studio"),
 	("--hash", "The version hash to use (Automatic)"),
 	("--args", "The protocol arguments to launch with, usually given by a protocol"),
 	("--skipupdatecheck", "Skip checking for updates from clientsettings.roblox.com"),
-	("--bootstrap", "Automatically install the provided binary if missing or outdated")
+	("--bootstrap", "Automatically install the provided binary if missing or outdated"),
+	("--sosoverride", "Overrides the check for SteamOS, does some pre/post-launch configuration to make Roblox work better on SteamOS")
 ];
 
 pub fn resolve_active_logfile(expected_log_directory: String) -> Option<String> {
@@ -55,13 +55,12 @@ pub fn main(raw_args: &[(String, String)]) {
 	let protocol_arguments = argparse::get_param_value_new(&raw_args, "args").unwrap_or_default();
 	let skip_update_check = argparse::get_param_value_new(&raw_args, "skipupdatecheck"); // Optional
 	let shall_we_bootstrap = argparse::get_param_value_new(&raw_args, "bootstrap"); // Optional
+	let override_steamos_check = argparse::get_param_value_new(&raw_args, "sosoverride"); // Optional
 	if binary_type.is_none() {
 		error!("Missing binary type, either Player or Studio");
 		help!("Accepted parameters:\n{}", argparse::generate_help(ACCEPTED_PARAMS.to_vec()));
 		process::exit(1);
 	}
-
-	let studio_oauthing = protocol_arguments.contains("roblox-studio-auth");
 
 	status!("Finding installation in configuration file...");
 	let binary = binary_type.unwrap();
@@ -94,6 +93,7 @@ pub fn main(raw_args: &[(String, String)]) {
 
 	let install_configuration = found_installation["configuration"].clone();
 	let install_path = found_installation["install_path"].as_str().unwrap_or_default();
+	let studio_oauthing = protocol_arguments.contains("roblox-studio-auth");
 
 	if skip_update_check.is_none() {
 		status!("Checking for updates...");
@@ -123,12 +123,24 @@ pub fn main(raw_args: &[(String, String)]) {
 		}
 	}
 
-	println!("{:?}", found_installation);
 	status!("Protocol parameter(s): {}", protocol_arguments);
 
 	if install_configuration["enable_rpc"].as_bool().unwrap_or_default() {
 		status!("Starting RPC...");
 		rpc::init_rpc(binary.to_owned(), None);
+	}
+
+	let old_fullscreen_value = steamos::get_fullscreen_value_from_rbxxml().unwrap_or_default();
+	if steamos::is_running_on_steamos() || override_steamos_check.is_some() {
+		status!("Running in SteamOS, determining if we should force fullscreen...");
+
+		if env::var("SteamOS").unwrap_or_default() == "1" && env::var("SteamGamepadUI").unwrap_or_default() == "1" || override_steamos_check.is_some() {
+			status!("Applejuice is running in Big Picture mode, forcing fullscreen...");
+			
+			if old_fullscreen_value == "false" {
+				steamos::set_rbx_fullscreen_value(true);
+			}
+		}
 	}
 
 	status!("Launching Roblox...");
@@ -184,5 +196,10 @@ pub fn main(raw_args: &[(String, String)]) {
 		}
 	} else {
 		create_notification(&format!("{}/assets/crudejuice.png", dir_location), "5000", &format!("Roblox {} has closed", binary), &format!("Exit code: {}", exitcode));
+	}
+
+	if steamos::is_running_on_steamos() || override_steamos_check.is_some() {
+		status!("Fullscreen was forced; restoring previous fullscreen XML value...");
+		steamos::set_rbx_fullscreen_value(old_fullscreen_value.parse::<bool>().unwrap());
 	}
 }
