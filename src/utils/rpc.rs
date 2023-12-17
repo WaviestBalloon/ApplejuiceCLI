@@ -223,7 +223,7 @@ pub fn init_rpc(binary_type: String, already_known_log_file: Option<String>) {
 									status!("Detected game leave; resetting RPC...");
 									
 									let state = format!("Using Roblox {} on Linux!", binary_type.clone());
-									let payload = activity::Activity::new()
+									let activity = activity::Activity::new()
 										.state(&state)
 										.details("With Applejuice")
 										.assets(
@@ -240,10 +240,12 @@ pub fn init_rpc(binary_type: String, already_known_log_file: Option<String>) {
 													.as_millis() as i64,
 											)
 										);
+
+									let _ = rpc_handler.set_activity(activity);
+									was_rpc_updated = true;
 								}
 
 								if was_rpc_updated == true { // Debug related
-									was_rpc_updated = false;
 									match rpc_handler.recv() {
 										Ok(output) => {
 											let output_string = format!("{:?}", output);

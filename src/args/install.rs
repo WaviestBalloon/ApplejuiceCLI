@@ -41,7 +41,6 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 
 	let indentation = status!("Downloading deployment...");
 	let cache_path = installation::download_deployment(binary_type, version_hash.to_string(), &channel);
-	success!("Done");
 	drop(indentation);
 
 	let indentation = status!("Extracting deployment...");
@@ -56,7 +55,6 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 	installation::write_appsettings_xml(folder_path.clone());
 	status!("Extracting deployment...");
 	installation::extract_deployment_zips(binary_type, cache_path.clone(), folder_path.clone(), !threading);
-	success!("Done");
 	drop(indentation);
 
 	status!("Carrying out post-install tasks... (Cleanup, FFlag configuration, etc)");

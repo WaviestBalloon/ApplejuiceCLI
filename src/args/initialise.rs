@@ -1,15 +1,13 @@
 use std::{fs, env::var};
 use serde_json::json;
 
-use crate::utils::setup;
-use crate::utils::terminal::*;
-use crate::utils::proton;
-use crate::utils::configuration;
+use crate::utils::{setup, terminal::*, proton, configuration, steamos};
 
+const ROOT_GITHUB_URL: &str = "https://raw.githubusercontent.com/WaviestBalloon/ApplejuiceCLI/main";
 const ASSET_URLS: [&str; 3] = [
-	"https://raw.githubusercontent.com/WaviestBalloon/ApplejuiceCLI/main/assets/player.png",
-	"https://raw.githubusercontent.com/WaviestBalloon/ApplejuiceCLI/main/assets/studio.png",
-	"https://raw.githubusercontent.com/WaviestBalloon/ApplejuiceCLI/main/assets/crudejuice.png"
+	"/assets/player.png",
+	"/assets/studio.png",
+	"/assets/crudejuice.png"
 ];
 const ROBLOX_PLAYER_MIMES: &str = "x-scheme-handler/roblox-player;x-scheme-handler/roblox";
 const ROBLOX_STUDIO_MIMES: &str = "x-scheme-handler/roblox-studio;x-scheme-handler/roblox-studio-auth";
@@ -57,7 +55,7 @@ pub fn main() {
 		let client = reqwest::blocking::Client::new();
 		for url in ASSET_URLS.iter() {
 			let filename = url.split('/').last().unwrap().to_lowercase();
-			let output = client.get(url.to_string())
+			let output = client.get(format!("{ROOT_GITHUB_URL}{url}"))
 				.send()
 				.expect("Failed to download asset")
 				.bytes()
@@ -119,6 +117,12 @@ MimeType={ROBLOX_STUDIO_MIMES}");
 	fs::write(format!("{desktop_shortcut_path}/roblox-studio.desktop"), studio_shortcut_contents).expect("Failed to write desktop shortcut for Studio");
 
 	configuration::update_desktop_database();
+
+	if steamos::is_running_on_steamos() {
+		status!("Detected SteamOS, automatically adding to Steam...");
+		steamos::add_item_to_steam_library(format!("{desktop_shortcut_path}/roblox-player.desktop"));
+		steamos::add_item_to_steam_library(format!("{desktop_shortcut_path}/roblox-studio.desktop"));
+	}
 
 	println!();
 	success!("Applejuice has been initialised!\n\tTo get started, run 'applejuicecli --help'\n\tOr to dive right in, launch Roblox Player or Roblox Studio!");

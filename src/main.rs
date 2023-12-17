@@ -1,6 +1,6 @@
 use std::{env, process::exit};
 mod utils; // Import utilities that are not necessarily commands
-mod args; use utils::argparse::parse_arguments;
+mod args;
 
 use crate::utils::{terminal::*, *}; // Import modules which act as a handler for certain command parameters
 
@@ -25,7 +25,7 @@ fn main() {
 
 	let command = &args[1];
 	let command_clean: &str = &command.replace("--", "");
-	let arguments = parse_arguments(&args);
+	let arguments = argparse::parse_arguments(&args);
 
 	match command_clean {
 		"help" => args::help::main(),
@@ -35,6 +35,7 @@ fn main() {
 		"opendata" => args::opendata::main(),
 		// TODO: fix this in above code
 		"launch" => args::launch::main(&arguments),
+		"sysinfo" => args::sysinfo::main(),
 		_ => {
 			let _indentation = error!("Unknown command parameter: {:?}", command);
 			help!("Run '{} --help' for more information.", args[0]);
