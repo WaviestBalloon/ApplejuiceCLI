@@ -1,6 +1,6 @@
 use crate::utils::{argparse, installation, notification::create_notification, setup, terminal::*, rpc, configuration, steamos};
 use crate::args;
-use std::{process, env};
+use std::process;
 use inotify::{Inotify, WatchMask};
 
 static ACCEPTED_PARAMS: [(&str, &str); 6] = [
