@@ -19,7 +19,12 @@ pub fn parse_osrelease() -> Option<Vec<Vec<String>>> {
 }
 
 pub fn get_fullscreen_value_from_rbxxml() -> Option<String> {
-	let rbxxml = fs::read_to_string(format!("{}/prefixdata/pfx/drive_c/users/steamuser/AppData/Local/Roblox/GlobalBasicSettings_13.xml", setup::get_applejuice_dir())).expect("Failed to read Roblox GlobalSettings.xml");
+	let xml_location = format!("{}/prefixdata/pfx/drive_c/users/steamuser/AppData/Local/Roblox/GlobalBasicSettings_13.xml", setup::get_applejuice_dir());
+	if fs::metadata(xml_location.clone()).is_err() {
+		warning!("Failed to find Roblox GlobalSettings.xml, assuming that this is the first time Roblox is running on this machine");
+		false;
+	}
+	let rbxxml = fs::read_to_string(xml_location).expect("Failed to read Roblox GlobalSettings.xml");
 	let rbxxml = rbxxml.split("\n").collect::<Vec<&str>>();
 	let mut fullscreen_value = None;
 
