@@ -1,5 +1,7 @@
 # <img src="assets/crudejuice.png" width=85px> ApplejuiceCLI
-ApplejuiceCLI is the backbone and bootstrapper of Applejuice, you can either use the interface or if you're big brain, use the CLI instead. (**Less bloat! Wow!**)
+### ApplejuiceCLI is a light-weight, fast Roblox on Linux bootstrapper that runs with Proton!
+
+You can either use the interface (Soon™) or if you're big brain, use the CLI instead. (**Less bloat! Wow!**)
 
 *Applejuice is a manager to get Roblox to run on Linux using Valve's Proton.*
 
@@ -11,25 +13,41 @@ ApplejuiceCLI is the backbone and bootstrapper of Applejuice, you can either use
 
 ## Installation
 
-> [!IMPORTANT]
-> If compile fails, you might be missing a dependency with SDL. So far, Ubuntu seems to be the one that has issues with compiling, make sure you run `sudo apt-get -y install libsdl2-dev` before installing and it should successfully compile.
-
 ```bash
 git clone https://github.com/WaviestBalloon/ApplejuiceCLI.git ; cd ApplejuiceCLI ; chmod +x ./install.sh ; bash ./install.sh
 ```
+
+## Compiling from source (Read me if running above)
+
+When running the install script, it will compile the binary for you as of now because there are no pre-compiled binaries available yet.
+
+> [!IMPORTANT]
+> If compile fails, you might be missing dependencies: 
+> - SDL (Monitor Hertz detection, FPS uncapping)
+> - libnotify (Desktop notifications)
+> - build-essentials/base-devel (Compiling)
+> - libssl-dev/openssl (Compiling)
+>
+> Debian/Ubuntu: 
+> ```
+> sudo apt-get -y install build-essentials libsdl2-dev libnotify libssl-dev
+> ```
+> Arch: 
+> ```
+> sudo pacman -S base-devel sdl2 libnotify openssl --noconfirm
+> ```
 
 ### Using the install script
 
 1. Clone this repository.
 2. Run `./install.sh`. (You may need to run `chmod +x ./install.sh` first)
-3. Enter your sudo password to continue after the binary compiles.
-4. Run `applejuicecli --install player` to install the Roblox Player!
+3. Launch Roblox via your application launcher or from the website!
 
-### Manual
+### Manual (Not recommended)
 
 1. Clone this repository.
-2. Make sure you have Rust installed.
+2. Make sure you have Rust and required dependencies installed.
 3. Run `cargo build --release` in the repository.
 4. Copy the compiled binary from `./target/release/applejuice_cli` to `/usr/local/bin` with the name `applejuicecli`.
-5. Run `applejuicecli --init` to initialise the configuration directory.
-6. Run `applejuicecli --install player` to install the Roblox Player!
+5. Run `applejuicecli --init` to initialise the configuration file and directories.
+6. Launch Roblox via your application launcher or from the website!

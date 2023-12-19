@@ -74,12 +74,12 @@ struct ResponseError {
 	errors: Vec<ResponseErrorMeat>
 }
 
-const PLAYER_EXTRACT_BINDINGS: [(&str, &str); 20] = [
+const PLAYER_EXTRACT_BINDINGS: [(&str, &str); 19] = [
 	("RobloxApp.zip", ""),
 	("shaders.zip", "shaders/"),
 	("ssl.zip", "ssl/"),
 	("WebView2.zip", ""),
-	("WebView2RuntimeInstaller.zip", "WebView2RuntimeInstaller/"),
+	// ("WebView2RuntimeInstaller.zip", ""), (Unnecessary)
 	("content-avatar.zip", "content/avatar/"),
 	("content-configs.zip", "content/configs/"),
 	("content-fonts.zip", "content/fonts/"),
@@ -96,13 +96,13 @@ const PLAYER_EXTRACT_BINDINGS: [(&str, &str); 20] = [
 	("extracontent-textures.zip", "ExtraContent/textures/"),
 	("extracontent-places.zip", "ExtraContent/places/")
 ];
-const STUDIO_EXTRACT_BINDINGS: [(&str, &str); 32] = [
+const STUDIO_EXTRACT_BINDINGS: [(&str, &str); 31] = [
 	("RobloxStudio.zip", ""),
 	("redist.zip", ""),
 	("Libraries.zip", ""),
 	("LibrariesQt5.zip", ""),
 	("WebView2.zip", ""),
-	("WebView2RuntimeInstaller.zip", ""),
+	// ("WebView2RuntimeInstaller.zip", ""), (Unnecessary)
 	("shaders.zip", "shaders/"),
 	("ssl.zip", "ssl/"),
 	("Qml.zip", "Qml/"),

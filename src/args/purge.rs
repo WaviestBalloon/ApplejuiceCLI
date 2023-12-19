@@ -1,50 +1,32 @@
-use crate::utils::{setup, terminal::*, argparse, configuration::{get_config, update_config}};
-use std::{fs::{read_dir, remove_dir_all, remove_file, metadata}, process::exit, env::var, process};
+use crate::utils::{setup, terminal::*, argparse, configuration::{get_config, update_config, self}};
+use std::{fs::{read_dir, remove_dir_all, remove_file, metadata}, process, env::var};
 
-const HELP_TEXT: &str = "\nUsage: --purge [type]\nPurges cache or installs, useful for a fresh start or if you are having issues\n\nOptions:\n\tcache\tDeletes all compressed files that were downloaded from the CDN\n\tinstalls\tNukes every install of Roblox you have\n\tinstall\tDeletes a specific version of Roblox, can purge multiple versions at once";
+static ACCEPTED_PARAMS: [(&str, &str); 2] = [
+	("cache", "Deletes all cached deployments (~/.local/share/applejuice/cache)"),
+	("installs", "Uninstalls Roblox Player and Roblox Studio")
+];
 
 fn check_location(folder: &str) {
 	if !setup::confirm_existence(folder) {
 		error!("{folder} directory does not exist! Did you forget to initialise?");
-		exit(1);
+		process::exit(1);
 	}
 
 	let paths = read_dir(format!("{}/cache", setup::get_applejuice_dir())).unwrap();
 	if paths.count() == 0 {
 		error!("{folder} directory is empty!");
-		exit(1);
-	}
-}
-
-fn get_all_valid_installations() {
-	// Vec format: (location, size, installation_date, special_mods)
-	let mut valid_player_versions: Vec<(String, String, String, String)> = vec![];
-	let mut valid_studio_versions: Vec<(String, String, String, String)> = vec![];
-
-	let paths = read_dir(format!("{}/roblox", setup::get_applejuice_dir())).unwrap();
-	for deployment_path in paths { // "roblox/<DEPLOYMENT_CHANNEL>"
-		let studio_player = read_dir(deployment_path.unwrap().path()).unwrap();
-
-		for binary_type in studio_player { // "roblox/<DEPLOYMENT_CHANNEL>/<STUDIO/PLAYER>"
-			let version = read_dir(binary_type.unwrap().path()).unwrap();
-
-			for version_path in version { // "roblox/<DEPLOYMENT_CHANNEL>/<STUDIO/PLAYER>/<VERSION>"
-				//let path_unwrap = version_path.unwrap().path().to_str().unwrap();
-
-				//println!("{}", path_unwrap);
-				println!("{:?}", version_path.unwrap().path());
-			}
-		}
+		process::exit(1);
 	}
 }
 
 pub fn main(args: Vec<Vec<(String, String)>>) {
 	let binding = argparse::get_param_value(args, "purge");
-	let parsed_args = binding.split(' ').collect::<Vec<&str>>();
-	if parsed_args[0].is_empty() {
+	let parsed_args = binding.split(" ").collect::<Vec<&str>>();
+
+	if parsed_args[0] == "blank" {
 		error!("No command line arguments provided to purge!");
-		eprintln!("{}", HELP_TEXT);
-		exit(1);
+		help!("Accepted parameters:\n{}", argparse::generate_help(ACCEPTED_PARAMS.to_vec()));
+		process::exit(1);
 	}
 	let install_type: &str = parsed_args[0];
 	
@@ -58,7 +40,7 @@ pub fn main(args: Vec<Vec<(String, String)>>) {
 				},
 				Err(errmsg) => {
 					error!("Failed to remove the cache directory!\nError: {}", errmsg);
-					exit(1);
+					process::exit(1);
 				}
 			}
 			
@@ -94,28 +76,28 @@ pub fn main(args: Vec<Vec<(String, String)>>) {
 														},
 													Err(errmsg) => {
 														error!("Failed to remove the Roblox directory for version {}!\nError: {}", path_unwrap.path().to_str().unwrap(), errmsg);
-														exit(1);
+														process::exit(1);
 													}
 												}
 											}
 										},
 										Err(errmsg) => {
 											error!("Failed to read the Roblox directory!\nError: {}", errmsg);
-											exit(1);
+											process::exit(1);
 										}
 									}
 								}
 							},
 							Err(errmsg) => {
 								error!("Failed to read the Roblox directory!\nError: {}", errmsg);
-								exit(1);
+								process::exit(1);
 							}
 						}
 					}
 				},
 				Err(errmsg) => {
 					error!("Failed to read the Roblox directory!\nError: {}", errmsg);
-					exit(1);
+					process::exit(1);
 				}
 			}
 
@@ -126,7 +108,7 @@ pub fn main(args: Vec<Vec<(String, String)>>) {
 				},
 				Err(errmsg) => {
 					format!("Failed to remove the Roblox directory!\nError: {}", errmsg);
-					exit(1);
+					process::exit(1);
 				}
 			}
 
@@ -140,11 +122,8 @@ pub fn main(args: Vec<Vec<(String, String)>>) {
 					remove_file(desktop_shortcut_path).unwrap();
 				}
 			});
-			status!("Updating desktop database...");
-			process::Command::new("update-desktop-database")
-				.arg(format!("{}/.local/share/applications", var("HOME").expect("$HOME not set")))
-				.spawn()
-				.expect("Failed to execute update-desktop-database");
+			
+			configuration::update_desktop_database();
 
 			status!("Removing installation entires from configuration file...");
 			removing.iter().for_each(|version| {
@@ -155,19 +134,10 @@ pub fn main(args: Vec<Vec<(String, String)>>) {
 			success!("Created Roblox directory");
 
 			success!("Purged Roblox installations successfully");
-		},
-		"install" => {
-			status!("Discovering Roblox installations...");
-			check_location("roblox");
-			
-			get_all_valid_installations();
-
-			error!("Not implemented yet!");
-		},
+		}
 		_ => {
 			error!("Unknown type to purge {:?}", parsed_args[0]);
-			eprintln!("{}", HELP_TEXT);
-			exit(1);
+			help!("Accepted parameters:\n{}", argparse::generate_help(ACCEPTED_PARAMS.to_vec()));
 		}
 	}
 }

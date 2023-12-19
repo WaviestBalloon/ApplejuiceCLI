@@ -4,11 +4,11 @@ use serde_json;
 
 pub fn discover_proton_directory() -> serde_json::Value { // Try to automatically find where Proton is installed to
 	let potential_path = format!("{}/.steam/steam/steamapps/common/", var("HOME").expect("$HOME not set"));
-	let mut installations = serde_json::json!({ "proton_installations": {} }); // Init
+	let mut installations = serde_json::json!({}); // Init
 
 	match fs::read_dir(potential_path.clone()) {
 		Ok(_) => {
-			status!("Found Steam directory at '{}'", potential_path);
+			success!("Found Steam directory at '{}'", potential_path);
 
 			for entry in fs::read_dir(potential_path.clone()).unwrap() {
 				let unwrapped_entry = entry.unwrap();
@@ -17,7 +17,7 @@ pub fn discover_proton_directory() -> serde_json::Value { // Try to automaticall
 
 				if fsname.contains("Proton") {
 					success!("Found '{}' at '{}'", fsname, path.to_str().unwrap());
-					installations["proton_installations"][fsname] = serde_json::Value::String(path.to_str().unwrap().to_string());
+					installations[fsname] = serde_json::Value::String(path.to_str().unwrap().to_string());
 				}
 			}
 
@@ -28,4 +28,12 @@ pub fn discover_proton_directory() -> serde_json::Value { // Try to automaticall
 			serde_json::Value::Null
 		}
 	}
+}
+
+pub fn construct_proton_process() {
+	
+}
+
+pub fn construct_wine_process() {
+	
 }

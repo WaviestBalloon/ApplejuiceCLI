@@ -1,10 +1,13 @@
-use std::{fs, env::var, process::{self, exit}};
+use std::{fs, process, time};
 use serde_json::json;
 use sdl2::init;
 
-use crate::utils::{terminal::*, installation::{self, ExactVersion, Version}, setup, configuration, argparse::get_param_value_new};
+use crate::utils::{terminal::*, installation::{self, ExactVersion, Version}, setup, configuration, argparse::get_param_value_new, argparse};
 
-const HELP_TEXT: &str = "\nUsage: --install <hash | binary> [channel] [--exact] [--removeolder] [--migratefflags]\nInstalls the Roblox Player or Roblox Studio\n\nbinary:\n\tPlayer\tInstalls the Roblox Player\n\tStudio\tInstalls Roblox Studio\n\nExample: --install player zcanary --removeolder --migratefflags";
+static ACCEPTED_PARAMS: [(&str, &str); 2] = [
+	("binary", "Player or Studio"),
+	("--migratefflags", "Copy FFlag configuration from the Roblox installation to the new one")
+];
 
 fn detect_display_hertz() -> i32 {
 	match init() {
@@ -20,6 +23,11 @@ fn detect_display_hertz() -> i32 {
 }
 
 fn download_and_install(version: ExactVersion, threading: bool) {
+	let start_time = time::Instant::now();
+	let global_config = configuration::get_config("global");
+	let overrides = global_config["misc"]["overrides"].clone();
+	let remove_deployment_postinstall = global_config["misc"]["purge_cached_deployment_after_install"].clone();
+
 	let ExactVersion {hash: version_hash, channel} = version;
 
 	let indentation = status!("Fetching package manifest...");
@@ -33,7 +41,6 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 
 	let indentation = status!("Downloading deployment...");
 	let cache_path = installation::download_deployment(binary_type, version_hash.to_string(), &channel);
-	success!("Done");
 	drop(indentation);
 
 	let indentation = status!("Extracting deployment...");
@@ -42,14 +49,15 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 		success!("Constructed install directory at {:?}", folder_path);
 	} else {
 		error!("Failed to create directory at '{}'", folder_path);
-		exit(1);
+		process::exit(1);
 	}
 	status!("Writing AppSettings.xml...");
 	installation::write_appsettings_xml(folder_path.clone());
 	status!("Extracting deployment...");
-	installation::extract_deployment_zips(binary_type, cache_path, folder_path.clone(), !threading);
-	success!("Done");
+	installation::extract_deployment_zips(binary_type, cache_path.clone(), folder_path.clone(), !threading);
 	drop(indentation);
+
+	status!("Carrying out post-install tasks... (Cleanup, FFlag configuration, etc)");
 
 	status!("Creating ClientSettings for FFlag configuration...");
 	if !setup::confirm_existence(format!("{}/ClientSettings", folder_path).as_str()) {
@@ -81,37 +89,28 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 		warning!("Failed to find a Proton instance! Do you have one specified in your config.json file?");
 	}
 
-	status!("Creating application shortcut...");
-	let clean_version_hash = version_hash.replace("version-", "");
-	let desktop_shortcut_path = format!("{}/.local/share/applications/roblox-{}-{}.desktop", var("HOME").expect("$HOME not set"), binary_type.to_lowercase(), clean_version_hash);
-	let desktop_shortcut_contents = format!("[Desktop Entry]
-Name=Roblox {binary_type} ({channel}-{clean_version_hash})
-Comment=Launch Roblox with Proton
-Exec=env applejuicecli --launch --binary {binary_type} --channel {channel} --hash {version_hash} --args %u
-Icon={folder_path}/content/textures/loading/robloxTilt.png
-Type=Application
-Categories=Game
-MimeType=x-scheme-handler/{}", if binary_type == "Studio" { "roblox-studio;x-scheme-handler/roblox-studio-auth" } else { "roblox-player" });
-	fs::write(desktop_shortcut_path.clone(), desktop_shortcut_contents).expect("Failed to write desktop shortcut");
+	if remove_deployment_postinstall == true {
+		status!("Deleting cached deployment...");
+		fs::remove_dir_all(cache_path).expect("Failed to remove deployment from cache post-install!");
+	}
 
-	status!("Updating desktop database...");
-	process::Command::new("update-desktop-database")
-		.arg(format!("{}/.local/share/applications", var("HOME").expect("$HOME not set")))
-		.spawn()
-		.expect("Failed to execute update-desktop-database");
+	configuration::update_desktop_database();
 
 	configuration::update_config(serde_json::json!({
-		format!("{}", version_hash): {
+		binary_type: {
 			"channel": channel,
-			"binary_type": binary_type,
+			"version_hash": version_hash,
 			"install_path": folder_path,
-			"shortcut_path": desktop_shortcut_path,
 			"preferred_proton": proton_instance,
-			"enable_rpc": true
+			"configuration": {
+				"preferred_compat": "proton",
+				"parameters": "%command%",
+				"enable_rpc": true
+			}
 		}
-	}), &version_hash);
+	}), "roblox_installations");
 
-	success!("Roblox {} has been installed!\n\t{} {} located in {}", binary_type, binary_type, version_hash, folder_path);
+	success!("Roblox {} has been installed!\n\t{} {} located in {}\n\tTook {:?} to complete", binary_type, binary_type, version_hash, folder_path, start_time.elapsed());
 }
 
 pub fn main(arguments: &[(String, String)]) {
@@ -128,14 +127,20 @@ pub fn main(arguments: &[(String, String)]) {
 	// Process Arguments
 	let Some(hash_or_binary) = inline_arguments.next()
 		.filter(|hash_or_binary| !hash_or_binary.is_empty())
-			else {error!("{}", HELP_TEXT); exit(1)};
+			else {
+				help!("Accepted parameters:\n{}", argparse::generate_help(ACCEPTED_PARAMS.to_vec()));
+				process::exit(1);
+			};
 	let channel = inline_arguments.next().unwrap_or("LIVE");
-	if inline_arguments.next().is_some() {error!("{}", HELP_TEXT); exit(1)}
+	if inline_arguments.next().is_some() {
+		help!("Accepted parameters:\n{}", argparse::generate_help(ACCEPTED_PARAMS.to_vec()));
+		process::exit(1);
+	}
 	let version = match exact {
 		true => Version::exact(channel, hash_or_binary),
 		false => Version::latest(channel, hash_or_binary)
 	};
 
 	// Download
-	download_and_install(version.fetch_latest(), threading)
+	download_and_install(version.fetch_latest(), threading);
 }
