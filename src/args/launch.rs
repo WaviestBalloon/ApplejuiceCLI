@@ -132,7 +132,8 @@ pub fn main(raw_args: &[(String, String)]) {
 
 	let old_fullscreen_value = steamos::get_fullscreen_value_from_rbxxml().unwrap_or_default();
 	let running_in_big_picture = steamos::is_running_deck_big_picture_mode();
-	if steamos::is_running_on_steamos() && override_steamos_check.is_none() {
+	let reset_default_value_on_exit = !old_fullscreen_value.is_empty() || old_fullscreen_value == "false";
+	if steamos::is_running_on_steamos() && override_steamos_check.is_some() {
 		help!("Running in SteamOS, support is experimental and may not work correctly.");
 	}
 	if running_in_big_picture || override_steamos_check.is_some() {
@@ -140,6 +141,8 @@ pub fn main(raw_args: &[(String, String)]) {
 		
 		if old_fullscreen_value == "false" {
 			steamos::set_rbx_fullscreen_value(true);
+		} else if old_fullscreen_value.is_empty() {
+			warning!("Cannot force fullscreen, returned XML value is empty; please restart Roblox to ensure the XML configuration file has been generated (Normal on first launch)");
 		}
 	}
 
@@ -198,7 +201,7 @@ pub fn main(raw_args: &[(String, String)]) {
 		create_notification(&format!("{}/assets/crudejuice.png", dir_location), "5000", &format!("Roblox {} has closed", binary), &format!("Exit code: {}", exitcode));
 	}
 
-	if running_in_big_picture || override_steamos_check.is_some() {
+	if (running_in_big_picture || override_steamos_check.is_some()) && reset_default_value_on_exit {
 		status!("Fullscreen was forced; restoring previous fullscreen XML value...");
 		steamos::set_rbx_fullscreen_value(old_fullscreen_value.parse::<bool>().unwrap());
 	}
