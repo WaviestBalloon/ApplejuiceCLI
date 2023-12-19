@@ -19,6 +19,41 @@ fn check_location(folder: &str) {
 	}
 }
 
+fn check_location(folder: &str) {
+	if !setup::confirm_existence(folder) {
+		error!("{folder} directory does not exist! Did you forget to initialise?");
+		exit(1);
+	}
+
+	let paths = read_dir(format!("{}/cache", setup::get_applejuice_dir())).unwrap();
+	if paths.count() == 0 {
+		error!("{folder} directory is empty!");
+		exit(1);
+	}
+}
+
+fn get_all_valid_installations() {
+	// Vec format: (location, size, installation_date, special_mods)
+	let mut valid_player_versions: Vec<(String, String, String, String)> = vec![];
+	let mut valid_studio_versions: Vec<(String, String, String, String)> = vec![];
+
+	let paths = read_dir(format!("{}/roblox", setup::get_applejuice_dir())).unwrap();
+	for deployment_path in paths { // "roblox/<DEPLOYMENT_CHANNEL>"
+		let studio_player = read_dir(deployment_path.unwrap().path()).unwrap();
+
+		for binary_type in studio_player { // "roblox/<DEPLOYMENT_CHANNEL>/<STUDIO/PLAYER>"
+			let version = read_dir(binary_type.unwrap().path()).unwrap();
+
+			for version_path in version { // "roblox/<DEPLOYMENT_CHANNEL>/<STUDIO/PLAYER>/<VERSION>"
+				//let path_unwrap = version_path.unwrap().path().to_str().unwrap();
+
+				//println!("{}", path_unwrap);
+				println!("{:?}", version_path.unwrap().path());
+			}
+		}
+	}
+}
+
 pub fn main(args: Vec<Vec<(String, String)>>) {
 	let binding = argparse::get_param_value(args, "purge");
 	let parsed_args = binding.split(" ").collect::<Vec<&str>>();
