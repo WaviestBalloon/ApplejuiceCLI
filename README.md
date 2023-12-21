@@ -30,11 +30,11 @@ When running the install script, it will compile the binary for you as of now be
 >
 > Debian/Ubuntu: 
 > ```
-> sudo apt-get -y install build-essentials libsdl2-dev libnotify libssl-dev
+> sudo apt-get -y install build-essential libsdl2-dev libnotify libssl-dev
 > ```
 > Arch: 
 > ```
-> sudo pacman -S base-devel sdl2 libnotify openssl --noconfirm
+> sudo pacman -Sy base-devel sdl2 libnotify openssl --noconfirm
 > ```
 
 ### Using the install script
