@@ -244,11 +244,9 @@ pub fn init_rpc(binary_type: String, already_known_log_file: Option<String>) {
 									was_rpc_updated = true;
 								} else if line_usable.contains("leaveUGCGameInternal") { // When the user leaves a game and enters the LuaApp
 									status!("Detected game leave; resetting RPC...");
-
 									let mut activity: activity::Activity;
 									construct_default_rpc!(activity, binary_type);
 									let _ = rpc_handler.set_activity(activity);
-
 									was_rpc_updated = true;
 								}
 
