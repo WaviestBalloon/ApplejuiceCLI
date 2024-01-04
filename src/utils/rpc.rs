@@ -44,6 +44,29 @@ fn convert_into_assetdelivery_url(asset_id: i64) -> String {
 	return format!("https://assetdelivery.roblox.com/v1/asset/?id={}", asset_id);
 }
 
+macro_rules! construct_default_rpc {
+	($activity:ident, $application_name:expr) => {
+		let state = format!("Using Roblox {} on Linux!", $application_name);
+		let $activity = activity::Activity::new()
+			.state(&state)
+			.details("With Applejuice")
+			.assets(
+				activity::Assets::new()
+					.large_image("crudejuice")
+					.large_text("Bitdancer Approved"),
+			)
+			.timestamps(
+				activity::Timestamps::new()
+				.start(
+					time::SystemTime::now()
+						.duration_since(time::SystemTime::UNIX_EPOCH)
+						.unwrap()
+						.as_millis() as i64,
+				)
+			);
+	};
+}
+
 macro_rules! construct_rpc_assets {
 	($rpc_assets:ident, $small_image:expr, $large_image:expr) => {
 		// `clear` and `reset` have not been implemented yet, and may never be fully implemented due to how unstable RPC is
@@ -221,26 +244,8 @@ pub fn init_rpc(binary_type: String, already_known_log_file: Option<String>) {
 									was_rpc_updated = true;
 								} else if line_usable.contains("leaveUGCGameInternal") { // When the user leaves a game and enters the LuaApp
 									status!("Detected game leave; resetting RPC...");
-									
-									let state = format!("Using Roblox {} on Linux!", binary_type.clone());
-									let activity = activity::Activity::new()
-										.state(&state)
-										.details("With Applejuice")
-										.assets(
-											activity::Assets::new()
-												.large_image("crudejuice")
-												.large_text("Bitdancer Approved"),
-										)
-										.timestamps(
-											activity::Timestamps::new()
-											.start(
-												time::SystemTime::now()
-													.duration_since(time::SystemTime::UNIX_EPOCH)
-													.unwrap()
-													.as_millis() as i64,
-											)
-										);
-
+									let mut activity: activity::Activity;
+									construct_default_rpc!(activity, binary_type);
 									let _ = rpc_handler.set_activity(activity);
 									was_rpc_updated = true;
 								}
@@ -259,8 +264,11 @@ pub fn init_rpc(binary_type: String, already_known_log_file: Option<String>) {
 										Err(error) => {
 											warning!("Error occurred when attempting to display RPC request receive: {error}\nLast successful receive unwrap: {:?}", last_successful_rec_unwrap);
 											
-											status!("Attempting to re-initialise RPC...");
-											self::init_rpc(binary_type.clone(), Some(log_path.clone()));
+											status!("Attempting to reset RPC...");
+											let mut activity: activity::Activity;
+											construct_default_rpc!(activity, binary_type);
+
+											let _ = rpc_handler.set_activity(activity);
 										}
 									}
 								}
