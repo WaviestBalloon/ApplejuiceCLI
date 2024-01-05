@@ -76,7 +76,7 @@ pub fn main(raw_args: &[(String, String)]) {
 
 			warning!("Unable to find a Roblox installation, bootstrapping now...");
 			status!("Downloading and installing latest version...");
-			create_notification(&format!("{}/assets/crudejuice.png", dir_location), "15000", "Installing Roblox...", "");
+			create_notification(&format!("{}/assets/crudejuice.png", dir_location), 15000, "Installing Roblox...", "");
 
 			// TODO: Remove this, as Roblox has now locked all non-prod deployment channels :c
 			let channel = match configuration["misc"]["overrides"]["deployment_channel"].as_str() {
@@ -107,7 +107,7 @@ pub fn main(raw_args: &[(String, String)]) {
 			if shall_we_bootstrap.is_some() { // TODO: move to seperate module
 				status!("Downloading and installing latest version...");
 				help!("Install info: \n\tInstalling: {}\nOld version: {}\nUsing deployment channel: {}", latest_version, version, deployment_channel);
-				create_notification(&format!("{}/assets/crudejuice.png", dir_location), "5000", &format!("Updating Roblox {}...", binary), &format!("Updating to deployment {latest_version}"));
+				create_notification(&format!("{}/assets/crudejuice.png", dir_location), 5000, &format!("Updating Roblox {}...", binary), &format!("Updating to deployment {latest_version}"));
 
 				args::install::main(&[("install".to_string(), binary.to_string())]);
 				
@@ -118,7 +118,7 @@ pub fn main(raw_args: &[(String, String)]) {
 					if binary == "Player" { "player" } else { "studio" },
 					if deployment_channel == "LIVE" { "" } else { deployment_channel }
 				);
-				create_notification("dialog-warning", "5000", "Version outdated!", &format!("You are on {} and the latest version for {} is {}\nConsider running \"{}\"", version.replace("version-", ""), deployment_channel, latest_version.replace("version-", ""), formatted_install_command));
+				create_notification("dialog-warning", 5000, "Version outdated!", &format!("You are on {} and the latest version for {} is {}\nConsider running \"{}\"", version.replace("version-", ""), deployment_channel, latest_version.replace("version-", ""), formatted_install_command));
 			}
 		}
 	}
@@ -150,14 +150,14 @@ pub fn main(raw_args: &[(String, String)]) {
 	if studio_oauthing {
 		create_notification(
 			&format!("{}/assets/studio.png", dir_location),
-			"5000",
+			5000,
 			"Studio OAuth",
 			"Launching Studio to authenticate...",
 		);
 	} else {
 		create_notification(
 			&format!("{}/assets/crudejuice.png", dir_location),
-			"5000",
+			5000,
 			&format!("Roblox {} is starting!", binary),
 			"",
 		);
@@ -193,12 +193,12 @@ pub fn main(raw_args: &[(String, String)]) {
 	
 	if studio_oauthing {
 		if exitcode == 0 {
-			create_notification(&format!("{}/assets/studio.png", dir_location), "5000", "Studio OAuth", "You should now be logged into Roblox Studio successfully!");
+			create_notification(&format!("{}/assets/studio.png", dir_location), 5000, "Studio OAuth", "You should now be logged into Roblox Studio successfully!");
 		} else {
-			create_notification(&format!("{}/assets/studio.png", dir_location), "5000", "Studio OAuth",&format!("An error may have occured during the authentication process, please try again.\nExit code: {}", exitcode));
+			create_notification(&format!("{}/assets/studio.png", dir_location), 5000, "Studio OAuth",&format!("An error may have occured during the authentication process, please try again.\nExit code: {}", exitcode));
 		}
 	} else {
-		create_notification(&format!("{}/assets/crudejuice.png", dir_location), "5000", &format!("Roblox {} has closed", binary), &format!("Exit code: {}", exitcode));
+		create_notification(&format!("{}/assets/crudejuice.png", dir_location), 5000, &format!("Roblox {} has closed", binary), &format!("Exit code: {}", exitcode));
 	}
 
 	if (running_in_big_picture || override_steamos_check.is_some()) && reset_default_value_on_exit {
