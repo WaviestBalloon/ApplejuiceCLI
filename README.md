@@ -24,17 +24,16 @@ When running the install script, it will compile the binary for you as of now be
 > [!IMPORTANT]
 > If compile fails, you might be missing dependencies: 
 > - SDL (Monitor Hertz detection, FPS uncapping)
-> - libnotify (Desktop notifications)
 > - build-essentials/base-devel (Compiling)
 > - libssl-dev/openssl (Compiling)
 >
 > Debian/Ubuntu: 
 > ```
-> sudo apt-get -y install build-essential libsdl2-dev libnotify libssl-dev
+> sudo apt-get -y install build-essential libsdl2-dev libssl-dev
 > ```
 > Arch: 
 > ```
-> sudo pacman -Sy base-devel sdl2 libnotify openssl --noconfirm
+> sudo pacman -Sy base-devel sdl2 openssl --noconfirm
 > ```
 
 ### Using the install script
