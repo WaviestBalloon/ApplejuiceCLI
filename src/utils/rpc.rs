@@ -181,7 +181,7 @@ pub fn init_rpc(binary_type: String, already_known_log_file: Option<String>) {
 
 								if line_usable.contains("[BloxstrapRPC] ") {
 									if detected_bloxstrap == false {
-										create_notification(&format!("{}/assets/crudejuice.png", setup::get_applejuice_dir()), "5000", "BloxstrapRPC enabled", "This game has support for the BloxstrapRPC protocol! We have switched to using it for your rich presence.");
+										create_notification(&format!("{}/assets/crudejuice.png", setup::get_applejuice_dir()), 5000, "BloxstrapRPC enabled", "This game has support for the BloxstrapRPC protocol! We have switched to using it for your rich presence.");
 										detected_bloxstrap = true;
 									}
 									status!("Parsing Log line for RPC: {}", line_usable);
