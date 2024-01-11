@@ -50,3 +50,18 @@ When running the install script, it will compile the binary for you as of now be
 4. Copy the compiled binary from `./target/release/applejuice_cli` to `/usr/local/bin` with the name `applejuicecli`.
 5. Run `applejuicecli --init` to initialise the configuration file and directories.
 6. Launch Roblox via your application launcher or from the website!
+
+### Uninstalling
+
+Run the install script with the `--uninstall` flag.
+
+> [!WARNING]
+> **This will leave nothing left of ApplejuicCLI!**
+> The following WILL be lost if you uninstall:
+> - Roblox configuration files
+> - Roblox in-game screenshots
+> - FastFlags configuration
+> - ApplejuiceCLI configuration files
+> - And more
+> 
+> **Please consider backing up ANY and ALL data you wish to keep!**

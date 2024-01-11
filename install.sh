@@ -15,11 +15,36 @@ if [[ $EUID -eq 0 ]]; then
 	exit 1
 fi
 if [[ -f /usr/local/bin/applejuicecli ]]; then
-	echo "Applejuice is already installed, the binary will be overwritten but your configuration will be kept unharmed."
+	echo "Applejuice is already installed, the binary will be overwritten but your configuration will be kept unharmed. If you want to uninstall Applejuice, run script with --uninstall flag."
 fi
 if pgrep -x "applejuicecli" > /dev/null; then
 	echo "Applejuice is already running and cannot be installed, please quit out of Roblox and Applejuice in order to continue!"
 	exit 1
+fi
+
+# Uninstall
+if [[ $1 == "--uninstall" ]]; then
+	echo "Uninstalling Applejuice..."
+	while true; do
+		read -p "Are you sure you wish to uninstall Applejuice? You WILL lose your configuration files, anything saved on your prefix including Roblox screenshots and possibly other data you might wish to keep... (y/n): " yn
+		case $yn in
+			[Yy]* ) break;;
+			[Nn]* ) exit 0; break;;
+			* ) echo "Please answer y or n.";;
+		esac
+	done
+	
+	echo "---------------------------"
+	echo "Removing data folder and Roblox installations..."
+	rm -rf ~/.local/share/applejuice
+	echo "Removing desktop/protocol handler files for Player and Studio..."
+	rm -rf ~/.local/share/applications/roblox-player.desktop
+	rm -rf ~/.local/share/applications/roblox-studio.desktop
+	echo "Removing Applejuice binary..."
+	sudo rm -rf /usr/local/bin/applejuicecli || doas rm -rf /usr/local/bin/applejuicecli
+	echo "---------------------------"
+	echo "(!) Applejuice has been uninstalled."
+	exit 0
 fi
 
 echo "Moving to project directory..."
@@ -49,7 +74,7 @@ echo "---------------------------"
 
 # Install it!!
 echo "Installing the Applejuice CLI to /usr/local/bin..."
-sudo cp ./target/release/applejuice_cli /usr/local/bin/applejuicecli || doas cp ./target/release/applejuice_cli /usr/local/bin/applejuicecli
+sudo cp ./target/release/applejuicecli /usr/local/bin/applejuicecli || doas cp ./target/release/applejuicecli /usr/local/bin/applejuicecli
 
 # Applejuice initalisation also downloads these asset files if missing as a fallback
 echo "Copying asset files..."
@@ -64,4 +89,4 @@ echo "---------------------------"
 
 # Finish line: 
 echo ""
-echo "Success: You can now run the Applejuice CLI by typing 'applejuicecli' in your terminal."
+echo "(!) You can now run the Applejuice CLI by typing 'applejuicecli' in your terminal."

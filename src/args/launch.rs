@@ -1,6 +1,6 @@
 use crate::utils::{argparse, installation, notification::create_notification, setup, terminal::*, rpc, configuration, steamos};
 use crate::args;
-use std::process;
+use std::{process, path::Path};
 use inotify::{Inotify, WatchMask};
 
 static ACCEPTED_PARAMS: [(&str, &str); 6] = [
@@ -76,7 +76,7 @@ pub fn main(raw_args: &[(String, String)]) {
 
 			warning!("Unable to find a Roblox installation, bootstrapping now...");
 			status!("Downloading and installing latest version...");
-			create_notification(&format!("{}/assets/crudejuice.png", dir_location), 15000, "Installing Roblox...", "");
+			create_notification(&format!("{}/assets/crudejuice.png", dir_location), 15000, &format!("Installing Roblox {}...", binary), "");
 
 			// TODO: Remove this, as Roblox has now locked all non-prod deployment channels :c
 			let channel = match configuration["misc"]["overrides"]["deployment_channel"].as_str() {
@@ -147,6 +147,14 @@ pub fn main(raw_args: &[(String, String)]) {
 	}
 
 	status!("Launching Roblox...");
+	if binary == "Studio" { // Do a check if DataModelPatch.rbxm exists, if not, Studio might have issues when running (See: https://devforum.roblox.com/t/no-verified-patch-could-be-loaded/1797937/42?u=waviestballoon)
+		let data_model_patch_path = format!("{}/ExtraContent/models/DataModelPatch/DataModelPatch.rbxm", install_path);
+		help!("{}", data_model_patch_path);
+		if !Path::new(&data_model_patch_path).exists() {
+			warning!("DataModelPatch.rbxm does not exist, Studio may have issues when running!");
+			create_notification("dialog-warning", 30000, "Missing critical file", "DataModelPatch.rbxm does not exist, Studio may have issues when running! Reinstalling Studio may fix this issue");
+		}
+	}
 	if studio_oauthing {
 		create_notification(
 			&format!("{}/assets/studio.png", dir_location),
