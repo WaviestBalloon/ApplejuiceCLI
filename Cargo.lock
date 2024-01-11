@@ -27,7 +27,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "applejuice_cli"
+name = "applejuicecli"
 version = "0.1.0"
 dependencies = [
  "discord-rich-presence",

@@ -2,7 +2,7 @@ use crate::utils::terminal::*;
 use notify_rust::Notification;
 
 pub fn create_notification(icon: &str, expire_time: i32, title: &str, body: &str) {
-	help!("Notice: {body}");
+	help!("{title}: {body}");
 	let _ = Notification::new()
 		.summary(title)
 		.body(body)
