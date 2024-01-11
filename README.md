@@ -56,4 +56,12 @@ When running the install script, it will compile the binary for you as of now be
 Run the install script with the `--uninstall` flag.
 
 > [!WARNING]
-> This will clear ALL TRACES of Applejuice from your system, including your configuration files for Applejuice and Roblox including FastFlags, your Roblox installations, your Roblox settings and data including your in-game screenshots and more that you may wish to keep. Please back up the files you wish to keep before uninstalling.
+> **This will leave nothing left of ApplejuicCLI!**
+> The following WILL be lost if you uninstall:
+> - Roblox configuration files
+> - Roblox in-game screenshots
+> - FastFlags configuration
+> - ApplejuiceCLI configuration files
+> - And more
+> 
+> **Please consider backing up ANY and ALL data you wish to keep!**
