@@ -17,7 +17,7 @@ You can either use the interface (Soon™) or if you're big brain, use the CLI i
 git clone https://github.com/WaviestBalloon/ApplejuiceCLI.git ; cd ApplejuiceCLI ; chmod +x ./install.sh ; bash ./install.sh
 ```
 
-## Compiling from source (Read me if running above)
+## Compiling from source (Read me)
 
 When running the install script, it will compile the binary for you as of now because there are no pre-compiled binaries available yet.
 
@@ -42,12 +42,12 @@ When running the install script, it will compile the binary for you as of now be
 2. Run `./install.sh`. (You may need to run `chmod +x ./install.sh` first)
 3. Launch Roblox via your application launcher or from the website!
 
-### Manual (Not recommended)
+### Manual (Not recommended - You will not get support)
 
 1. Clone this repository.
 2. Make sure you have Rust and required dependencies installed.
 3. Run `cargo build --release` in the repository.
-4. Copy the compiled binary from `./target/release/applejuice_cli` to `/usr/local/bin` with the name `applejuicecli`.
+4. Copy the compiled binary from `./target/release/applejuicecli` to `/usr/local/bin`.
 5. Run `applejuicecli --init` to initialise the configuration file and directories.
 6. Launch Roblox via your application launcher or from the website!
 
@@ -57,6 +57,7 @@ Run the install script with the `--uninstall` flag.
 
 > [!WARNING]
 > **This will leave nothing left of ApplejuicCLI!**
+> 
 > The following WILL be lost if you uninstall:
 > - Roblox configuration files
 > - Roblox in-game screenshots
