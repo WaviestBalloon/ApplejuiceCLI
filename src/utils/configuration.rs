@@ -25,14 +25,13 @@ struct RobloxInstallation<'a> {
 	version: &'a str
 }
 
-#[warn(dead_code)]
-pub fn test() {
+/*pub fn test() {
 	let mut x = Config::default();
 	x.proton_installations.insert("test_key", Path::new("/pathtest"));
 	let a = serde_json::to_string(&x).unwrap();
 	let y: Config = serde_json::from_str(&a).unwrap();
 	println!("{:?}", y);
-}
+}*/
 
 // Update a certain element in the configuration JSON file
 pub fn update_config(json: serde_json::Value, config_type: &str) {

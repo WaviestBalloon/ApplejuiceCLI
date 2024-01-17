@@ -79,7 +79,7 @@ pub fn main(raw_args: &[(String, String)]) {
 			create_notification(&format!("{}/assets/crudejuice.png", dir_location), 15000, &format!("Installing Roblox {}...", binary), "");
 
 			// TODO: Remove this, as Roblox has now locked all non-prod deployment channels :c
-			let channel = match configuration["misc"]["overrides"]["deployment_channel"].as_str() {
+			let _channel = match configuration["misc"]["overrides"]["deployment_channel"].as_str() {
 				Some(channel) => channel,
 				None => "LIVE",
 			};
@@ -171,7 +171,10 @@ pub fn main(raw_args: &[(String, String)]) {
 		);
 	}
 
-	let output = process::Command::new(dbg!(format!("{}/proton", found_installation["preferred_proton"].as_str().unwrap())))
+	let proton_installs = configuration::get_config("proton_installations");
+	let proton_installation_path = proton_installs[found_installation["preferred_proton"].as_str().unwrap_or_default()].as_str().unwrap_or_default();
+	help!("Using Proton path from `preferred_proton` match: {}", proton_installation_path);
+	let output = process::Command::new(dbg!(format!("{}/proton", proton_installation_path)))
 		.env(
 			"STEAM_COMPAT_DATA_PATH",
 			format!("{}/prefixdata", dir_location),

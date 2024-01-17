@@ -88,6 +88,7 @@ pub fn main(raw_args: &[(String, String)]) {
 				"CHANNEL_DEPLOYMENT_CDN": null,
 			},
 			"purge_cached_deployment_after_install": false,
+			"purge_old_installed_deployments_after_update": true
 		}
 	}), "global");
 	configuration::update_config(json!({ }), "roblox_installations");

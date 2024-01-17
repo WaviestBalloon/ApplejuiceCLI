@@ -30,6 +30,7 @@ pub fn discover_proton_directory() -> serde_json::Value { // Try to automaticall
 	}
 }
 
+/* Used for when we start supporting both Wine and Proton
 pub fn construct_proton_process() {
 	
 }
@@ -37,3 +38,4 @@ pub fn construct_proton_process() {
 pub fn construct_wine_process() {
 	
 }
+*/
