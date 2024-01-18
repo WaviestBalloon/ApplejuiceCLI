@@ -76,22 +76,26 @@ pub fn main(raw_args: &[(String, String)]) {
 	}
 
 	// Initialise entries for config.json
-	configuration::update_config(json!({
-		"config_version": "0",
-		"ui": {},
-		"cli": {},
-		"misc": {
-			"overrides": {
-				"LATEST_VERSION_PLAYER_CHANNEL": null,
-				"LATEST_VERSION_STUDIO_CHANNEL": null,
-				"LIVE_DEPLOYMENT_CDN": null,
-				"CHANNEL_DEPLOYMENT_CDN": null,
-			},
-			"purge_cached_deployment_after_install": false,
-			"purge_old_installed_deployments_after_update": true
-		}
-	}), "global");
-	configuration::update_config(json!({ }), "roblox_installations");
+	if setup::confirm_existence("config.json") {
+		warning!("config.json already exists, skipping entry initialisation!");
+	} else {
+		configuration::update_config(json!({
+			"config_version": "0",
+			"ui": {},
+			"cli": {},
+			"misc": {
+				"overrides": {
+					"LATEST_VERSION_PLAYER_CHANNEL": null,
+					"LATEST_VERSION_STUDIO_CHANNEL": null,
+					"LIVE_DEPLOYMENT_CDN": null,
+					"CHANNEL_DEPLOYMENT_CDN": null,
+				},
+				"purge_cached_deployment_after_install": false,
+				"purge_old_installed_deployments_after_update": true
+			}
+		}), "global");
+		configuration::update_config(json!({ }), "roblox_installations");
+	}
 
 	status!("Finding a Proton installation...");
 	let detected_installations = proton::discover_proton_directory();
