@@ -3,13 +3,14 @@ use crate::args;
 use std::{process, path::Path};
 use inotify::{Inotify, WatchMask};
 
-static ACCEPTED_PARAMS: [(&str, &str); 6] = [
+static ACCEPTED_PARAMS: [(&str, &str); 7] = [
 	("--binary", "The binary type to launch, either Player or Studio"),
 	("--hash", "The version hash to use (Automatic)"),
 	("--args", "The protocol arguments to launch with, usually given by a protocol"),
 	("--skipupdatecheck", "Skip checking for updates from clientsettings.roblox.com"),
 	("--bootstrap", "Automatically install the provided binary if missing or outdated"),
-	("--sosoverride", "Overrides the check for SteamOS, does some pre/post-launch configuration to make Roblox work better on SteamOS")
+	("--sosoverride", "Overrides the check for SteamOS, does some pre/post-launch configuration to make Roblox work better on SteamOS"),
+	("--forceuse", "Forces Applejuice to ignore your preferred_proton and to use a specified binary instead (Only for allow-path-test branch)")
 ];
 
 pub fn resolve_active_logfile(expected_log_directory: String) -> Option<String> {
@@ -173,13 +174,18 @@ pub fn main(raw_args: &[(String, String)]) {
 
 	let proton_installs = configuration::get_config("proton_installations");
 	let proton_installation_path = proton_installs[found_installation["preferred_proton"].as_str().unwrap_or_default()].as_str().unwrap_or_default();
-	help!("Using Proton path from `preferred_proton` match: {}", proton_installation_path);
-	if setup::confirm_existence(&proton_installation_path) {
-		error!("Proton installation does not exist, check your configuration file");
-		create_notification("dialog-warning", 30000, "Proton configuration error", "Unable to find the Proton installation to launch Roblox with, please check your configuration file to ensure that `preferred_proton` is set correctly");
-		process::exit(1);
+	let custom_wine_binary_location = argparse::get_param_value_new(&raw_args, "forceuse"); // Optional
+	let mut binary_path = format!("{}/proton", proton_installation_path);
+
+	if custom_wine_binary_location.is_some() {
+		let custom_wine_binary_location = custom_wine_binary_location.unwrap();
+		status!("Forcing use of custom binary at: {}", custom_wine_binary_location);
+		warning!("--forceuse has been added, this is experimental and should not be used all the time, this will ignore your preferred Proton");
+		create_notification(&format!("{}/assets/crudejuice.png", dir_location), 10000, "Forcing use of custom binary", "--forceuse has been added, this is experimental and should not be used all the time, this will ignore your preferred Proton");
+		binary_path = custom_wine_binary_location.to_string();
 	}
-	let output = process::Command::new(dbg!(format!("{}/proton", proton_installation_path)))
+
+	let output = process::Command::new(binary_path)
 		.env(
 			"STEAM_COMPAT_DATA_PATH",
 			format!("{}/prefixdata", dir_location),
