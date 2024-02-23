@@ -175,7 +175,7 @@ pub fn main(raw_args: &[(String, String)]) {
 	let proton_installs = configuration::get_config("proton_installations");
 	let proton_installation_path = proton_installs[found_installation["preferred_proton"].as_str().unwrap_or_default()].as_str().unwrap_or_default();
 	let custom_wine_binary_location = argparse::get_param_value_new(&raw_args, "forceuse"); // Optional
-	let mut binary_path = format!("{}/proton", proton_installation_path);
+	let mut binary_path = proton_installation_path;
 
 	if custom_wine_binary_location.is_some() {
 		let custom_wine_binary_location = custom_wine_binary_location.unwrap();
