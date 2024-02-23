@@ -182,7 +182,7 @@ pub fn main(raw_args: &[(String, String)]) {
 		status!("Forcing use of custom binary at: {}", custom_wine_binary_location);
 		warning!("--forceuse has been added, this is experimental and should not be used all the time, this will ignore your preferred Proton");
 		create_notification(&format!("{}/assets/crudejuice.png", dir_location), 10000, "Forcing use of custom binary", "--forceuse has been added, this is experimental and should not be used all the time, this will ignore your preferred Proton");
-		binary_path = custom_wine_binary_location.to_string();
+		binary_path = custom_wine_binary_location;
 	}
 
 	let output = process::Command::new(binary_path)
