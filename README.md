@@ -1,6 +1,11 @@
 # <img src="assets/crudejuice.png" width=85px> ApplejuiceCLI
 ### ApplejuiceCLI is a light-weight, fast Roblox on Linux bootstrapper that runs with Proton!
 
+> [!WARNING]
+> **Playing Roblox under Wine no longer works due to the Hyperion block being readded to Roblox [due to multiple reasons](https://devforum.roblox.com/t/why-isnt-hyperion-an-anti-cheat/2840095/33?u=waviestballoon).**
+>
+> **Studio will work as intended, Applejuice will still continue to be maintained.**
+
 You can either use the interface (Soon™) or if you're big brain, use the CLI instead. (**Less bloat! Wow!**)
 
 *Applejuice is a manager to get Roblox to run on Linux using Valve's Proton.*
