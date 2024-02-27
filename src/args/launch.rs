@@ -185,6 +185,35 @@ pub fn main(raw_args: &[(String, String)]) {
 		binary_path = custom_wine_binary_location;
 	}
 
+	dbg!(process::Command::new(binary_path)
+	.env(
+		"STEAM_COMPAT_DATA_PATH",
+		format!("{}/prefixdata", dir_location),
+	)
+	.env(
+		"STEAM_COMPAT_CLIENT_INSTALL_PATH",
+		format!("{}/not-steam", dir_location),
+	)
+	.env(
+		"USER",
+		"steamuser",
+	)
+	.env(
+		"WINEPREFIX",
+		format!("{}/prefixdata", dir_location),
+	)
+	//.arg("run") // Verb `waitforexitandrun` prevents other instances from launching and queues them, not good, using `run`
+	.arg(format!(
+		"{}/{}",
+		install_path,
+		if binary == "Player" {
+			"RobloxPlayerBeta.exe".to_string()
+		} else {
+			"RobloxStudioBeta.exe".to_string()
+		}
+	))
+	.arg(protocol_arguments));
+
 	let output = process::Command::new(binary_path)
 		.env(
 			"STEAM_COMPAT_DATA_PATH",
@@ -202,7 +231,7 @@ pub fn main(raw_args: &[(String, String)]) {
 			"WINEPREFIX",
 			format!("{}/prefixdata", dir_location),
 		)
-		.arg("run") // Verb `waitforexitandrun` prevents other instances from launching and queues them, not good, using `run`
+		//.arg("run") // Verb `waitforexitandrun` prevents other instances from launching and queues them, not good, using `run`
 		.arg(format!(
 			"{}/{}",
 			install_path,
