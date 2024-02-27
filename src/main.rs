@@ -5,10 +5,12 @@ mod args;
 use crate::utils::{terminal::*, *}; // Import modules which act as a handler for certain command parameters
 
 #[cfg(not(target_os = "linux"))]
-compile_error!("Applejuice is a Linux-only application and is not designed to be ran on any operating system other than a Linux-based system.");
+compile_error!("Applejuice is a Linux-only application and is not designed to be ran on any operating system other than a Linux-based system");
 
 #[cfg(target_os = "windows")]
 compile_error!("Since you are compiling for Windows, consider using Bloxstrap: https://github.com/pizzaboxer/bloxstrap/");
+#[cfg(target_pointer_width = "32")]
+compile_error!("Roblox no longer supports 32-bit processor architectures, please use a 64-bit processor architecture instead or if you are confident enough, remove lines 12 and 13 from main.rs");
 
 fn main() {
 	let args: Vec<String> = env::args().collect();

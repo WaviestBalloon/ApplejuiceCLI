@@ -25,7 +25,8 @@ fn detect_display_hertz() -> i32 {
 fn download_and_install(version: ExactVersion, threading: bool) {
 	let start_time = time::Instant::now();
 	let global_config = configuration::get_config("global");
-	let overrides = global_config["misc"]["overrides"].clone();
+	let _overrides = global_config["misc"]["overrides"].clone();
+	let remove_cache_deployment_postinstall = global_config["misc"]["purge_cached_deployment_after_install"].clone();
 	let remove_deployment_postinstall = global_config["misc"]["purge_cached_deployment_after_install"].clone();
 
 	let ExactVersion {hash: version_hash, channel} = version;
@@ -35,9 +36,15 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 	success!("Done");
 	drop(indentation);
 
-	let mut package_manifest_parsed: Vec<&str> = package_manifest.split('\n').collect();
+	let mut package_manifest_parsed: Vec<&str> = package_manifest.split("\n").collect();
 	package_manifest_parsed.remove(package_manifest_parsed.len() - 1); // Remove last element which is an empty string
 	let binary_type = installation::get_binary_type(package_manifest_parsed);
+
+	let mut are_we_upgrading = false;
+	let installations = configuration::get_config("roblox_installations");
+	if installations[binary_type]["version_hash"] != "null" &&installations[binary_type]["version_hash"] != version_hash.to_string() {
+		are_we_upgrading = true;
+	}
 
 	let indentation = status!("Downloading deployment...");
 	let cache_path = installation::download_deployment(binary_type, version_hash.to_string(), &channel);
@@ -59,12 +66,18 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 
 	status!("Carrying out post-install tasks... (Cleanup, FFlag configuration, etc)");
 
+	if binary_type == "Studio" && setup::confirm_existence(format!("{}/StudioFonts/SourceSansPro-Black.ttf", folder_path).as_str()) {
+		status!("Applying fix for broken Studio font...");
+		fs::remove_file(format!("{}/StudioFonts/SourceSansPro-Black.ttf", folder_path)).expect("Failed to remove broken font");
+	}
+
 	status!("Creating ClientSettings for FFlag configuration...");
 	if !setup::confirm_existence(format!("{}/ClientSettings", folder_path).as_str()) {
 		let display_refresh_rate = detect_display_hertz();
 		let mut target_fps = display_refresh_rate;
 		if target_fps <= 100 { target_fps *= 2 }
 		status!("Setting target FPS to {} based on your display refresh rate of {}Hz", target_fps, display_refresh_rate);
+		
 		fs::create_dir(format!("{}/ClientSettings", folder_path)).expect("Failed to create ClientSettings directory");
 		fs::write(format!("{}/ClientSettings/ClientAppSettings.json", folder_path), json!({
 			"FLogNetwork": 7, // Level 7 logs prints and thingys, needed for BloxstrapRPC integration
@@ -78,20 +91,30 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 	let proton_instances = configuration::get_config("proton_installations");
 	let mut proton_instance: String = "".to_string();
 	if !proton_instances.is_null() {
-		for (_key, value) in proton_instances.as_object().unwrap() {
+		for (key, value) in proton_instances.as_object().unwrap() {
 			if value.as_str().unwrap().contains("Proton") {
-				proton_instance = value.as_str().unwrap().to_string();
+				proton_instance = key.to_string();
 				break;
 			}
 		}
-		success!("Setting \"preferred_proton\" to {}", proton_instance);
+		success!("Setting `preferred_proton` to {}", proton_instance);
 	} else {
 		warning!("Failed to find a Proton instance! Do you have one specified in your config.json file?");
 	}
 
-	if remove_deployment_postinstall == true {
+	if remove_cache_deployment_postinstall == true {
 		status!("Deleting cached deployment...");
-		fs::remove_dir_all(cache_path).expect("Failed to remove deployment from cache post-install!");
+		fs::remove_dir_all(cache_path).expect("Failed to remove deployment from cache for post-install!");
+	}
+	if remove_deployment_postinstall == true && are_we_upgrading == true {
+		status!("Deleting old deployment...");
+		let old_install_location = installations[binary_type]["install_path"].to_string();
+
+		if fs::metadata(old_install_location.clone()).is_err() {
+			warning!("Failed to find old deployment, skipping removal...");
+		} else {
+			fs::remove_dir_all(old_install_location).expect("Failed to remove deployment from previous installation for post-install!");
+		}
 	}
 
 	configuration::update_desktop_database();
