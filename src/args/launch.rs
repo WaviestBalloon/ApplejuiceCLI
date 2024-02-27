@@ -181,7 +181,7 @@ pub fn main(raw_args: &[(String, String)]) {
 		let custom_wine_binary_location = custom_wine_binary_location.unwrap();
 		status!("Forcing use of custom binary at: {}", custom_wine_binary_location);
 		warning!("--forceuse has been added, this is experimental and should not be used all the time, this will ignore your preferred Proton");
-		create_notification(&format!("{}/assets/crudejuice.png", dir_location), 10000, "Forcing use of custom binary", "--forceuse has been added, this is experimental and should not be used all the time, this will ignore your preferred Proton");
+		create_notification(&format!("{}/assets/crudejuice.png", dir_location), 10000, "Using custom binary", "--forceuse has been added, this is experimental and should not be used all the time, this will ignore your preferred Proton");
 		binary_path = custom_wine_binary_location;
 	}
 
@@ -197,6 +197,10 @@ pub fn main(raw_args: &[(String, String)]) {
 		.env(
 			"USER",
 			"steamuser",
+		)
+		.env(
+			"WINEPREFIX",
+			format!("{}/prefixdata", dir_location),
 		)
 		.arg("run") // Verb `waitforexitandrun` prevents other instances from launching and queues them, not good, using `run`
 		.arg(format!(
