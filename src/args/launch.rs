@@ -173,7 +173,10 @@ pub fn main(raw_args: &[(String, String)]) {
 
 	let proton_installs = configuration::get_config("proton_installations");
 	let proton_installation_path = proton_installs[found_installation["preferred_proton"].as_str().unwrap_or_default()].as_str().unwrap_or_default();
+	let prefix_path = found_installation["prefix"].as_str().unwrap_or_default();
+
 	help!("Using Proton path from `preferred_proton` match: {}", proton_installation_path);
+	help!("Using Prefix path from `prefix`: {}", prefix_path);
 	if setup::confirm_existence(&proton_installation_path) {
 		error!("Proton installation does not exist, check your configuration file");
 		create_notification("dialog-warning", 30000, "Proton configuration error", "Unable to find the Proton installation to launch Roblox with, please check your configuration file to ensure that `preferred_proton` is set correctly");
@@ -182,11 +185,19 @@ pub fn main(raw_args: &[(String, String)]) {
 	let output = process::Command::new(dbg!(format!("{}/proton", proton_installation_path)))
 		.env(
 			"STEAM_COMPAT_DATA_PATH",
-			format!("{}/prefixdata", dir_location),
+			format!("{}/{}", dir_location, prefix_path),
 		)
 		.env(
 			"STEAM_COMPAT_CLIENT_INSTALL_PATH",
 			format!("{}/not-steam", dir_location),
+		)
+		.env(
+			"USER",
+			"steamuser"
+		)
+		.env(
+			"WINEPREFIX",
+			format!("{}/{}", dir_location, prefix_path)
 		)
 		.arg("run") // Verb `waitforexitandrun` prevents other instances from launching and queues them, not good, using `run`
 		.arg(format!(
