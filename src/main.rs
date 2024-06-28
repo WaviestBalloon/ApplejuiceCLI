@@ -8,9 +8,9 @@ use crate::utils::{terminal::*, *}; // Import modules which act as a handler for
 compile_error!("Applejuice is a Linux-only application and is not designed to be ran on any operating system other than a Linux-based system");
 
 #[cfg(target_os = "windows")]
-compile_error!("Since you are compiling for Windows, consider using Bloxstrap: https://github.com/pizzaboxer/bloxstrap/");
+compile_error!("Since you are trying to compile for Windows, consider using Bloxstrap instead: https://github.com/pizzaboxer/bloxstrap/");
 #[cfg(target_pointer_width = "32")]
-compile_error!("Roblox no longer supports 32-bit processor architectures, please use a 64-bit processor architecture instead or if you are confident enough, remove lines 12 and 13 from main.rs");
+compile_error!("Roblox no longer supports 32-bit processor architectures, please use a 64-bit processor architecture");
 
 fn main() {
 	let args: Vec<String> = env::args().collect();

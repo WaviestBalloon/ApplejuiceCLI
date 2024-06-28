@@ -139,7 +139,6 @@ pub fn get_latest_version_hash(binary: &str, channel: &str) -> String {
 }
 
 pub fn fetch_latest_version(version: LatestVersion) -> ExactVersion {
-	status!("Fetching latest version hash...");
 	let LatestVersion {channel, binary} = version;
 
 	let version = match &*binary.to_lowercase() {

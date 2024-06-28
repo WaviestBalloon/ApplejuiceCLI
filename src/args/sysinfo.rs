@@ -2,7 +2,7 @@ use crate::utils::{setup, steamos, terminal::*};
 use std::fs;
 
 pub fn main() {
-	status!("Fetching system information...");
+	status!("Fetching information...");
 
 	println!("Version: {}", env!("CARGO_PKG_VERSION"));
 	println!("Application directory: {}", setup::get_applejuice_dir());

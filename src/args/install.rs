@@ -1,11 +1,12 @@
 use std::{fs, process, time};
-use serde_json::json;
+use serde_json::{json, Value};
 use sdl2::init;
+use native_dialog::{MessageDialog, MessageType};
 
 use crate::utils::{terminal::*, installation::{self, ExactVersion, Version}, setup, configuration, argparse::get_param_value_new, argparse};
 
 static ACCEPTED_PARAMS: [(&str, &str); 2] = [
-	("binary", "Player or Studio"),
+	("(binary)", "Player or Studio, e.g. `--install Player`"),
 	("--migratefflags", "Copy FFlag configuration from the Roblox installation to the new one")
 ];
 
@@ -27,7 +28,7 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 	let global_config = configuration::get_config("global");
 	let _overrides = global_config["misc"]["overrides"].clone();
 	let remove_cache_deployment_postinstall = global_config["misc"]["purge_cached_deployment_after_install"].clone();
-	let remove_deployment_postinstall = global_config["misc"]["purge_cached_deployment_after_install"].clone();
+	let remove_deployment_postinstall = global_config["misc"]["purge_old_installed_deployments_after_update"].clone();
 
 	let ExactVersion {hash: version_hash, channel} = version;
 
@@ -42,7 +43,8 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 
 	let mut are_we_upgrading = false;
 	let installations = configuration::get_config("roblox_installations");
-	if installations[binary_type]["version_hash"] != "null" &&installations[binary_type]["version_hash"] != version_hash.to_string() {
+	if installations[binary_type]["version_hash"] != Value::Null && installations[binary_type]["version_hash"] != version_hash.to_string() {
+		status!("Upgrading Roblox {} from {} to {}", binary_type, installations[binary_type]["version_hash"], version_hash);
 		are_we_upgrading = true;
 	}
 
@@ -74,8 +76,7 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 	status!("Creating ClientSettings for FFlag configuration...");
 	if !setup::confirm_existence(format!("{}/ClientSettings", folder_path).as_str()) {
 		let display_refresh_rate = detect_display_hertz();
-		let mut target_fps = display_refresh_rate;
-		if target_fps <= 100 { target_fps *= 2 }
+		let target_fps = display_refresh_rate;
 		status!("Setting target FPS to {} based on your display refresh rate of {}Hz", target_fps, display_refresh_rate);
 		
 		fs::create_dir(format!("{}/ClientSettings", folder_path)).expect("Failed to create ClientSettings directory");
@@ -107,10 +108,10 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 		fs::remove_dir_all(cache_path).expect("Failed to remove deployment from cache for post-install!");
 	}
 	if remove_deployment_postinstall == true && are_we_upgrading == true {
-		status!("Deleting old deployment...");
-		let old_install_location = installations[binary_type]["install_path"].to_string();
+		let old_install_location = installations[binary_type]["install_path"].as_str().unwrap_or_default();
+		status!("Delting old installation at {}", old_install_location);
 
-		if fs::metadata(old_install_location.clone()).is_err() {
+		if fs::metadata(old_install_location).is_err() {
 			warning!("Failed to find old deployment, skipping removal...");
 		} else {
 			fs::remove_dir_all(old_install_location).expect("Failed to remove deployment from previous installation for post-install!");
@@ -119,19 +120,35 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 
 	configuration::update_desktop_database();
 
-	configuration::update_config(serde_json::json!({
-		binary_type: {
-			"channel": channel,
-			"version_hash": version_hash,
-			"install_path": folder_path,
-			"preferred_proton": proton_instance,
-			"configuration": {
-				"preferred_compat": "proton",
-				"parameters": "%command%",
-				"enable_rpc": true
+	if installations[binary_type]["version_hash"] != Value::Null && installations[binary_type] != Value::Null {
+		status!("Updating Roblox installation entry in config.json...");
+		configuration::update_config(serde_json::json!({
+			binary_type: {
+				"channel": channel,
+				"version_hash": version_hash,
+				"install_path": folder_path,
+				"preferred_proton": installations[binary_type]["preferred_proton"],
+				"configuration": installations[binary_type]["configuration"].clone()
 			}
-		}
-	}), "roblox_installations");
+		}), "roblox_installations");
+	} else {
+		status!("Creating Roblox installation entry in config.json...");
+		configuration::update_config(serde_json::json!({
+			binary_type: {
+				"channel": channel,
+				"version_hash": version_hash,
+				"install_path": folder_path,
+				"preferred_proton": proton_instance,
+				"configuration": {
+					"preferred_compat": "proton",
+					"use_verb": "run",
+					"prefix": "prefixdata",
+					"parameters": "%command%",
+					"enable_rpc": true
+				}
+			}
+		}), "roblox_installations");
+	}
 
 	success!("Roblox {} has been installed!\n\t{} {} located in {}\n\tTook {:?} to complete", binary_type, binary_type, version_hash, folder_path, start_time.elapsed());
 }
@@ -163,6 +180,26 @@ pub fn main(arguments: &[(String, String)]) {
 		true => Version::exact(channel, hash_or_binary),
 		false => Version::latest(channel, hash_or_binary)
 	};
+
+	status!("Checking system root disk space...");
+	let mut system_info = sysinfo::System::new();
+	system_info.refresh_all();
+	let drives = sysinfo::Disks::new_with_refreshed_list();
+	let root_drive = drives[0].available_space();
+	if root_drive < 1_000_000_000 {
+		warning!("Root disk space is less than 1GB! Displaying notice to user...");
+		let choice = MessageDialog::new()
+			.set_type(MessageType::Warning)
+			.set_title("Applejuice")
+			.set_text("The available disk space is less than 1GB!\nThe typical size of a Roblox installation is around 600MB, are you sure you would like to continue?\n\nThe installation could fail and cause a stuck install.")
+			.show_confirm()
+			.unwrap();
+
+		if !choice {
+			error!("User chose to not continue with installation due to low disk space!");
+			process::exit(1);
+		}
+	}
 
 	// Download
 	download_and_install(version.fetch_latest(), threading);

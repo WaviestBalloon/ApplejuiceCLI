@@ -35,7 +35,6 @@ struct RobloxInstallation<'a> {
 
 // Update a certain element in the configuration JSON file
 pub fn update_config(json: serde_json::Value, config_type: &str) {
-	status!("Updating configuration file...");
 	let config_path = format!("{}/config.json", setup::get_applejuice_dir());
 	if !setup::confirm_existence(&config_path) {
 		warning!("Failed to find configuration file at '{}', calling to construct the data folder!", config_path);
