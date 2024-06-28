@@ -1,5 +1,6 @@
 use crate::utils::{argparse, installation, notification::create_notification, setup, terminal::*, rpc, configuration, steamos};
 use crate::args;
+use std::fs;
 use std::{process, path::Path};
 use inotify::{Inotify, WatchMask};
 
@@ -174,30 +175,47 @@ pub fn main(raw_args: &[(String, String)]) {
 	let proton_installs = configuration::get_config("proton_installations");
 	let proton_installation_path = proton_installs[found_installation["preferred_proton"].as_str().unwrap_or_default()].as_str().unwrap_or_default();
 	help!("Using Proton path from `preferred_proton` match: {}", proton_installation_path);
-	if setup::confirm_existence(&proton_installation_path) {
+	if fs::metadata(&proton_installation_path).is_err() {
 		error!("Proton installation does not exist, check your configuration file");
 		create_notification("dialog-warning", 30000, "Proton configuration error", "Unable to find the Proton installation to launch Roblox with, please check your configuration file to ensure that `preferred_proton` is set correctly");
 		process::exit(1);
 	}
+	let full_path_of_executable = format!(
+		"{}/{}",
+		install_path,
+		if binary == "Player" {
+			"RobloxPlayerBeta.exe".to_string()
+		} else {
+			"RobloxStudioBeta.exe".to_string()
+		}
+	);
+	if fs::metadata(&full_path_of_executable).is_err() {
+		error!("Roblox executable does not exist, check your installation");
+		create_notification("dialog-warning", 30000, "Roblox installation error", &format!("Unable to find the Roblox executable to launch, please check your installation or run `--install {}`", binary));
+		process::exit(1);
+	}
+
+	let prefix_location = install_configuration["prefix"].as_str().unwrap_or_default();
+	help!("Using prefix: `{}`", prefix_location);
+	if fs::metadata(&format!("{}/{}", dir_location, prefix_location)).is_err() {
+		error!("Prefix location does not exist, check your configuration file");
+		create_notification("dialog-warning", 30000, "Prefix configuration error", "Unable to find the prefix location, please check your configuration file to ensure that `prefix` is set correctly");
+		process::exit(1);
+	}
+	let run_verb = install_configuration["use_verb"].as_str().unwrap_or_default();
+	help!("Using verb: `{}`", run_verb);
+
 	let output = process::Command::new(dbg!(format!("{}/proton", proton_installation_path)))
 		.env(
 			"STEAM_COMPAT_DATA_PATH",
-			format!("{}/prefixdata", dir_location),
+			format!("{}/{}", dir_location, prefix_location),
 		)
 		.env(
 			"STEAM_COMPAT_CLIENT_INSTALL_PATH",
 			format!("{}/not-steam", dir_location),
 		)
-		.arg("run") // Verb `waitforexitandrun` prevents other instances from launching and queues them, not good, using `run`
-		.arg(format!(
-			"{}/{}",
-			install_path,
-			if binary == "Player" {
-				"RobloxPlayerBeta.exe".to_string()
-			} else {
-				"RobloxStudioBeta.exe".to_string()
-			}
-		))
+		.arg(run_verb) // Verb `waitforexitandrun` prevents other instances from launching and queues them, not good, using `run`
+		.arg(full_path_of_executable)
 		.arg(protocol_arguments)
 		.spawn()
 		.expect("Failed to launch Roblox Player using Proton")
