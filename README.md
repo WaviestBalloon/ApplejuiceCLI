@@ -40,6 +40,10 @@ When running the install script, it will compile the binary for you as of now be
 > ```
 > sudo pacman -Sy base-devel sdl2 openssl --noconfirm
 > ```
+> Fedora:
+> ```
+> sudo dnf install sdl2-devel openssl-devel
+> ```
 
 ### Using the install script
 
