@@ -107,7 +107,7 @@ pub fn main(args: Vec<Vec<(String, String)>>) {
 					success!("Removed Roblox directory");
 				},
 				Err(errmsg) => {
-					format!("Failed to remove the Roblox directory!\nError: {}", errmsg);
+					error!("Failed to remove the Roblox directory!\nError: {}", errmsg);
 					process::exit(1);
 				}
 			}
