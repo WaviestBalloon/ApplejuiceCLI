@@ -74,8 +74,9 @@ struct ResponseError {
 	errors: Vec<ResponseErrorMeat>
 }
 
-const PLAYER_EXTRACT_BINDINGS: [(&str, &str); 19] = [
+const PLAYER_EXTRACT_BINDINGS: [(&str, &str); 20] = [
 	("RobloxApp.zip", ""),
+	("redist.zip", ""),
 	("shaders.zip", "shaders/"),
 	("ssl.zip", "ssl/"),
 	("WebView2.zip", ""),
