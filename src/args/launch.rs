@@ -38,25 +38,25 @@ pub fn resolve_active_logfile(expected_log_directory: String) -> Option<String> 
 		let log_path = format!("{expected_log_directory}{file}");
 		success!("Found log file at {}", log_path);
 
-		return Some(log_path);
+		Some(log_path)
 	} else {
 		error!("Failed to find log file");
-		return None;
+		None
 	}
 }
 
 pub fn main(raw_args: &[(String, String)]) {
-	if argparse::get_param_value_new(&raw_args, "help").is_some() {
+	if argparse::get_param_value_new(raw_args, "help").is_some() {
 		help!("Accepted parameters:\n{}", argparse::generate_help(ACCEPTED_PARAMS.to_vec()));
 		return;
 	}
 	
 	let dir_location = setup::get_applejuice_dir();
-	let binary_type = argparse::get_param_value_new(&raw_args, "binary");
-	let protocol_arguments = argparse::get_param_value_new(&raw_args, "args").unwrap_or_default();
-	let skip_update_check = argparse::get_param_value_new(&raw_args, "skipupdatecheck"); // Optional
-	let shall_we_bootstrap = argparse::get_param_value_new(&raw_args, "bootstrap"); // Optional
-	let override_steamos_check = argparse::get_param_value_new(&raw_args, "sosoverride"); // Optional
+	let binary_type = argparse::get_param_value_new(raw_args, "binary");
+	let protocol_arguments = argparse::get_param_value_new(raw_args, "args").unwrap_or_default();
+	let skip_update_check = argparse::get_param_value_new(raw_args, "skipupdatecheck"); // Optional
+	let shall_we_bootstrap = argparse::get_param_value_new(raw_args, "bootstrap"); // Optional
+	let override_steamos_check = argparse::get_param_value_new(raw_args, "sosoverride"); // Optional
 	if binary_type.is_none() {
 		error!("Missing binary type, either Player or Studio");
 		help!("Accepted parameters:\n{}", argparse::generate_help(ACCEPTED_PARAMS.to_vec()));
@@ -67,7 +67,7 @@ pub fn main(raw_args: &[(String, String)]) {
 	let binary = binary_type.unwrap();
 	let installations = configuration::get_config("roblox_installations");
 	let configuration = configuration::get_config("global");
-	let found_installation: &serde_json::Value = match installations.get(&binary) {
+	let found_installation: &serde_json::Value = match installations.get(binary) {
 		Some(installation) => installation,
 		None => {
 			if shall_we_bootstrap.is_none() {
@@ -80,10 +80,7 @@ pub fn main(raw_args: &[(String, String)]) {
 			create_notification(&format!("{}/assets/crudejuice.png", dir_location), 15000, &format!("Installing Roblox {}...", binary), "");
 
 			// TODO: Remove this, as Roblox has now locked all non-prod deployment channels :c
-			let _channel = match configuration["misc"]["overrides"]["deployment_channel"].as_str() {
-				Some(channel) => channel,
-				None => "LIVE",
-			};
+			let _channel = configuration["misc"]["overrides"]["deployment_channel"].as_str().unwrap_or("LIVE");
 			
 			args::install::main(&[("install".to_string(), binary.to_string())]);
 
@@ -98,7 +95,7 @@ pub fn main(raw_args: &[(String, String)]) {
 
 	if skip_update_check.is_none() {
 		status!("Checking for updates...");
-		let latest_version = installation::get_latest_version_hash(binary, &found_installation["channel"].as_str().unwrap_or_default());
+		let latest_version = installation::get_latest_version_hash(binary, found_installation["channel"].as_str().unwrap_or_default());
 		let version = found_installation["version_hash"].as_str().unwrap();
 		let deployment_channel = found_installation["channel"].as_str().unwrap();
 
@@ -175,7 +172,7 @@ pub fn main(raw_args: &[(String, String)]) {
 	let proton_installs = configuration::get_config("proton_installations");
 	let proton_installation_path = proton_installs[found_installation["preferred_proton"].as_str().unwrap_or_default()].as_str().unwrap_or_default();
 	help!("Using Proton path from `preferred_proton` match: {}", proton_installation_path);
-	if fs::metadata(&proton_installation_path).is_err() {
+	if fs::metadata(proton_installation_path).is_err() {
 		error!("Proton installation does not exist, check your configuration file");
 		create_notification("dialog-warning", 30000, "Proton configuration error", "Unable to find the Proton installation to launch Roblox with, please check your configuration file to ensure that `preferred_proton` is set correctly");
 		process::exit(1);
@@ -197,7 +194,7 @@ pub fn main(raw_args: &[(String, String)]) {
 
 	let prefix_location = install_configuration["prefix"].as_str().unwrap_or_default();
 	help!("Using prefix: `{}`", prefix_location);
-	if fs::metadata(&format!("{}/{}", dir_location, prefix_location)).is_err() {
+	if fs::metadata(format!("{}/{}", dir_location, prefix_location)).is_err() {
 		error!("Prefix location does not exist, check your configuration file");
 		create_notification("dialog-warning", 30000, "Prefix configuration error", "Unable to find the prefix location, please check your configuration file to ensure that `prefix` is set correctly");
 		process::exit(1);
@@ -205,7 +202,7 @@ pub fn main(raw_args: &[(String, String)]) {
 	let run_verb = install_configuration["use_verb"].as_str().unwrap_or_default();
 	help!("Using verb: `{}`", run_verb);
 
-	let output = process::Command::new(dbg!(format!("{}/proton", proton_installation_path)))
+	let output = process::Command::new(format!("{}/proton", proton_installation_path))
 		.env(
 			"STEAM_COMPAT_DATA_PATH",
 			format!("{}/{}", dir_location, prefix_location),

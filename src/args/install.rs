@@ -37,7 +37,7 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 	success!("Done");
 	drop(indentation);
 
-	let mut package_manifest_parsed: Vec<&str> = package_manifest.split("\n").collect();
+	let mut package_manifest_parsed: Vec<&str> = package_manifest.split('\n').collect();
 	package_manifest_parsed.remove(package_manifest_parsed.len() - 1); // Remove last element which is an empty string
 	let binary_type = installation::get_binary_type(package_manifest_parsed);
 
@@ -81,7 +81,6 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 		
 		fs::create_dir(format!("{}/ClientSettings", folder_path)).expect("Failed to create ClientSettings directory");
 		fs::write(format!("{}/ClientSettings/ClientAppSettings.json", folder_path), json!({
-			"FLogNetwork": 7, // Level 7 logs prints and thingys, needed for BloxstrapRPC integration
 			"DFIntTaskSchedulerTargetFps": target_fps, // Uncapping FPS to the monitor's refresh rate
 		}).to_string()).expect("Failed to create the config file!");
 	} else {
@@ -107,7 +106,7 @@ fn download_and_install(version: ExactVersion, threading: bool) {
 		status!("Deleting cached deployment...");
 		fs::remove_dir_all(cache_path).expect("Failed to remove deployment from cache for post-install!");
 	}
-	if remove_deployment_postinstall == true && are_we_upgrading == true {
+	if remove_deployment_postinstall == true && are_we_upgrading {
 		let old_install_location = installations[binary_type]["install_path"].as_str().unwrap_or_default();
 		status!("Delting old installation at {}", old_install_location);
 

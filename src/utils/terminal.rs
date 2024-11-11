@@ -3,7 +3,7 @@ use std::cell::Cell;
 pub struct LogContext(());
 
 thread_local! {
-	pub static _INDENTATION: Cell<usize> = Cell::new(0);
+	pub static _INDENTATION: Cell<usize> = const { Cell::new(0) };
 }
 
 impl LogContext {

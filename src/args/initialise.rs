@@ -17,12 +17,12 @@ static ACCEPTED_PARAMS: [(&str, &str); 1] = [
 ];
 
 pub fn main(raw_args: &[(String, String)]) {
-	if argparse::get_param_value_new(&raw_args, "help").is_some() {
+	if argparse::get_param_value_new(raw_args, "help").is_some() {
 		help!("Accepted parameters:\n{}", argparse::generate_help(ACCEPTED_PARAMS.to_vec()));
 		return;
 	}
 	status!("Initialising Applejuice...");
-	let override_steamos_check = argparse::get_param_value_new(&raw_args, "sosoverride");
+	let override_steamos_check = argparse::get_param_value_new(raw_args, "sosoverride");
 
 	if setup::confirm_applejuice_data_folder_existence() {
 		warning!("Configuration directory already exists!");

@@ -44,17 +44,17 @@ pub fn update_config(json: serde_json::Value, config_type: &str) {
 	let config_file = fs::read_to_string(config_path.clone()).unwrap();
 	let mut config_json: serde_json::Value = serde_json::from_str(&config_file).unwrap();
 
-	// do not overwrite everything inside of config_type, just append onto it
-	let mut config_type_json = config_json[config_type].clone();
-	for (key, value) in json.as_object().unwrap() {
-		config_type_json[key] = value.clone();
+	if json.is_null() || json.as_object().unwrap().is_empty() {
+		config_json[config_type] = json;
+	} else {
+		// do not overwrite everything inside of config_type, just append onto it
+		let mut config_type_json = config_json[config_type].clone();
+		for (key, value) in json.as_object().unwrap() {
+			config_type_json[key] = value.clone();
+		}
+		config_json[config_type] = config_type_json.clone();
 	}
-	config_json[config_type] = config_type_json;
 
-
-	//config_json[config_type] = json;
-
-	//serde_json::from_str::<Config>(&config_file)
 	fs::write(config_path, serde_json::to_string_pretty(&config_json).unwrap()).unwrap();
 }
 

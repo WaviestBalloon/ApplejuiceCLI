@@ -1,5 +1,7 @@
-use crate::utils::{setup, terminal::*, argparse, configuration::{get_config, update_config, self}};
-use std::{fs::{read_dir, remove_dir_all, remove_file, metadata}, process, env::var};
+use serde_json::json;
+
+use crate::utils::{setup, terminal::*, argparse, configuration};
+use std::{fs::{read_dir, remove_dir_all}, process};
 
 static ACCEPTED_PARAMS: [(&str, &str); 2] = [
 	("cache", "Deletes all cached deployments (~/.local/share/applejuice/cache)"),
@@ -12,7 +14,7 @@ fn check_location(folder: &str) {
 		process::exit(1);
 	}
 
-	let paths = read_dir(format!("{}/cache", setup::get_applejuice_dir())).unwrap();
+	let paths = read_dir(format!("{}/{}", setup::get_applejuice_dir(), folder)).unwrap();
 	if paths.count() == 0 {
 		error!("{folder} directory is empty!");
 		process::exit(1);
@@ -21,7 +23,7 @@ fn check_location(folder: &str) {
 
 pub fn main(args: Vec<Vec<(String, String)>>) {
 	let binding = argparse::get_param_value(args, "purge");
-	let parsed_args = binding.split(" ").collect::<Vec<&str>>();
+	let parsed_args = binding.split(' ').collect::<Vec<&str>>();
 
 	if parsed_args[0] == "blank" {
 		error!("No command line arguments provided to purge!");
@@ -111,24 +113,11 @@ pub fn main(args: Vec<Vec<(String, String)>>) {
 					process::exit(1);
 				}
 			}
-
-			status!("Removing shortcuts to deployments...");
-			removing.iter().for_each(|version| {
-				let config = get_config(version);
-				let binary_type = config.get("binary_type").unwrap().as_str().unwrap();
-				let clean_version_hash = version.replace("version-", "");
-				let desktop_shortcut_path = format!("{}/.local/share/applications/roblox-{}-{}.desktop", var("HOME").expect("$HOME not set"), binary_type.to_lowercase(), clean_version_hash);
-				if metadata(desktop_shortcut_path.clone()).is_ok() {
-					remove_file(desktop_shortcut_path).unwrap();
-				}
-			});
 			
 			configuration::update_desktop_database();
 
 			status!("Removing installation entires from configuration file...");
-			removing.iter().for_each(|version| {
-				update_config(serde_json::Value::Null, version);
-			});
+			configuration::update_config(json!({ }), "roblox_installations");
 
 			setup::create_dir("roblox");
 			success!("Created Roblox directory");

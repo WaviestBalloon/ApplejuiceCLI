@@ -3,13 +3,9 @@ use std::process::exit;
 use std::{process, fs, path, io, thread, thread::available_parallelism};
 use crate::utils::terminal::*;
 use crate::setup;
-use rbxdd::{appsettings, bindings};
-use serde::Deserialize;
-use serde_json::from_str;
-use reqwest::blocking::get;
+use rbxdd::rbxcdn::Binary;
+use rbxdd::{appsettings, bindings, rbxcdn};
 
-const LATEST_VERSION_PLAYER_CHANNEL: &str = "https://clientsettings.roblox.com/v2/client-version/WindowsPlayer/channel/";
-const LATEST_VERSION_STUDIO_CHANNEL: &str = "https://clientsettings.roblox.com/v2/client-version/WindowsStudio64/channel/";
 const LIVE_DEPLOYMENT_CDN: &str = "https://setup.rbxcdn.com/";
 const CHANNEL_DEPLOYMENT_CDN: &str = "https://roblox-setup.cachefly.net/channel/";
 
@@ -57,24 +53,6 @@ impl<'a> Version<'a> {
 	}
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct Response {
-	client_version_upload: String
-}
-
-/* Response error handling for fetch_latest_version fn */
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct ResponseErrorMeat {
-	code: i32,
-}
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct ResponseError {
-	errors: Vec<ResponseErrorMeat>
-}
-
 pub fn get_latest_version_hash(binary: &str, channel: &str) -> String {
 	fetch_latest_version(LatestVersion {
 		channel: Cow::Borrowed(channel),
@@ -85,33 +63,23 @@ pub fn get_latest_version_hash(binary: &str, channel: &str) -> String {
 pub fn fetch_latest_version(version: LatestVersion) -> ExactVersion {
 	let LatestVersion {channel, binary} = version;
 
-	let version = match &*binary.to_lowercase() {
-		"player" => format!("{}{}", LATEST_VERSION_PLAYER_CHANNEL, channel),
-		"studio" => format!("{}{}", LATEST_VERSION_STUDIO_CHANNEL, channel),
+	let required_binary: Binary = match &*binary.to_lowercase() {
+		"player" => Binary::Player,
+		"studio" => Binary::Studio,
 		_ => {
 			error!("Unknown binary type {:?}", binary);
 			exit(1);
 		}
 	};
 
-	let output = get(version)
-		.expect("Failed to get the latest available version hash.")
-		.text()
-		.unwrap();
-
-	let Response {client_version_upload: hash} = match from_str(&output) {
-		Ok(json_parsed) => json_parsed,
-		Err(error) => {
-			let ResponseError {errors} = from_str(&output).expect(&format!("Failed to parse error response from server.\nResponse: {}\nError: {}", output, error));
-			match errors[0].code {
-				1 => { error!("Could not find version details for channel {}, make sure you have spelt the deployment channel name correctly.", channel); },
-				5 => { error!("The deployment channel {} is restricted by Roblox!", channel); },
-				_ => { error!("Unknown error response when attempting to resolve channel {}!\nResponse: {}\nError: {}", channel, output, error); }
-			}
-
+	let hash = match rbxcdn::get_latest_version(required_binary, None) {
+		Ok(hash) => hash,
+		Err(err) => {
+			error!("Failed to get latest version: {}", err);
 			exit(1);
 		}
 	};
+
 	success!("Resolved hash to {}", hash);
 	ExactVersion {channel, hash: Cow::Owned(hash)}
 }
@@ -161,7 +129,7 @@ pub fn download_deployment(binary: &str, version_hash: String, channel: &str) ->
 
 	let client = reqwest::blocking::Client::new();
 	progress_bar::init_progress_bar_with_eta(bindings.len());
-	for (_index, (package, _path)) in bindings.iter().enumerate() {
+	for (package, _path) in bindings.iter() {
 		progress_bar::print_progress_bar_info("•", format!("Downloading {package}... ({version_hash}-{package})").as_str(), progress_bar::Color::Blue, progress_bar::Style::Bold);
 
 		let mut response = client.get(format!("{}{}-{}", deployment_channel, version_hash, package)).send().unwrap();
@@ -189,7 +157,7 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 	progress_bar::init_progress_bar_with_eta(bindings.len());
 
 	if disallow_multithreading {
-		for (_index, (package, path)) in bindings.iter().enumerate() {
+		for (package, path) in bindings.iter() {
 			progress_bar::print_progress_bar_info("•", format!("Extracting {package}...").as_str(), progress_bar::Color::Blue, progress_bar::Style::Bold);
 	
 			if setup::confirm_existence(&format!("{}/{}", extraction_path, path)) && !path.is_empty() {

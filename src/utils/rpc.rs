@@ -41,7 +41,7 @@ enum BloxstrapCommand {
 }
 
 fn convert_into_assetdelivery_url(asset_id: i64) -> String {
-	return format!("https://assetdelivery.roblox.com/v1/asset/?id={}", asset_id);
+	format!("https://assetdelivery.roblox.com/v1/asset/?id={}", asset_id)
 }
 
 macro_rules! construct_default_rpc {
@@ -123,7 +123,7 @@ pub fn init_rpc(binary_type: String, already_known_log_file: Option<String>) {
 			.assets(
 				activity::Assets::new()
 					.large_image("crudejuice")
-					.large_text("Bitdancer Approved"),
+					.large_text("Meower Approved"),
 			)
 			.timestamps(
 				activity::Timestamps::new()
@@ -139,19 +139,18 @@ pub fn init_rpc(binary_type: String, already_known_log_file: Option<String>) {
 		success!("RPC instance started");
 
 		Ok(client)
-	}).or_else(|errmsg| {
+	}).map_err(|errmsg| {
 		warning!("Failed to start RPC instance");
-		Err(errmsg)
+		errmsg
 	});
 	
 	if let Ok(mut rpc_handler) = client { // If the RPC Client had successfully initialised
 		thread::spawn(move || {
-			let log_path;
-			if already_known_log_file.is_some() {
-				log_path = already_known_log_file;
+			let log_path= if already_known_log_file.is_some() {
+				already_known_log_file
 			} else {
-				log_path = launch::resolve_active_logfile(format!("{}/prefixdata/pfx/drive_c/users/steamuser/AppData/Local/Roblox/logs/", setup::get_applejuice_dir()));
-			}
+				launch::resolve_active_logfile(format!("{}/prefixdata/pfx/drive_c/users/steamuser/AppData/Local/Roblox/logs/", setup::get_applejuice_dir()))
+			};
 			
 			if let Some(log_path) = log_path {
 				let mut file = fs::File::open(log_path.clone()).unwrap();
@@ -180,7 +179,7 @@ pub fn init_rpc(binary_type: String, already_known_log_file: Option<String>) {
 								let mut was_rpc_updated = false;
 
 								if line_usable.contains("[BloxstrapRPC] ") {
-									if detected_bloxstrap == false {
+									if !detected_bloxstrap {
 										create_notification(&format!("{}/assets/crudejuice.png", setup::get_applejuice_dir()), 5000, "BloxstrapRPC enabled", "This game has support for the BloxstrapRPC protocol! We have switched to using it for your rich presence.");
 										detected_bloxstrap = true;
 									}
@@ -250,7 +249,7 @@ pub fn init_rpc(binary_type: String, already_known_log_file: Option<String>) {
 									was_rpc_updated = true;
 								}
 
-								if was_rpc_updated == true { // Debug related
+								if was_rpc_updated { // Debug related
 									match rpc_handler.recv() {
 										Ok(output) => {
 											let output_string = format!("{:?}", output);
