@@ -3,6 +3,7 @@ use std::process::exit;
 use std::{process, fs, path, io, thread, thread::available_parallelism};
 use crate::utils::terminal::*;
 use crate::setup;
+use rbxdd::{appsettings, bindings};
 use serde::Deserialize;
 use serde_json::from_str;
 use reqwest::blocking::get;
@@ -74,64 +75,6 @@ struct ResponseError {
 	errors: Vec<ResponseErrorMeat>
 }
 
-const PLAYER_EXTRACT_BINDINGS: [(&str, &str); 20] = [
-	("RobloxApp.zip", ""),
-	("redist.zip", ""),
-	("shaders.zip", "shaders/"),
-	("ssl.zip", "ssl/"),
-	("WebView2.zip", ""),
-	// ("WebView2RuntimeInstaller.zip", ""), (Unnecessary)
-	("content-avatar.zip", "content/avatar/"),
-	("content-configs.zip", "content/configs/"),
-	("content-fonts.zip", "content/fonts/"),
-	("content-sky.zip", "content/sky/"),
-	("content-sounds.zip", "content/sounds/"),
-	("content-textures2.zip", "content/textures/"),
-	("content-models.zip", "content/models/"),
-	("content-textures3.zip", "PlatformContent/pc/textures/"),
-	("content-terrain.zip", "PlatformContent/pc/terrain/"),
-	("content-platform-fonts.zip", "PlatformContent/pc/fonts/"),
-	("extracontent-luapackages.zip", "ExtraContent/LuaPackages/"),
-	("extracontent-translations.zip", "ExtraContent/translations/"),
-	("extracontent-models.zip", "ExtraContent/models/"),
-	("extracontent-textures.zip", "ExtraContent/textures/"),
-	("extracontent-places.zip", "ExtraContent/places/")
-];
-const STUDIO_EXTRACT_BINDINGS: [(&str, &str); 31] = [
-	("RobloxStudio.zip", ""),
-	("redist.zip", ""),
-	("Libraries.zip", ""),
-	("LibrariesQt5.zip", ""),
-	("WebView2.zip", ""),
-	// ("WebView2RuntimeInstaller.zip", ""), (Unnecessary)
-	("shaders.zip", "shaders/"),
-	("ssl.zip", "ssl/"),
-	("Qml.zip", "Qml/"),
-	("Plugins.zip", "Plugins/"),
-	("StudioFonts.zip", "StudioFonts/"),
-	("BuiltInPlugins.zip", "BuiltInPlugins/"),
-	("ApplicationConfig.zip", "ApplicationConfig/"),
-	("BuiltInStandalonePlugins.zip", "BuiltInStandalonePlugins/"),
-	("content-qt_translations.zip", "content/qt_translations/"),
-	("content-sky.zip", "content/sky/"),
-	("content-fonts.zip", "content/fonts/"),
-	("content-avatar.zip", "content/avatar/"),
-	("content-models.zip", "content/models/"),
-	("content-sounds.zip", "content/sounds/"),
-	("content-configs.zip", "content/configs/"),
-	("content-api-docs.zip", "content/api_docs/"),
-	("content-textures2.zip", "content/textures/"),
-	("content-studio_svg_textures.zip", "content/studio_svg_textures/"),
-	("content-platform-fonts.zip", "PlatformContent/pc/fonts/"),
-	("content-terrain.zip", "PlatformContent/pc/terrain/"),
-	("content-textures3.zip", "PlatformContent/pc/textures/"),
-	("extracontent-translations.zip", "ExtraContent/translations/"),
-	("extracontent-luapackages.zip", "ExtraContent/LuaPackages/"),
-	("extracontent-textures.zip", "ExtraContent/textures/"),
-	("extracontent-scripts.zip", "ExtraContent/scripts/"),
-	("extracontent-models.zip", "ExtraContent/models/")
-];
-
 pub fn get_latest_version_hash(binary: &str, channel: &str) -> String {
 	fetch_latest_version(LatestVersion {
 		channel: Cow::Borrowed(channel),
@@ -194,12 +137,7 @@ pub fn get_binary_type(package_manifest: Vec<&str>) -> &str {
 }
 
 pub fn write_appsettings_xml(path: String) { // spaghetti
-	fs::write(format!("{}/AppSettings.xml", path), "\
-<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<Settings>
-	<ContentFolder>content</ContentFolder>
-	<BaseUrl>http://www.roblox.com</BaseUrl>
-</Settings>").expect("Failed to write AppSettings.xml");
+	fs::write(format!("{}/AppSettings.xml", path), appsettings::XML_DATA).expect("Failed to write AppSettings.xml");
 }
 
 pub fn download_deployment(binary: &str, version_hash: String, channel: &str) -> String {
@@ -215,7 +153,7 @@ pub fn download_deployment(binary: &str, version_hash: String, channel: &str) ->
 	status!("Downloading deployment...");
 	status!("Using cache directory: {temp_path}");
 	
-	let bindings: &[_] = if binary == "Player" { &PLAYER_EXTRACT_BINDINGS } else { &STUDIO_EXTRACT_BINDINGS };
+	let bindings: &[_] = if binary == "Player" { &bindings::PLAYER_EXTRACT_BINDINGS } else { &bindings::STUDIO_EXTRACT_BINDINGS };
 	let deployment_channel = if channel == "LIVE" { LIVE_DEPLOYMENT_CDN.to_string() } else { format!("{CHANNEL_DEPLOYMENT_CDN}{channel}/") };
 
 	status!("Using deployment CDN URL: {}", deployment_channel);
@@ -245,7 +183,7 @@ pub fn download_deployment(binary: &str, version_hash: String, channel: &str) ->
 }
 
 pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path: String, disallow_multithreading: bool) {
-	let bindings: &[_] = if binary == "Player" { &PLAYER_EXTRACT_BINDINGS } else { &STUDIO_EXTRACT_BINDINGS };
+	let bindings: &[_] = if binary == "Player" { &bindings::PLAYER_EXTRACT_BINDINGS } else { &bindings::STUDIO_EXTRACT_BINDINGS };
 	help!("{} files will be extracted", bindings.len());
 
 	progress_bar::init_progress_bar_with_eta(bindings.len());
