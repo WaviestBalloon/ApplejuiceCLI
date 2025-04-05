@@ -139,9 +139,8 @@ pub fn init_rpc(binary_type: String, already_known_log_file: Option<String>) {
 		success!("RPC instance started");
 
 		Ok(client)
-	}).map_err(|errmsg| {
-		warning!("Failed to start RPC instance");
-		errmsg
+	}).inspect_err(|err| {
+		warning!("Failed to start RPC instance: {}", err);
 	});
 	
 	if let Ok(mut rpc_handler) = client { // If the RPC Client had successfully initialised

@@ -75,7 +75,7 @@ pub fn fetch_latest_version(version: LatestVersion) -> ExactVersion {
 	let hash = match rbxcdn::get_latest_version(required_binary, None) {
 		Ok(hash) => hash,
 		Err(err) => {
-			error!("Failed to get latest version: {}", err);
+			error!("Failed to get latest version: {:?}", err);
 			exit(1);
 		}
 	};
@@ -187,7 +187,7 @@ pub fn extract_deployment_zips(binary: &str, temp_path: String, extraction_path:
 		help!("{} threads available, {} chunks created from bindings", threads_available, chunked_files.size_hint().0);
 		drop(indentation);
 
-		for (_index, chunk) in chunked_files.enumerate() {
+		for chunk in chunked_files {
 			let extract_bind = extraction_path.clone();
 			let temp_path_bind = temp_path.clone();
 			let indentation = LogContext::get_indentation();

@@ -10,7 +10,7 @@ pub fn parse_osrelease() -> Option<Vec<Vec<String>>> {
 	let osreleasefilebuf = BufReader::new(File::open("/etc/os-release").expect("Failed to open /etc/os-release"));
 	let mut osrelease = Vec::new();
 
-	for line in osreleasefilebuf.lines().flatten() {
+	for line in osreleasefilebuf.lines().map_while(Result::ok) {
 		let line = line.split('=').map(|s| s.to_string()).collect::<Vec<String>>();
 		osrelease.push(line);
 	}
@@ -84,7 +84,7 @@ pub fn is_running_deck_big_picture_mode() -> bool {
 
 pub fn add_item_to_steam_library(path: String) {
 	let name: BufReader<File> = BufReader::new(File::open(path.clone()).expect("Failed to open"));
-	let application_name = name.lines().flatten().collect::<Vec<String>>()[1].replace("Name=", "");
+	let application_name = name.lines().map_while(Result::ok).collect::<Vec<String>>()[1].replace("Name=", "");
 	let url_encoded_path = urlencoding::encode(&path);
 
 	// Took me, over 6 hours to figure this out, apparently this is meant to prevent browser abuse
