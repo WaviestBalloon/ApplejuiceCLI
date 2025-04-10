@@ -4,13 +4,14 @@ use std::fs;
 use std::{process, path::Path};
 use inotify::{Inotify, WatchMask};
 
-static ACCEPTED_PARAMS: [(&str, &str); 6] = [
+static ACCEPTED_PARAMS: [(&str, &str); 7] = [
 	("--binary", "The binary type to launch, either Player or Studio"),
 	("--hash", "The version hash to use (Automatic)"),
 	("--args", "The protocol arguments to launch with, usually given by a protocol"),
 	("--skipupdatecheck", "Skip checking for updates from clientsettings.roblox.com"),
 	("--bootstrap", "Automatically install the provided binary if missing or outdated"),
-	("--sosoverride", "Overrides the check for SteamOS, does some pre/post-launch configuration to make Roblox work better on SteamOS")
+	("--sosoverride", "Overrides the check for SteamOS, does some pre/post-launch configuration to make Roblox work better on SteamOS"),
+	("--displaylogs", "If a log file is created by Roblox client, it will echo any appended changes to stdout")
 ];
 
 pub fn resolve_active_logfile(expected_log_directory: String) -> Option<String> {
@@ -125,7 +126,7 @@ pub fn main(raw_args: &[(String, String)]) {
 
 	if install_configuration["enable_rpc"].as_bool().unwrap_or_default() {
 		status!("Starting RPC...");
-		rpc::init_rpc(binary.to_owned(), None);
+		rpc::init_rpc(binary.to_owned(), None, Some(argparse::get_param_value_new(raw_args, "displaylogs").is_some()));
 	}
 
 	let old_fullscreen_value = steamos::get_fullscreen_value_from_rbxxml().unwrap_or_default();

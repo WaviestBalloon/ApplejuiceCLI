@@ -112,7 +112,7 @@ macro_rules! construct_rpc_assets {
 	}
 }
 
-pub fn init_rpc(binary_type: String, already_known_log_file: Option<String>) {
+pub fn init_rpc(binary_type: String, already_known_log_file: Option<String>, output_log_to_stdout: Option<bool>) {
 	let client = DiscordIpcClient::new("1160530617117712384").and_then(|mut client| {
 		client.connect()?;
 
@@ -124,6 +124,7 @@ pub fn init_rpc(binary_type: String, already_known_log_file: Option<String>) {
 				activity::Assets::new()
 					.large_image("crudejuice")
 					.large_text("Meower Approved"),
+				
 			)
 			.timestamps(
 				activity::Timestamps::new()
@@ -246,6 +247,8 @@ pub fn init_rpc(binary_type: String, already_known_log_file: Option<String>) {
 									
 									let _ = rpc_handler.set_activity(activity);
 									was_rpc_updated = true;
+								} else if output_log_to_stdout.unwrap_or_default() == true {
+									status!("Client log: {}", line_usable);
 								}
 
 								if was_rpc_updated { // Debug related
