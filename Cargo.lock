@@ -1632,7 +1632,7 @@ dependencies = [
 [[package]]
 name = "rbxdd"
 version = "0.1.0"
-source = "git+https://github.com/WaviestBalloon/rbxdd.git?rev=0bd92c6#0bd92c69db203786fa14038a7b7faac1541f4682"
+source = "git+https://github.com/WaviestBalloon/rbxdd.git?rev=466af38#466af387ea9d9acbe9c36cd9b755bddb6c5d8f68"
 dependencies = [
  "curl",
  "serde_json",
