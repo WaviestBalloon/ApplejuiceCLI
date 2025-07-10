@@ -5,9 +5,11 @@ use native_dialog::{MessageDialog, MessageType};
 
 use crate::utils::{terminal::*, installation::{self, ExactVersion, Version}, setup, configuration, argparse::get_param_value_new, argparse};
 
-static ACCEPTED_PARAMS: [(&str, &str); 2] = [
+static ACCEPTED_PARAMS: [(&str, &str); 4] = [
 	("(binary)", "Player or Studio, e.g. `--install Player`"),
-	("--migratefflags", "Copy FFlag configuration from the Roblox installation to the new one")
+	("--migratefflags", "Copy FFlag configuration from the Roblox installation to the new one"),
+	("--exact", "Specify a version hash and skip fetching the latest, use `--skipupdatecheck` when launching to prevent checking for updates"),
+	("--nothreads", "Do not use multithreading when extracting the package files")
 ];
 
 fn detect_display_hertz() -> i32 {
@@ -157,7 +159,7 @@ pub fn main(arguments: &[(String, String)]) {
 	let Some(mut inline_arguments) = get_param_value_new(arguments, "install")
 		.map(|inline_arguments| inline_arguments.split(' '))
 			else {unreachable!("caller must ensure --install is always present")};
-	let exact = get_param_value_new(arguments, "exact").is_some();
+	let exact = get_param_value_new(arguments, "exact");
 	let threading = get_param_value_new(arguments, "nothreads").is_none();
 	// TODO: use these flags
 	// let _remove_older = argparse::get_param_value(raw_args.clone(), "removeolder").is_empty();
@@ -175,8 +177,9 @@ pub fn main(arguments: &[(String, String)]) {
 		help!("Accepted parameters:\n{}", argparse::generate_help(ACCEPTED_PARAMS.to_vec()));
 		process::exit(1);
 	}
-	let version = match exact {
-		true => Version::exact(channel, hash_or_binary),
+
+	let version = match exact.is_some() {
+		true => Version::exact(channel, exact.unwrap_or_default()),
 		false => Version::latest(channel, hash_or_binary)
 	};
 

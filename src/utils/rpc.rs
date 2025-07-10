@@ -248,7 +248,7 @@ pub fn init_rpc(binary_type: String, already_known_log_file: Option<String>, out
 									let _ = rpc_handler.set_activity(activity);
 									was_rpc_updated = true;
 								} else if output_log_to_stdout.unwrap_or_default() {
-									status!("Client log: {}", line_usable);
+									println!("{}", line_usable);
 								}
 
 								if was_rpc_updated { // Debug related
