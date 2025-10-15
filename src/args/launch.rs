@@ -117,7 +117,7 @@ pub fn main(raw_args: &[(String, String)]) {
 					if binary == "Player" { "player" } else { "studio" },
 					if deployment_channel == "LIVE" { "" } else { deployment_channel }
 				);
-				create_notification("dialog-warning", 5000, "Version outdated!", &format!("You are on {} and the latest version for {} is {}\nConsider running \"{}\"", version.replace("version-", ""), deployment_channel, latest_version.replace("version-", ""), formatted_install_command));
+				create_notification("dialog-warning", 5000, "Version outdated!", &format!("You are on {} and the latest version for {} is {}\nConsider running \"{}\"", version.replace("version-", ""), deployment_channel, latest_version.replace("version-", ""), formatted_install_command.trim_end()));
 			}
 		}
 	}
@@ -172,6 +172,7 @@ pub fn main(raw_args: &[(String, String)]) {
 
 	let proton_installs = configuration::get_config("proton_installations");
 	let proton_installation_path = proton_installs[found_installation["preferred_proton"].as_str().unwrap_or_default()].as_str().unwrap_or_default();
+	let before_command = install_configuration["before_command"].as_str().unwrap_or_default();
 	help!("Using Proton path from `preferred_proton` match: {}", proton_installation_path);
 	if fs::metadata(proton_installation_path).is_err() {
 		error!("Proton installation does not exist, check your configuration file");
@@ -203,7 +204,7 @@ pub fn main(raw_args: &[(String, String)]) {
 	let run_verb = install_configuration["use_verb"].as_str().unwrap_or_default();
 	help!("Using verb: `{}`", run_verb);
 
-	let output = process::Command::new(format!("{}/proton", proton_installation_path))
+	let output = process::Command::new(format!("{} {}/proton", before_command, proton_installation_path))
 		.env(
 			"STEAM_COMPAT_DATA_PATH",
 			format!("{}/{}", dir_location, prefix_location),

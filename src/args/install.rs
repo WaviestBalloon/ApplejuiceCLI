@@ -161,9 +161,6 @@ pub fn main(arguments: &[(String, String)]) {
 			else {unreachable!("caller must ensure --install is always present")};
 	let exact = get_param_value_new(arguments, "exact");
 	let threading = get_param_value_new(arguments, "nothreads").is_none();
-	// TODO: use these flags
-	// let _remove_older = argparse::get_param_value(raw_args.clone(), "removeolder").is_empty();
-	// let _migrate_fflags = argparse::get_param_value(raw_args.clone(), "migratefflags").is_empty();
 
 	// Process Arguments
 	let Some(hash_or_binary) = inline_arguments.next()
