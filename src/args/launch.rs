@@ -172,7 +172,6 @@ pub fn main(raw_args: &[(String, String)]) {
 
 	let proton_installs = configuration::get_config("proton_installations");
 	let proton_installation_path = proton_installs[found_installation["preferred_proton"].as_str().unwrap_or_default()].as_str().unwrap_or_default();
-	let before_command = install_configuration["before_command"].as_str().unwrap_or_default();
 	help!("Using Proton path from `preferred_proton` match: {}", proton_installation_path);
 	if fs::metadata(proton_installation_path).is_err() {
 		error!("Proton installation does not exist, check your configuration file");
@@ -204,7 +203,7 @@ pub fn main(raw_args: &[(String, String)]) {
 	let run_verb = install_configuration["use_verb"].as_str().unwrap_or_default();
 	help!("Using verb: `{}`", run_verb);
 
-	let output = process::Command::new(format!("{} {}/proton", before_command, proton_installation_path))
+	let output = process::Command::new(proton_installation_path)
 		.env(
 			"STEAM_COMPAT_DATA_PATH",
 			format!("{}/{}", dir_location, prefix_location),
