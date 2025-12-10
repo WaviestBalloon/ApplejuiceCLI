@@ -17,7 +17,7 @@ pub fn discover_proton_directory() -> serde_json::Value { // Try to automaticall
 
 				if fsname.contains("Proton") {
 					success!("Found '{}' at '{}'", fsname, path.to_str().unwrap());
-					installations[fsname] = serde_json::Value::String(path.to_str().unwrap().to_string());
+					installations[fsname] = serde_json::Value::String(format!("{}/proton", path.to_str().unwrap()));
 				}
 			}
 
