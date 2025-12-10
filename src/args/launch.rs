@@ -203,10 +203,23 @@ pub fn main(raw_args: &[(String, String)]) {
 	let run_verb = install_configuration["use_verb"].as_str().unwrap_or_default();
 	help!("Using verb: `{}`", run_verb);
 
+	let full_path_prefix_location = format!("{}/{}", dir_location, prefix_location);
+	help!("Running: STEAM_COMPAT_DATA_PATH={} STEAM_COMPAT_CLIENT_INSTALL_PATH={}/not-steam {} {} {} {}", full_path_prefix_location, dir_location, proton_installation_path, run_verb, full_path_of_executable, protocol_arguments);
+
+	if fs::metadata(&dir_location).unwrap().permissions().readonly() {
+		warning!("Applejuice data directory is set to read-only!");
+	}
+	if fs::metadata(&full_path_prefix_location).unwrap().permissions().readonly() {
+		warning!("Wine prefix directory is set to read-only!");
+	}
+	if fs::metadata(proton_installation_path).unwrap().permissions().readonly() {
+		warning!("Wine installation directory is set to read-only!");
+	}
+
 	let output = process::Command::new(proton_installation_path)
 		.env(
 			"STEAM_COMPAT_DATA_PATH",
-			format!("{}/{}", dir_location, prefix_location),
+			full_path_prefix_location,
 		)
 		.env(
 			"STEAM_COMPAT_CLIENT_INSTALL_PATH",
@@ -216,9 +229,9 @@ pub fn main(raw_args: &[(String, String)]) {
 		.arg(full_path_of_executable)
 		.arg(protocol_arguments)
 		.spawn()
-		.expect("Failed to launch Roblox Player using Proton")
+		.expect("Failed to launch Roblox Player")
 		.wait()
-		.expect("Failed to wait on Roblox Player using Proton");
+		.expect("Failed to wait on Roblox Player");
 
 	let exitcode = output.code().unwrap_or(0);
 	status!("Roblox has exited with code {}", exitcode);

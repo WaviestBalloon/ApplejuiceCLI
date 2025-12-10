@@ -63,7 +63,7 @@ pub fn main(raw_args: &[(String, String)]) {
 		status!("Downloading assets from GitHub...");
 		let client = reqwest::blocking::Client::new();
 		for url in ASSET_URLS.iter() {
-			let filename = url.split('/').last().unwrap().to_lowercase();
+			let filename = url.split('/').next_back().unwrap().to_lowercase();
 			let output = client.get(format!("{ROOT_GITHUB_URL}{url}"))
 				.send()
 				.expect("Failed to download asset")
