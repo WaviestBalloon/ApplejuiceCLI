@@ -1,7 +1,8 @@
 use std::{fs, env::var};
+use native_dialog::{MessageDialog, MessageType};
 use serde_json::json;
 
-use crate::utils::{setup, terminal::*, proton, configuration, steamos, argparse};
+use crate::utils::{argparse, configuration, notification::create_notification, proton, setup, steamos, terminal::*};
 
 const ROOT_GITHUB_URL: &str = "https://raw.githubusercontent.com/WaviestBalloon/ApplejuiceCLI/main";
 const ASSET_URLS: [&str; 3] = [
@@ -81,8 +82,6 @@ pub fn main(raw_args: &[(String, String)]) {
 	} else {
 		configuration::update_config(json!({
 			"config_version": "0",
-			"ui": {},
-			"cli": {},
 			"misc": {
 				"overrides": {
 					"LATEST_VERSION_PLAYER_CHANNEL": null,
@@ -97,14 +96,23 @@ pub fn main(raw_args: &[(String, String)]) {
 		configuration::update_config(json!({ }), "roblox_installations");
 	}
 
-	status!("Finding a Proton installation...");
+	status!("Automatically discovering Proton installations from Steam...");
 	let detected_installations = proton::discover_proton_directory();
-	if detected_installations == serde_json::Value::Null {
-		warning!("Failed to find a Proton installation! You might not have Steam or Proton installed.");
+	if detected_installations == serde_json::json!({}) {
+		warning!("Failed to find a Proton installation! You might not have Steam and Proton installed.");
+		
+		let formatted_alert_text = format!("Failed to automatically detect any Proton installations from Steam, you will not be able to launch Roblox applications until you specify one!\n\nIf you decide to install Proton via Steam, run \"applejuicecli --init\" again to retry detection.\nIf you download a Proton binary (e.g. Proton-GE) you may specify it in \"{}/config.json\" in this format: \n{{\"<identifier>\": \"<path to binary>\"}}", setup::get_applejuice_dir());
+		MessageDialog::new()
+			.set_type(MessageType::Warning)
+			.set_title("Applejuice - Manual configuration required")
+			.set_text(&formatted_alert_text)
+			.show_alert()
+			.unwrap();
 	} else {
-		configuration::update_config(detected_installations, "proton_installations");
 		success!("config.json updated with Proton paths");
 	}
+
+	configuration::update_config(detected_installations, "proton_installations");
 
 	status!("Creating Roblox shortcuts...");
 	let location = setup::get_applejuice_dir();
@@ -140,4 +148,5 @@ MimeType={ROBLOX_STUDIO_MIMES}");
 
 	println!();
 	success!("Applejuice has been initialised!\n\tTo get started, run 'applejuicecli --help'\n\tOr to dive right in, launch Roblox Player or Roblox Studio!");
+	create_notification(&format!("{}/assets/crudejuice.png", setup::get_applejuice_dir()), 5000, "Applejuice has been initialised!", "You may now launch Roblox");
 }

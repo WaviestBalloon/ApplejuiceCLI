@@ -3,6 +3,7 @@ use crate::args;
 use std::fs;
 use std::{process, path::Path};
 use inotify::{Inotify, WatchMask};
+use native_dialog::{MessageDialog, MessageType};
 
 static ACCEPTED_PARAMS: [(&str, &str); 7] = [
 	("--binary", "The binary type to launch, either Player or Studio"),
@@ -145,10 +146,10 @@ pub fn main(raw_args: &[(String, String)]) {
 		}
 	}
 
-	status!("Launching Roblox...");
+	status!("Launching Roblox {}...", binary);
 	if binary == "Studio" { // Do a check if DataModelPatch.rbxm exists, if not, Studio might have issues when running (See: https://devforum.roblox.com/t/no-verified-patch-could-be-loaded/1797937/42?u=waviestballoon)
 		let data_model_patch_path = format!("{}/ExtraContent/models/DataModelPatch/DataModelPatch.rbxm", install_path);
-		help!("{}", data_model_patch_path);
+		status!("Checking for \"{}\"...", data_model_patch_path);
 		if !Path::new(&data_model_patch_path).exists() {
 			warning!("DataModelPatch.rbxm does not exist, Studio may have issues when running!");
 			create_notification("dialog-warning", 30000, "Missing critical file", "DataModelPatch.rbxm does not exist, Studio may have issues when running! Reinstalling Studio may fix this issue");
@@ -194,8 +195,9 @@ pub fn main(raw_args: &[(String, String)]) {
 	}
 
 	let prefix_location = install_configuration["prefix"].as_str().unwrap_or_default();
+	let full_path_prefix_location = format!("{}/{}", dir_location, prefix_location);
 	help!("Using prefix: `{}`", prefix_location);
-	if fs::metadata(format!("{}/{}", dir_location, prefix_location)).is_err() {
+	if fs::metadata(&full_path_prefix_location).is_err() {
 		error!("Prefix location does not exist, check your configuration file");
 		create_notification("dialog-warning", 30000, "Prefix configuration error", "Unable to find the prefix location, please check your configuration file to ensure that `prefix` is set correctly");
 		process::exit(1);
@@ -203,7 +205,6 @@ pub fn main(raw_args: &[(String, String)]) {
 	let run_verb = install_configuration["use_verb"].as_str().unwrap_or_default();
 	help!("Using verb: `{}`", run_verb);
 
-	let full_path_prefix_location = format!("{}/{}", dir_location, prefix_location);
 	help!("Running: STEAM_COMPAT_DATA_PATH={} STEAM_COMPAT_CLIENT_INSTALL_PATH={}/not-steam {} {} {} {}", full_path_prefix_location, dir_location, proton_installation_path, run_verb, full_path_of_executable, protocol_arguments);
 
 	if fs::metadata(&dir_location).unwrap().permissions().readonly() {
@@ -212,8 +213,21 @@ pub fn main(raw_args: &[(String, String)]) {
 	if fs::metadata(&full_path_prefix_location).unwrap().permissions().readonly() {
 		warning!("Wine prefix directory is set to read-only!");
 	}
-	if fs::metadata(proton_installation_path).unwrap().permissions().readonly() {
-		warning!("Wine installation directory is set to read-only!");
+	let pipath_metadata = fs::metadata(proton_installation_path).unwrap();
+	if pipath_metadata.permissions().readonly() {
+		warning!("Wine/Proton installation directory is set to read-only!");
+	}
+	if !pipath_metadata.is_file() {
+		error!("Specified Wine/Proton binary is not a valid file!");
+
+		MessageDialog::new()
+			.set_type(MessageType::Warning)
+			.set_title("Applejuice - Invalid Wine/Proton binary")
+			.set_text(&format!("The set Wine/Proton binary inside of your config.json is not a valid file!\nMake sure you \"{}\" is a valid file that can be ran", proton_installation_path))
+			.show_alert()
+			.unwrap();
+
+		process::exit(1);
 	}
 
 	let output = process::Command::new(proton_installation_path)
