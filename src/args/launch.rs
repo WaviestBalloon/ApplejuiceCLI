@@ -223,7 +223,7 @@ pub fn main(raw_args: &[(String, String)]) {
 		MessageDialog::new()
 			.set_type(MessageType::Warning)
 			.set_title("Applejuice - Invalid Wine/Proton binary")
-			.set_text(&format!("The set Wine/Proton binary inside of your config.json is not a valid file!\nMake sure you \"{}\" is a valid file that can be ran", proton_installation_path))
+			.set_text(&format!("The set Wine/Proton binary inside of your config.json is not a valid file!\nMake sure \"{}\" is a valid file that can be ran", proton_installation_path))
 			.show_alert()
 			.unwrap();
 
