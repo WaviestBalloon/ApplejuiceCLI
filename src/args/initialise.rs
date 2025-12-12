@@ -146,7 +146,8 @@ MimeType={ROBLOX_STUDIO_MIMES}");
 		steamos::add_item_to_steam_library(format!("{desktop_shortcut_path}/roblox-studio.desktop"));
 	}
 
+	create_notification(&format!("{}/assets/crudejuice.png", setup::get_applejuice_dir()), 5000, "Applejuice has been initialised!", "Ready to launch Roblox");
+
 	println!();
 	success!("Applejuice has been initialised!\n\tTo get started, run 'applejuicecli --help'\n\tOr to dive right in, launch Roblox Player or Roblox Studio!");
-	create_notification(&format!("{}/assets/crudejuice.png", setup::get_applejuice_dir()), 5000, "Applejuice has been initialised!", "You may now launch Roblox");
 }

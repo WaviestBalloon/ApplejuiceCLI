@@ -176,7 +176,15 @@ pub fn main(raw_args: &[(String, String)]) {
 	help!("Using Proton path from `preferred_proton` match: {}", proton_installation_path);
 	if fs::metadata(proton_installation_path).is_err() {
 		error!("Proton installation does not exist, check your configuration file");
-		create_notification("dialog-warning", 30000, "Proton configuration error", "Unable to find the Proton installation to launch Roblox with, please check your configuration file to ensure that `preferred_proton` is set correctly");
+
+		MessageDialog::new()
+			.set_type(MessageType::Warning)
+			.set_title("Applejuice - Cannot find Wine/Proton")
+			.set_text("Failed to find the Proton installation to launch Roblox with, please check your configuration file to ensure that `preferred_proton` is set correctly on the Roblox install you are attempting to launch!")
+			.show_alert()
+			.unwrap();
+
+		create_notification("dialog-warning", 30000, "Proton configuration error", "Failed to find the Proton installation to launch Roblox with, please check your configuration file to ensure that `preferred_proton` is set correctly");
 		process::exit(1);
 	}
 	let full_path_of_executable = format!(
@@ -197,15 +205,34 @@ pub fn main(raw_args: &[(String, String)]) {
 	let prefix_location = install_configuration["prefix"].as_str().unwrap_or_default();
 	let full_path_prefix_location = format!("{}/{}", dir_location, prefix_location);
 	help!("Using prefix: `{}`", prefix_location);
+
 	if fs::metadata(&full_path_prefix_location).is_err() {
-		error!("Prefix location does not exist, check your configuration file");
-		create_notification("dialog-warning", 30000, "Prefix configuration error", "Unable to find the prefix location, please check your configuration file to ensure that `prefix` is set correctly");
-		process::exit(1);
+		warning!("Prefix location does not exist, attempting to create it now...");
+
+		match fs::create_dir_all(&full_path_prefix_location) {
+			Ok(_) => {
+				success!("Created prefix at \"{}\" successfully!", full_path_prefix_location);
+			},
+			Err(err) => {
+				error!("Failed to create prefix directory!\nError: {}", err);
+
+				MessageDialog::new()
+					.set_type(MessageType::Warning)
+					.set_title("Applejuice - Cannot create prefix")
+					.set_text(&format!("Failed to create the prefix location automatically, please check your configuration file to ensure that `prefix` is set correctly or manually create it\n\nError: {}", err))
+					.show_alert()
+					.unwrap();
+
+				create_notification("dialog-warning", 30000, "Prefix configuration error", "Failed to create the prefix location automatically, please check your configuration file to ensure that `prefix` is set correctly or manually create it");
+				process::exit(1);
+			}
+		}
 	}
+
 	let run_verb = install_configuration["use_verb"].as_str().unwrap_or_default();
 	help!("Using verb: `{}`", run_verb);
 
-	help!("Running: STEAM_COMPAT_DATA_PATH={} STEAM_COMPAT_CLIENT_INSTALL_PATH={}/not-steam {} {} {} {}", full_path_prefix_location, dir_location, proton_installation_path, run_verb, full_path_of_executable, protocol_arguments);
+	help!("Running: WINEPREFIX={} STEAM_COMPAT_DATA_PATH={} STEAM_COMPAT_CLIENT_INSTALL_PATH={}/not-steam {} {} {} {}", full_path_prefix_location, full_path_prefix_location, dir_location, proton_installation_path, run_verb, full_path_of_executable, protocol_arguments);
 
 	if fs::metadata(&dir_location).unwrap().permissions().readonly() {
 		warning!("Applejuice data directory is set to read-only!");
@@ -231,6 +258,10 @@ pub fn main(raw_args: &[(String, String)]) {
 	}
 
 	let output = process::Command::new(proton_installation_path)
+		.env(
+			"WINEPREFIX",
+			&full_path_prefix_location,
+		)
 		.env(
 			"STEAM_COMPAT_DATA_PATH",
 			full_path_prefix_location,

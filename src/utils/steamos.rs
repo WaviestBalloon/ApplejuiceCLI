@@ -60,7 +60,7 @@ pub fn set_rbx_fullscreen_value(toggle: bool) {
 pub fn is_running_on_steamos() -> bool { // Check if we are running SteamOS
 	let osrelease = parse_osrelease();
 	if osrelease.is_none() {
-		warning!("Unable to find /etc/os-release, assuming not SteamOS");
+		warning!("Failed to find /etc/os-release, assuming not SteamOS");
 		return false;
 	}
 	let mut is_steamos = false;
