@@ -117,6 +117,7 @@ pub fn main(raw_args: &[(String, String)]) {
 	status!("Creating Roblox shortcuts...");
 	let location = setup::get_applejuice_dir();
 	let desktop_shortcut_path = format!("{}/.local/share/applications/", var("HOME").expect("$HOME not set"));
+	fs::create_dir_all(&desktop_shortcut_path).expect("Failed to create ~/.local/share/applications directory");
 	
 	let player_shortcut_contents = format!("[Desktop Entry]
 Name=Roblox Player
