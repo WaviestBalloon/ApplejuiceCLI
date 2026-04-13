@@ -9,6 +9,7 @@ pub fn main() {
 	println!("Data folder exists? {}", setup::confirm_applejuice_data_folder_existence());
 	println!("Running on SteamOS? {}", steamos::is_running_on_steamos());
 	println!("/etc/os-release: {:?}", steamos::parse_osrelease().unwrap_or_default());
+	println!("/proc/version: {}", fs::read_to_string("/proc/version").unwrap_or_default());
 	println!("Configuration file data: {}", fs::read_to_string(format!("{}/config.json", setup::get_applejuice_dir())).unwrap());
 
 	success!("Finished, copy and paste everything above this line!");

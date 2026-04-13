@@ -1,12 +1,13 @@
 use crate::utils::{argparse, terminal::*};
 
-static ACCEPTED_PARAMS: [(&str, &str); 6] = [
+static ACCEPTED_PARAMS: [(&str, &str); 7] = [
 	("--help", "Displays this help message"),
 	("--init", "Initalised Applejuice, use if you have deleted any files in the applications/data folder directory"),
 	("--launch", "Launch a Roblox instance directly from your terminal"),
 	("--install", "Install Roblox Player or Roblox Studio"),
 	("--purge", "Deletes either deployment cache or uninstalls Roblox"),
-	("--opendata", "Open the data folder for Applejuice, where installations, cache, configuration files and more are located")
+	("--opendata", "Open the data folder for Applejuice, where installations, cache, configuration files and more are located"),
+	("--sysinfo", "Dumps potentially helpful data about your system for support")
 ];
 
 pub fn main() {
